@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'core/theme/app_theme.dart';
+import 'core/constants/app_strings.dart';
 
 void main() {
   runApp(const CleanPoolApp());
@@ -10,15 +12,17 @@ class CleanPoolApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'CleanPool',
+      title: AppStrings.appName,
       debugShowCheckedModeBanner: false,
-      home: const HomeScreen(),
+      theme: AppTheme.darkTheme,
+      home: const _PlaceholderScreen(),
     );
   }
 }
 
-class HomeScreen extends StatelessWidget {
-  const HomeScreen({super.key});
+// Pantalla temporal hasta que se implemente la navegación en la siguiente feature
+class _PlaceholderScreen extends StatelessWidget {
+  const _PlaceholderScreen();
 
   @override
   Widget build(BuildContext context) {
@@ -27,17 +31,15 @@ class HomeScreen extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.water_drop, size: 80, color: Colors.blue),
-            SizedBox(height: 20),
-            Text(
-              'CleanPool',
-              style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
+            Icon(
+              Icons.water_drop,
+              size: 80,
+              color: Theme.of(context).colorScheme.primary,
             ),
-            SizedBox(height: 10),
-            Text(
-              'Aplicación en construcción...',
-              style: TextStyle(fontSize: 16, color: Colors.grey),
-            ),
+            const SizedBox(height: 20),
+            Text('CleanPool', style: Theme.of(context).textTheme.displayLarge),
+            const SizedBox(height: 8),
+            Text('Base lista ✓', style: Theme.of(context).textTheme.bodyMedium),
           ],
         ),
       ),
