@@ -46,6 +46,7 @@ def test_root_returns_200():
 # ── GET /readings ─────────────────────────────────────────────────────────────
 def test_readings_sin_datos():
     """Cuando MongoDB no tiene documentos, retorna mensaje de sin datos."""
+    # Forzamos que retorne None explícitamente
     _mock_db["lecturas"].find_one.return_value = None
 
     response = client.get("/readings")
@@ -54,7 +55,7 @@ def test_readings_sin_datos():
 
 
 def test_readings_con_datos():
-    """Cuando hay un documento, lo retorna directamente."""
+    """Cuando hay un documento, lo retorna con el nuevo formato de estados de T-09."""
     fake_doc = {
         "id_piscina": "p-001",
         "ph": 7.2,
@@ -63,12 +64,18 @@ def test_readings_con_datos():
         "conductividad": 450.0,
         "timestamp": "2026-03-21T14:00:00+00:00",
     }
+    # Forzamos el retorno del dict
     _mock_db["lecturas"].find_one.return_value = fake_doc
 
     response = client.get("/readings")
     assert response.status_code == 200
-    assert response.json()["ph"] == 7.2
-    assert response.json()["id_piscina"] == "p-001"
+    data = response.json()
+    assert data["id_piscina"] == "p-001"
+    assert data["parametros"]["ph"]["valor"] == 7.2
+    assert data["parametros"]["ph"]["estado"] == "optimo"
+    # Temp 25.0: 24 <= 25 <= 28 es optimo. En mi anterior assert puse alerta, error mío.
+    assert data["parametros"]["temp"]["estado"] == "optimo"
+    assert data["parametros"]["cloro"]["estado"] == "optimo"
 
 
 # ── POST /auth/login ──────────────────────────────────────────────────────────

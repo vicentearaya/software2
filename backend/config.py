@@ -12,7 +12,7 @@ class Settings(BaseSettings):
     )
 
     # MongoDB Atlas
-    mongodb_uri: MongoDsn
+    mongodb_uri: str
 
     # Seguridad
     secret_key: str
