@@ -3,34 +3,32 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
 class AuthService {
-  // Cambia esta URL cuando el backend esté corriendo
   static const String _baseUrl = 'http://localhost:8000';
   static const String _tokenKey = 'auth_token';
   static const String _userKey = 'user_data';
 
-  // Login
+  // Login - MOCK temporal, reemplazar cuando el backend esté corriendo
   Future<Map<String, dynamic>> login(String email, String password) async {
-    try {
-      final response = await http.post(
-        Uri.parse('$_baseUrl/auth/login'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'email': email, 'password': password}),
-      );
+    await Future.delayed(const Duration(seconds: 1));
+    return {'success': true, 'data': {}};
 
-      final data = jsonDecode(response.body);
-
-      if (response.statusCode == 200) {
-        await _saveSession(data['token'], data['user']);
-        return {'success': true, 'data': data};
-      } else {
-        return {
-          'success': false,
-          'message': data['detail'] ?? 'Error al iniciar sesión',
-        };
-      }
-    } catch (e) {
-      return {'success': false, 'message': 'No se pudo conectar al servidor'};
-    }
+    // TODO: descomentar cuando el backend esté corriendo
+    // try {
+    //   final response = await http.post(
+    //     Uri.parse('$_baseUrl/auth/login'),
+    //     headers: {'Content-Type': 'application/json'},
+    //     body: jsonEncode({'username': email, 'password': password}),
+    //   );
+    //   final data = jsonDecode(response.body);
+    //   if (response.statusCode == 200) {
+    //     await _saveSession(data['access_token'], {});
+    //     return {'success': true, 'data': data};
+    //   } else {
+    //     return {'success': false, 'message': data['detail'] ?? 'Error al iniciar sesión'};
+    //   }
+    // } catch (e) {
+    //   return {'success': false, 'message': 'No se pudo conectar al servidor'};
+    // }
   }
 
   // Registro

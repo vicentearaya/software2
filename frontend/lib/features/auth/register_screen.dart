@@ -213,8 +213,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
       ),
       validator: (value) {
         if (value == null || value.isEmpty) return 'Confirma tu contraseña';
-        if (value != _passwordController.text)
+        if (value != _passwordController.text) {
           return 'Las contraseñas no coinciden';
+        }
         return null;
       },
     );
