@@ -21,6 +21,14 @@ class AppStrings {
   static const String pairDevice = 'Vincular dispositivo';
   static const String noPairedDevice = 'Sin dispositivo vinculado';
 
+  // Pool Registration
+  static const String registerPool = 'Registrar piscina';
+  static const String poolName = 'Nombre de la piscina';
+  static const String poolVolume = 'Volumen (litros)';
+  static const String poolType = 'Tipo de piscina';
+  static const String poolLocation = 'Ubicación geográfica';
+  static const String poolCreatedSuccess = 'Piscina registrada exitosamente';
+
   // General
   static const String loading = 'Cargando...';
   static const String error = 'Ocurrió un error';
