@@ -16,6 +16,7 @@ class Settings(BaseSettings):
 
     # Seguridad
     secret_key: str
+    api_key: str  # Clave que usará el ESP8266 en header X-API-KEY
     algorithm: str = "HS256"
     access_token_expire_minutes: int = 30
 

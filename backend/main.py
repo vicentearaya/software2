@@ -2,6 +2,7 @@ from fastapi import FastAPI
 
 from config import get_settings
 from routers import auth, readings
+from routers import ingesta
 
 settings = get_settings()
 
@@ -22,6 +23,7 @@ app = FastAPI(
 
 app.include_router(readings.router)
 app.include_router(auth.router)
+app.include_router(ingesta.router, prefix="/api/v1")
 
 
 @app.get("/", summary="Health check", tags=["General"])
