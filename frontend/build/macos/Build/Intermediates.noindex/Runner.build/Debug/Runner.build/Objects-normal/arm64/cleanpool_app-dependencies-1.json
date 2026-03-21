@@ -200,475 +200,487 @@
     "modulePath" : "\/Applications\/Xcode.app\/Contents\/Developer\/Toolchains\/XcodeDefault.xctoolchain\/usr\/lib\/swift\/macosx\/prebuilt-modules\/26.2\/os.swiftmodule\/arm64e-apple-macos.swiftmodule"
   },
   {
+    "isFramework" : true,
+    "moduleName" : "shared_preferences_foundation",
+    "modulePath" : "\/Users\/miilwaukee\/Documents\/Software 2\/aplicacion_proyecto\/frontend\/build\/macos\/Build\/Products\/Debug\/shared_preferences_foundation\/shared_preferences_foundation.framework\/Modules\/shared_preferences_foundation.swiftmodule\/arm64-apple-macos.swiftmodule"
+  },
+  {
     "isFramework" : false,
     "moduleName" : "simd",
     "modulePath" : "\/Applications\/Xcode.app\/Contents\/Developer\/Toolchains\/XcodeDefault.xctoolchain\/usr\/lib\/swift\/macosx\/prebuilt-modules\/26.2\/simd.swiftmodule\/arm64e-apple-macos.swiftmodule"
   },
   {
     "clangModuleMapPath" : "\/Applications\/Xcode.app\/Contents\/Developer\/Platforms\/MacOSX.platform\/Developer\/SDKs\/MacOSX.sdk\/System\/Library\/Frameworks\/Accessibility.framework\/Modules\/module.modulemap",
-    "clangModulePath" : "\/Users\/miilwaukee\/Documents\/Software 2\/aplicacion_proyecto\/build\/macos\/ModuleCache.noindex\/Accessibility-6WRWNFN449IDC4I94HJ43T996.pcm",
+    "clangModulePath" : "\/Users\/miilwaukee\/Documents\/Software 2\/aplicacion_proyecto\/frontend\/build\/macos\/ModuleCache.noindex\/Accessibility-96TT55W4OLWQNRL0D5K3X1MUI.pcm",
     "isBridgingHeaderDependency" : false,
     "isFramework" : false,
     "moduleName" : "Accessibility"
   },
   {
     "clangModuleMapPath" : "\/Applications\/Xcode.app\/Contents\/Developer\/Platforms\/MacOSX.platform\/Developer\/SDKs\/MacOSX.sdk\/System\/Library\/Frameworks\/AppKit.framework\/Modules\/module.modulemap",
-    "clangModulePath" : "\/Users\/miilwaukee\/Documents\/Software 2\/aplicacion_proyecto\/build\/macos\/ModuleCache.noindex\/AppKit-4YL9BV2WS8FL6TOEN75Z94EWP.pcm",
+    "clangModulePath" : "\/Users\/miilwaukee\/Documents\/Software 2\/aplicacion_proyecto\/frontend\/build\/macos\/ModuleCache.noindex\/AppKit-4UH0ZO5XR1C36A0VPCJNLYL80.pcm",
     "isBridgingHeaderDependency" : false,
     "isFramework" : false,
     "moduleName" : "AppKit"
   },
   {
     "clangModuleMapPath" : "\/Applications\/Xcode.app\/Contents\/Developer\/Platforms\/MacOSX.platform\/Developer\/SDKs\/MacOSX.sdk\/System\/Library\/Frameworks\/ApplicationServices.framework\/Modules\/module.modulemap",
-    "clangModulePath" : "\/Users\/miilwaukee\/Documents\/Software 2\/aplicacion_proyecto\/build\/macos\/ModuleCache.noindex\/ApplicationServices-B3T5ZSWIN1M3JYRIAH1XI5YWY.pcm",
+    "clangModulePath" : "\/Users\/miilwaukee\/Documents\/Software 2\/aplicacion_proyecto\/frontend\/build\/macos\/ModuleCache.noindex\/ApplicationServices-58XSJRUB7IUKJO8CTPEH07Y6R.pcm",
     "isBridgingHeaderDependency" : false,
     "isFramework" : false,
     "moduleName" : "ApplicationServices"
   },
   {
     "clangModuleMapPath" : "\/Applications\/Xcode.app\/Contents\/Developer\/Platforms\/MacOSX.platform\/Developer\/SDKs\/MacOSX.sdk\/System\/Library\/Frameworks\/CFNetwork.framework\/Modules\/module.modulemap",
-    "clangModulePath" : "\/Users\/miilwaukee\/Documents\/Software 2\/aplicacion_proyecto\/build\/macos\/ModuleCache.noindex\/CFNetwork-1XBDO5A33MBLAUNK5NWQGP9IV.pcm",
+    "clangModulePath" : "\/Users\/miilwaukee\/Documents\/Software 2\/aplicacion_proyecto\/frontend\/build\/macos\/ModuleCache.noindex\/CFNetwork-2U40XIAQO6YR2L9DXZF8X27BO.pcm",
     "isBridgingHeaderDependency" : false,
     "isFramework" : false,
     "moduleName" : "CFNetwork"
   },
   {
     "clangModuleMapPath" : "\/Applications\/Xcode.app\/Contents\/Developer\/Platforms\/MacOSX.platform\/Developer\/SDKs\/MacOSX.sdk\/usr\/include\/cups.modulemap",
-    "clangModulePath" : "\/Users\/miilwaukee\/Documents\/Software 2\/aplicacion_proyecto\/build\/macos\/ModuleCache.noindex\/CUPS-6BDUOF4BNVHM5O412L646REXJ.pcm",
+    "clangModulePath" : "\/Users\/miilwaukee\/Documents\/Software 2\/aplicacion_proyecto\/frontend\/build\/macos\/ModuleCache.noindex\/CUPS-7T8TOVW5KHR0WANL6KDAZZZRV.pcm",
     "isBridgingHeaderDependency" : false,
     "isFramework" : false,
     "moduleName" : "CUPS"
   },
   {
     "clangModuleMapPath" : "\/Applications\/Xcode.app\/Contents\/Developer\/Platforms\/MacOSX.platform\/Developer\/SDKs\/MacOSX.sdk\/System\/Library\/Frameworks\/Cocoa.framework\/Modules\/module.modulemap",
-    "clangModulePath" : "\/Users\/miilwaukee\/Documents\/Software 2\/aplicacion_proyecto\/build\/macos\/ModuleCache.noindex\/Cocoa-1DACYG545WW0B10B4Q6SFGDLB.pcm",
+    "clangModulePath" : "\/Users\/miilwaukee\/Documents\/Software 2\/aplicacion_proyecto\/frontend\/build\/macos\/ModuleCache.noindex\/Cocoa-3XG2VSH9KKHX4V0CC7P8OSPR5.pcm",
     "isBridgingHeaderDependency" : false,
     "isFramework" : false,
     "moduleName" : "Cocoa"
   },
   {
     "clangModuleMapPath" : "\/Applications\/Xcode.app\/Contents\/Developer\/Platforms\/MacOSX.platform\/Developer\/SDKs\/MacOSX.sdk\/System\/Library\/Frameworks\/ColorSync.framework\/Modules\/module.modulemap",
-    "clangModulePath" : "\/Users\/miilwaukee\/Documents\/Software 2\/aplicacion_proyecto\/build\/macos\/ModuleCache.noindex\/ColorSync-2JS22ZZG8HRR38989MF7S03FD.pcm",
+    "clangModulePath" : "\/Users\/miilwaukee\/Documents\/Software 2\/aplicacion_proyecto\/frontend\/build\/macos\/ModuleCache.noindex\/ColorSync-ED84XDWLPZH3KW6CXUP8IDM1.pcm",
     "isBridgingHeaderDependency" : false,
     "isFramework" : false,
     "moduleName" : "ColorSync"
   },
   {
     "clangModuleMapPath" : "\/Applications\/Xcode.app\/Contents\/Developer\/Platforms\/MacOSX.platform\/Developer\/SDKs\/MacOSX.sdk\/System\/Library\/Frameworks\/CoreAudio.framework\/Modules\/module.modulemap",
-    "clangModulePath" : "\/Users\/miilwaukee\/Documents\/Software 2\/aplicacion_proyecto\/build\/macos\/ModuleCache.noindex\/CoreAudio-D8UOUBKA92HW6TBM0NHZP3JVR.pcm",
+    "clangModulePath" : "\/Users\/miilwaukee\/Documents\/Software 2\/aplicacion_proyecto\/frontend\/build\/macos\/ModuleCache.noindex\/CoreAudio-76O5PMB1SJ9J5KFK8XZARXWBR.pcm",
     "isBridgingHeaderDependency" : false,
     "isFramework" : false,
     "moduleName" : "CoreAudio"
   },
   {
     "clangModuleMapPath" : "\/Applications\/Xcode.app\/Contents\/Developer\/Platforms\/MacOSX.platform\/Developer\/SDKs\/MacOSX.sdk\/System\/Library\/Frameworks\/CoreAudioTypes.framework\/Modules\/module.modulemap",
-    "clangModulePath" : "\/Users\/miilwaukee\/Documents\/Software 2\/aplicacion_proyecto\/build\/macos\/ModuleCache.noindex\/CoreAudioTypes-A3G0GRDU3AAGVTWULQG676X6Y.pcm",
+    "clangModulePath" : "\/Users\/miilwaukee\/Documents\/Software 2\/aplicacion_proyecto\/frontend\/build\/macos\/ModuleCache.noindex\/CoreAudioTypes-DYCCWALUBY379N70LL2Z0JVOE.pcm",
     "isBridgingHeaderDependency" : false,
     "isFramework" : false,
     "moduleName" : "CoreAudioTypes"
   },
   {
     "clangModuleMapPath" : "\/Applications\/Xcode.app\/Contents\/Developer\/Platforms\/MacOSX.platform\/Developer\/SDKs\/MacOSX.sdk\/System\/Library\/Frameworks\/CoreData.framework\/Modules\/module.modulemap",
-    "clangModulePath" : "\/Users\/miilwaukee\/Documents\/Software 2\/aplicacion_proyecto\/build\/macos\/ModuleCache.noindex\/CoreData-DIBN0K9JZQX7TCBZGFRF89Y4X.pcm",
+    "clangModulePath" : "\/Users\/miilwaukee\/Documents\/Software 2\/aplicacion_proyecto\/frontend\/build\/macos\/ModuleCache.noindex\/CoreData-2DPZ2AT9M4QLHHWZ3CJPNLFFD.pcm",
     "isBridgingHeaderDependency" : false,
     "isFramework" : false,
     "moduleName" : "CoreData"
   },
   {
     "clangModuleMapPath" : "\/Applications\/Xcode.app\/Contents\/Developer\/Platforms\/MacOSX.platform\/Developer\/SDKs\/MacOSX.sdk\/System\/Library\/Frameworks\/CoreFoundation.framework\/Modules\/module.modulemap",
-    "clangModulePath" : "\/Users\/miilwaukee\/Documents\/Software 2\/aplicacion_proyecto\/build\/macos\/ModuleCache.noindex\/CoreFoundation-2NJOJJ8SRM04RW7LS7T260IDX.pcm",
+    "clangModulePath" : "\/Users\/miilwaukee\/Documents\/Software 2\/aplicacion_proyecto\/frontend\/build\/macos\/ModuleCache.noindex\/CoreFoundation-AQE3EE5FEHYY2QYHKH3XTBWYP.pcm",
     "isBridgingHeaderDependency" : false,
     "isFramework" : false,
     "moduleName" : "CoreFoundation"
   },
   {
     "clangModuleMapPath" : "\/Applications\/Xcode.app\/Contents\/Developer\/Platforms\/MacOSX.platform\/Developer\/SDKs\/MacOSX.sdk\/System\/Library\/Frameworks\/CoreGraphics.framework\/Modules\/module.modulemap",
-    "clangModulePath" : "\/Users\/miilwaukee\/Documents\/Software 2\/aplicacion_proyecto\/build\/macos\/ModuleCache.noindex\/CoreGraphics-A12I2IUWDFKEP10P6B43VBDT3.pcm",
+    "clangModulePath" : "\/Users\/miilwaukee\/Documents\/Software 2\/aplicacion_proyecto\/frontend\/build\/macos\/ModuleCache.noindex\/CoreGraphics-2L2X0UI4YNKXKDGPJ6LDJOQOV.pcm",
     "isBridgingHeaderDependency" : false,
     "isFramework" : false,
     "moduleName" : "CoreGraphics"
   },
   {
     "clangModuleMapPath" : "\/Applications\/Xcode.app\/Contents\/Developer\/Platforms\/MacOSX.platform\/Developer\/SDKs\/MacOSX.sdk\/System\/Library\/Frameworks\/CoreImage.framework\/Modules\/module.modulemap",
-    "clangModulePath" : "\/Users\/miilwaukee\/Documents\/Software 2\/aplicacion_proyecto\/build\/macos\/ModuleCache.noindex\/CoreImage-284NN7GK60BUHSD3OAZOSRTEL.pcm",
+    "clangModulePath" : "\/Users\/miilwaukee\/Documents\/Software 2\/aplicacion_proyecto\/frontend\/build\/macos\/ModuleCache.noindex\/CoreImage-EOWA9J74LONQOLYGEF36RX8WC.pcm",
     "isBridgingHeaderDependency" : false,
     "isFramework" : false,
     "moduleName" : "CoreImage"
   },
   {
     "clangModuleMapPath" : "\/Applications\/Xcode.app\/Contents\/Developer\/Platforms\/MacOSX.platform\/Developer\/SDKs\/MacOSX.sdk\/System\/Library\/Frameworks\/CoreMedia.framework\/Modules\/module.modulemap",
-    "clangModulePath" : "\/Users\/miilwaukee\/Documents\/Software 2\/aplicacion_proyecto\/build\/macos\/ModuleCache.noindex\/CoreMedia-AK8QT2DPFL16G2Q47QHZI40S5.pcm",
+    "clangModulePath" : "\/Users\/miilwaukee\/Documents\/Software 2\/aplicacion_proyecto\/frontend\/build\/macos\/ModuleCache.noindex\/CoreMedia-AKCZ41336I745CR3LVEZOOODG.pcm",
     "isBridgingHeaderDependency" : false,
     "isFramework" : false,
     "moduleName" : "CoreMedia"
   },
   {
     "clangModuleMapPath" : "\/Applications\/Xcode.app\/Contents\/Developer\/Platforms\/MacOSX.platform\/Developer\/SDKs\/MacOSX.sdk\/System\/Library\/Frameworks\/CoreServices.framework\/Modules\/module.modulemap",
-    "clangModulePath" : "\/Users\/miilwaukee\/Documents\/Software 2\/aplicacion_proyecto\/build\/macos\/ModuleCache.noindex\/CoreServices-BZH5INR0UYS5K91O55CKZOO1W.pcm",
+    "clangModulePath" : "\/Users\/miilwaukee\/Documents\/Software 2\/aplicacion_proyecto\/frontend\/build\/macos\/ModuleCache.noindex\/CoreServices-4BL5JEYJ43P3N579ELKLVYBXE.pcm",
     "isBridgingHeaderDependency" : false,
     "isFramework" : false,
     "moduleName" : "CoreServices"
   },
   {
     "clangModuleMapPath" : "\/Applications\/Xcode.app\/Contents\/Developer\/Platforms\/MacOSX.platform\/Developer\/SDKs\/MacOSX.sdk\/System\/Library\/Frameworks\/CoreText.framework\/Modules\/module.modulemap",
-    "clangModulePath" : "\/Users\/miilwaukee\/Documents\/Software 2\/aplicacion_proyecto\/build\/macos\/ModuleCache.noindex\/CoreText-5JA08F9DK6LN16595LZGDT65L.pcm",
+    "clangModulePath" : "\/Users\/miilwaukee\/Documents\/Software 2\/aplicacion_proyecto\/frontend\/build\/macos\/ModuleCache.noindex\/CoreText-1HZMUUCM1E22FIPT4HD7C08R4.pcm",
     "isBridgingHeaderDependency" : false,
     "isFramework" : false,
     "moduleName" : "CoreText"
   },
   {
     "clangModuleMapPath" : "\/Applications\/Xcode.app\/Contents\/Developer\/Platforms\/MacOSX.platform\/Developer\/SDKs\/MacOSX.sdk\/System\/Library\/Frameworks\/CoreTransferable.framework\/Modules\/module.modulemap",
-    "clangModulePath" : "\/Users\/miilwaukee\/Documents\/Software 2\/aplicacion_proyecto\/build\/macos\/ModuleCache.noindex\/CoreTransferable-55H8CV4M8XJRB5DY9URAIK2G5.pcm",
+    "clangModulePath" : "\/Users\/miilwaukee\/Documents\/Software 2\/aplicacion_proyecto\/frontend\/build\/macos\/ModuleCache.noindex\/CoreTransferable-AQ9QXJQOGS94ARFT2SURQ631V.pcm",
     "isBridgingHeaderDependency" : false,
     "isFramework" : false,
     "moduleName" : "CoreTransferable"
   },
   {
     "clangModuleMapPath" : "\/Applications\/Xcode.app\/Contents\/Developer\/Platforms\/MacOSX.platform\/Developer\/SDKs\/MacOSX.sdk\/System\/Library\/Frameworks\/CoreVideo.framework\/Modules\/module.modulemap",
-    "clangModulePath" : "\/Users\/miilwaukee\/Documents\/Software 2\/aplicacion_proyecto\/build\/macos\/ModuleCache.noindex\/CoreVideo-464U8EOSQY3S715O4399IHDZF.pcm",
+    "clangModulePath" : "\/Users\/miilwaukee\/Documents\/Software 2\/aplicacion_proyecto\/frontend\/build\/macos\/ModuleCache.noindex\/CoreVideo-DQ7L240G02N6KEIW7GFJH6X6D.pcm",
     "isBridgingHeaderDependency" : false,
     "isFramework" : false,
     "moduleName" : "CoreVideo"
   },
   {
     "clangModuleMapPath" : "\/Applications\/Xcode.app\/Contents\/Developer\/Platforms\/MacOSX.platform\/Developer\/SDKs\/MacOSX.sdk\/usr\/include\/Darwin.modulemap",
-    "clangModulePath" : "\/Users\/miilwaukee\/Documents\/Software 2\/aplicacion_proyecto\/build\/macos\/ModuleCache.noindex\/Darwin-CX4RLYW06X571HVYRT4FZMTYG.pcm",
+    "clangModulePath" : "\/Users\/miilwaukee\/Documents\/Software 2\/aplicacion_proyecto\/frontend\/build\/macos\/ModuleCache.noindex\/Darwin-AGL8RVI7ERHMNSG5M4AFUVHRE.pcm",
     "isBridgingHeaderDependency" : false,
     "isFramework" : false,
     "moduleName" : "Darwin"
   },
   {
     "clangModuleMapPath" : "\/Applications\/Xcode.app\/Contents\/Developer\/Platforms\/MacOSX.platform\/Developer\/SDKs\/MacOSX.sdk\/System\/Library\/Frameworks\/DataDetection.framework\/Modules\/module.modulemap",
-    "clangModulePath" : "\/Users\/miilwaukee\/Documents\/Software 2\/aplicacion_proyecto\/build\/macos\/ModuleCache.noindex\/DataDetection-NM223GJQEPNY0UPJMMZQJ9KT.pcm",
+    "clangModulePath" : "\/Users\/miilwaukee\/Documents\/Software 2\/aplicacion_proyecto\/frontend\/build\/macos\/ModuleCache.noindex\/DataDetection-B99JAK70CEPE2QU8XS9V20B85.pcm",
     "isBridgingHeaderDependency" : false,
     "isFramework" : false,
     "moduleName" : "DataDetection"
   },
   {
     "clangModuleMapPath" : "\/Applications\/Xcode.app\/Contents\/Developer\/Platforms\/MacOSX.platform\/Developer\/SDKs\/MacOSX.sdk\/System\/Library\/Frameworks\/DeveloperToolsSupport.framework\/Modules\/module.modulemap",
-    "clangModulePath" : "\/Users\/miilwaukee\/Documents\/Software 2\/aplicacion_proyecto\/build\/macos\/ModuleCache.noindex\/DeveloperToolsSupport-AX72G58KFERZ8ZOMVYTMWCZJE.pcm",
+    "clangModulePath" : "\/Users\/miilwaukee\/Documents\/Software 2\/aplicacion_proyecto\/frontend\/build\/macos\/ModuleCache.noindex\/DeveloperToolsSupport-3NSB9H4AGT8FW719T1BW68TBQ.pcm",
     "isBridgingHeaderDependency" : false,
     "isFramework" : false,
     "moduleName" : "DeveloperToolsSupport"
   },
   {
     "clangModuleMapPath" : "\/Applications\/Xcode.app\/Contents\/Developer\/Platforms\/MacOSX.platform\/Developer\/SDKs\/MacOSX.sdk\/System\/Library\/Frameworks\/DiskArbitration.framework\/Modules\/module.modulemap",
-    "clangModulePath" : "\/Users\/miilwaukee\/Documents\/Software 2\/aplicacion_proyecto\/build\/macos\/ModuleCache.noindex\/DiskArbitration-9QHWAA4KE44NBLY0W3AT92L0T.pcm",
+    "clangModulePath" : "\/Users\/miilwaukee\/Documents\/Software 2\/aplicacion_proyecto\/frontend\/build\/macos\/ModuleCache.noindex\/DiskArbitration-3H7A3IXM15FR3SR8Y028SX35L.pcm",
     "isBridgingHeaderDependency" : false,
     "isFramework" : false,
     "moduleName" : "DiskArbitration"
   },
   {
     "clangModuleMapPath" : "\/Applications\/Xcode.app\/Contents\/Developer\/Platforms\/MacOSX.platform\/Developer\/SDKs\/MacOSX.sdk\/usr\/include\/dispatch.modulemap",
-    "clangModulePath" : "\/Users\/miilwaukee\/Documents\/Software 2\/aplicacion_proyecto\/build\/macos\/ModuleCache.noindex\/Dispatch-3Y2B6LGIVJMVWCXEGHIOPG9X6.pcm",
+    "clangModulePath" : "\/Users\/miilwaukee\/Documents\/Software 2\/aplicacion_proyecto\/frontend\/build\/macos\/ModuleCache.noindex\/Dispatch-C9G3615WWAJ1M1BV15N8QU96E.pcm",
     "isBridgingHeaderDependency" : false,
     "isFramework" : false,
     "moduleName" : "Dispatch"
   },
   {
-    "clangModuleMapPath" : "\/Users\/miilwaukee\/Documents\/Software 2\/aplicacion_proyecto\/build\/macos\/Build\/Products\/Debug\/FlutterMacOS.framework\/Modules\/module.modulemap",
-    "clangModulePath" : "\/Users\/miilwaukee\/Documents\/Software 2\/aplicacion_proyecto\/build\/macos\/Build\/Intermediates.noindex\/SwiftExplicitPrecompiledModules\/FlutterMacOS-1TNHK0KE99QD4RC44VUE2G5F5.pcm",
+    "clangModuleMapPath" : "\/Users\/miilwaukee\/Documents\/Software 2\/aplicacion_proyecto\/frontend\/build\/macos\/Build\/Products\/Debug\/FlutterMacOS.framework\/Modules\/module.modulemap",
+    "clangModulePath" : "\/Users\/miilwaukee\/Documents\/Software 2\/aplicacion_proyecto\/frontend\/build\/macos\/Build\/Intermediates.noindex\/SwiftExplicitPrecompiledModules\/FlutterMacOS-COLIXEHQBBQ3COQWSZK0AZROZ.pcm",
     "isBridgingHeaderDependency" : false,
     "isFramework" : false,
     "moduleName" : "FlutterMacOS"
   },
   {
     "clangModuleMapPath" : "\/Applications\/Xcode.app\/Contents\/Developer\/Platforms\/MacOSX.platform\/Developer\/SDKs\/MacOSX.sdk\/System\/Library\/Frameworks\/Foundation.framework\/Modules\/module.modulemap",
-    "clangModulePath" : "\/Users\/miilwaukee\/Documents\/Software 2\/aplicacion_proyecto\/build\/macos\/ModuleCache.noindex\/Foundation-E29BDG0YB0OLNDUZHBATQP46.pcm",
+    "clangModulePath" : "\/Users\/miilwaukee\/Documents\/Software 2\/aplicacion_proyecto\/frontend\/build\/macos\/ModuleCache.noindex\/Foundation-6VRHBKTWBTADICD2THF0OTCW1.pcm",
     "isBridgingHeaderDependency" : false,
     "isFramework" : false,
     "moduleName" : "Foundation"
   },
   {
     "clangModuleMapPath" : "\/Applications\/Xcode.app\/Contents\/Developer\/Platforms\/MacOSX.platform\/Developer\/SDKs\/MacOSX.sdk\/System\/Library\/Frameworks\/IOKit.framework\/Modules\/module.modulemap",
-    "clangModulePath" : "\/Users\/miilwaukee\/Documents\/Software 2\/aplicacion_proyecto\/build\/macos\/ModuleCache.noindex\/IOKit-86JVP4URBYMMXVHSUY06SAYKF.pcm",
+    "clangModulePath" : "\/Users\/miilwaukee\/Documents\/Software 2\/aplicacion_proyecto\/frontend\/build\/macos\/ModuleCache.noindex\/IOKit-40N0ABHTGDE94G0A0D0QEUXAA.pcm",
     "isBridgingHeaderDependency" : false,
     "isFramework" : false,
     "moduleName" : "IOKit"
   },
   {
     "clangModuleMapPath" : "\/Applications\/Xcode.app\/Contents\/Developer\/Platforms\/MacOSX.platform\/Developer\/SDKs\/MacOSX.sdk\/System\/Library\/Frameworks\/IOSurface.framework\/Modules\/module.modulemap",
-    "clangModulePath" : "\/Users\/miilwaukee\/Documents\/Software 2\/aplicacion_proyecto\/build\/macos\/ModuleCache.noindex\/IOSurface-1CWNKVR3C2RMKGPOR92MSY4T6.pcm",
+    "clangModulePath" : "\/Users\/miilwaukee\/Documents\/Software 2\/aplicacion_proyecto\/frontend\/build\/macos\/ModuleCache.noindex\/IOSurface-7BYHTAOVHEJ8MFGWUJM69BQO2.pcm",
     "isBridgingHeaderDependency" : false,
     "isFramework" : false,
     "moduleName" : "IOSurface"
   },
   {
     "clangModuleMapPath" : "\/Applications\/Xcode.app\/Contents\/Developer\/Platforms\/MacOSX.platform\/Developer\/SDKs\/MacOSX.sdk\/System\/Library\/Frameworks\/ImageIO.framework\/Modules\/module.modulemap",
-    "clangModulePath" : "\/Users\/miilwaukee\/Documents\/Software 2\/aplicacion_proyecto\/build\/macos\/ModuleCache.noindex\/ImageIO-CJF9HIWWOWCD6NMW7ZVI9GM6B.pcm",
+    "clangModulePath" : "\/Users\/miilwaukee\/Documents\/Software 2\/aplicacion_proyecto\/frontend\/build\/macos\/ModuleCache.noindex\/ImageIO-ADT8AVVRK0ICU526A3QCO277R.pcm",
     "isBridgingHeaderDependency" : false,
     "isFramework" : false,
     "moduleName" : "ImageIO"
   },
   {
     "clangModuleMapPath" : "\/Applications\/Xcode.app\/Contents\/Developer\/Platforms\/MacOSX.platform\/Developer\/SDKs\/MacOSX.sdk\/usr\/include\/DarwinBasic.modulemap",
-    "clangModulePath" : "\/Users\/miilwaukee\/Documents\/Software 2\/aplicacion_proyecto\/build\/macos\/ModuleCache.noindex\/MachO-CJ32HPCYD7ALI0W8TG9DZ1CDL.pcm",
+    "clangModulePath" : "\/Users\/miilwaukee\/Documents\/Software 2\/aplicacion_proyecto\/frontend\/build\/macos\/ModuleCache.noindex\/MachO-3Z96JCYY5I45D23TTKWQGAVW1.pcm",
     "isBridgingHeaderDependency" : false,
     "isFramework" : false,
     "moduleName" : "MachO"
   },
   {
     "clangModuleMapPath" : "\/Applications\/Xcode.app\/Contents\/Developer\/Platforms\/MacOSX.platform\/Developer\/SDKs\/MacOSX.sdk\/System\/Library\/Frameworks\/Metal.framework\/Modules\/module.modulemap",
-    "clangModulePath" : "\/Users\/miilwaukee\/Documents\/Software 2\/aplicacion_proyecto\/build\/macos\/ModuleCache.noindex\/Metal-91C4S2X35KQX1Q95OQQMXF1V7.pcm",
+    "clangModulePath" : "\/Users\/miilwaukee\/Documents\/Software 2\/aplicacion_proyecto\/frontend\/build\/macos\/ModuleCache.noindex\/Metal-2FOCITPSYNXBCKTLFYOVNMZ95.pcm",
     "isBridgingHeaderDependency" : false,
     "isFramework" : false,
     "moduleName" : "Metal"
   },
   {
     "clangModuleMapPath" : "\/Applications\/Xcode.app\/Contents\/Developer\/Platforms\/MacOSX.platform\/Developer\/SDKs\/MacOSX.sdk\/System\/Library\/Frameworks\/OSLog.framework\/Modules\/module.modulemap",
-    "clangModulePath" : "\/Users\/miilwaukee\/Documents\/Software 2\/aplicacion_proyecto\/build\/macos\/ModuleCache.noindex\/OSLog-APO7WM558V5PO57SA6G3XNMMX.pcm",
+    "clangModulePath" : "\/Users\/miilwaukee\/Documents\/Software 2\/aplicacion_proyecto\/frontend\/build\/macos\/ModuleCache.noindex\/OSLog-7POJ0NXBNUKYXOTVO2BW7NCZG.pcm",
     "isBridgingHeaderDependency" : false,
     "isFramework" : false,
     "moduleName" : "OSLog"
   },
   {
     "clangModuleMapPath" : "\/Applications\/Xcode.app\/Contents\/Developer\/Platforms\/MacOSX.platform\/Developer\/SDKs\/MacOSX.sdk\/usr\/include\/ObjectiveC.modulemap",
-    "clangModulePath" : "\/Users\/miilwaukee\/Documents\/Software 2\/aplicacion_proyecto\/build\/macos\/ModuleCache.noindex\/ObjectiveC-66RG4N0LR2QBGTI75OQSY4DZ7.pcm",
+    "clangModulePath" : "\/Users\/miilwaukee\/Documents\/Software 2\/aplicacion_proyecto\/frontend\/build\/macos\/ModuleCache.noindex\/ObjectiveC-9AMO5M0RXMGLOX10XY086XGA8.pcm",
     "isBridgingHeaderDependency" : false,
     "isFramework" : false,
     "moduleName" : "ObjectiveC"
   },
   {
     "clangModuleMapPath" : "\/Applications\/Xcode.app\/Contents\/Developer\/Platforms\/MacOSX.platform\/Developer\/SDKs\/MacOSX.sdk\/System\/Library\/Frameworks\/OpenGL.framework\/Modules\/module.modulemap",
-    "clangModulePath" : "\/Users\/miilwaukee\/Documents\/Software 2\/aplicacion_proyecto\/build\/macos\/ModuleCache.noindex\/OpenGL-6TU0W2T6WE8ZEX342I4KJIVZY.pcm",
+    "clangModulePath" : "\/Users\/miilwaukee\/Documents\/Software 2\/aplicacion_proyecto\/frontend\/build\/macos\/ModuleCache.noindex\/OpenGL-BOJKJKERQO6WBSHDDM2LBNI4W.pcm",
     "isBridgingHeaderDependency" : false,
     "isFramework" : false,
     "moduleName" : "OpenGL"
   },
   {
     "clangModuleMapPath" : "\/Applications\/Xcode.app\/Contents\/Developer\/Platforms\/MacOSX.platform\/Developer\/SDKs\/MacOSX.sdk\/System\/Library\/Frameworks\/QuartzCore.framework\/Modules\/module.modulemap",
-    "clangModulePath" : "\/Users\/miilwaukee\/Documents\/Software 2\/aplicacion_proyecto\/build\/macos\/ModuleCache.noindex\/QuartzCore-8B2SGJYPUVHQDIVYFZNHEFMQE.pcm",
+    "clangModulePath" : "\/Users\/miilwaukee\/Documents\/Software 2\/aplicacion_proyecto\/frontend\/build\/macos\/ModuleCache.noindex\/QuartzCore-DUN4A8CDVINF26KNBJWQANS29.pcm",
     "isBridgingHeaderDependency" : false,
     "isFramework" : false,
     "moduleName" : "QuartzCore"
   },
   {
     "clangModuleMapPath" : "\/Applications\/Xcode.app\/Contents\/Developer\/Platforms\/MacOSX.platform\/Developer\/SDKs\/MacOSX.sdk\/System\/Library\/Frameworks\/Security.framework\/Modules\/module.modulemap",
-    "clangModulePath" : "\/Users\/miilwaukee\/Documents\/Software 2\/aplicacion_proyecto\/build\/macos\/ModuleCache.noindex\/Security-E6YESVEE5YRIK2EX2P9461I8.pcm",
+    "clangModulePath" : "\/Users\/miilwaukee\/Documents\/Software 2\/aplicacion_proyecto\/frontend\/build\/macos\/ModuleCache.noindex\/Security-BX1RKD5DCG3PH42NRINLTM1DF.pcm",
     "isBridgingHeaderDependency" : false,
     "isFramework" : false,
     "moduleName" : "Security"
   },
   {
     "clangModuleMapPath" : "\/Applications\/Xcode.app\/Contents\/Developer\/Platforms\/MacOSX.platform\/Developer\/SDKs\/MacOSX.sdk\/usr\/include\/Spatial\/module.modulemap",
-    "clangModulePath" : "\/Users\/miilwaukee\/Documents\/Software 2\/aplicacion_proyecto\/build\/macos\/ModuleCache.noindex\/Spatial-C1MJQZALVHRQS461KLP5CLUIO.pcm",
+    "clangModulePath" : "\/Users\/miilwaukee\/Documents\/Software 2\/aplicacion_proyecto\/frontend\/build\/macos\/ModuleCache.noindex\/Spatial-4HANT5NHO85R5635PH4XT4J3Q.pcm",
     "isBridgingHeaderDependency" : false,
     "isFramework" : false,
     "moduleName" : "Spatial"
   },
   {
     "clangModuleMapPath" : "\/Applications\/Xcode.app\/Contents\/Developer\/Platforms\/MacOSX.platform\/Developer\/SDKs\/MacOSX.sdk\/usr\/lib\/swift\/shims\/module.modulemap",
-    "clangModulePath" : "\/Users\/miilwaukee\/Documents\/Software 2\/aplicacion_proyecto\/build\/macos\/ModuleCache.noindex\/SwiftShims-5QPJ7RCSGA331K97H2VNLF9L1.pcm",
+    "clangModulePath" : "\/Users\/miilwaukee\/Documents\/Software 2\/aplicacion_proyecto\/frontend\/build\/macos\/ModuleCache.noindex\/SwiftShims-8GCF7L7NXGDIZNGH6L4EEUAFR.pcm",
     "isBridgingHeaderDependency" : false,
     "isFramework" : false,
     "moduleName" : "SwiftShims"
   },
   {
     "clangModuleMapPath" : "\/Applications\/Xcode.app\/Contents\/Developer\/Platforms\/MacOSX.platform\/Developer\/SDKs\/MacOSX.sdk\/System\/Library\/Frameworks\/SwiftUI.framework\/Modules\/module.modulemap",
-    "clangModulePath" : "\/Users\/miilwaukee\/Documents\/Software 2\/aplicacion_proyecto\/build\/macos\/ModuleCache.noindex\/SwiftUI-4K4WM9GNADUZD3EHBMYRNPAJI.pcm",
+    "clangModulePath" : "\/Users\/miilwaukee\/Documents\/Software 2\/aplicacion_proyecto\/frontend\/build\/macos\/ModuleCache.noindex\/SwiftUI-1KG85GHNMESJJ9SGQIBOI3WKM.pcm",
     "isBridgingHeaderDependency" : false,
     "isFramework" : false,
     "moduleName" : "SwiftUI"
   },
   {
     "clangModuleMapPath" : "\/Applications\/Xcode.app\/Contents\/Developer\/Platforms\/MacOSX.platform\/Developer\/SDKs\/MacOSX.sdk\/System\/Library\/Frameworks\/SwiftUICore.framework\/Modules\/module.modulemap",
-    "clangModulePath" : "\/Users\/miilwaukee\/Documents\/Software 2\/aplicacion_proyecto\/build\/macos\/ModuleCache.noindex\/SwiftUICore-GGD1JL5Y33CQDXH5HMBKL6I2.pcm",
+    "clangModulePath" : "\/Users\/miilwaukee\/Documents\/Software 2\/aplicacion_proyecto\/frontend\/build\/macos\/ModuleCache.noindex\/SwiftUICore-CBHYTYJMSJVI3BH0OZUZWFPI8.pcm",
     "isBridgingHeaderDependency" : false,
     "isFramework" : false,
     "moduleName" : "SwiftUICore"
   },
   {
     "clangModuleMapPath" : "\/Applications\/Xcode.app\/Contents\/Developer\/Platforms\/MacOSX.platform\/Developer\/SDKs\/MacOSX.sdk\/System\/Library\/Frameworks\/Symbols.framework\/Modules\/module.modulemap",
-    "clangModulePath" : "\/Users\/miilwaukee\/Documents\/Software 2\/aplicacion_proyecto\/build\/macos\/ModuleCache.noindex\/Symbols-EYFYS9FBA60UPO7R177AVFBEA.pcm",
+    "clangModulePath" : "\/Users\/miilwaukee\/Documents\/Software 2\/aplicacion_proyecto\/frontend\/build\/macos\/ModuleCache.noindex\/Symbols-2Y1HY1IC67S2B6V3KO4KJ6TVG.pcm",
     "isBridgingHeaderDependency" : false,
     "isFramework" : false,
     "moduleName" : "Symbols"
   },
   {
     "clangModuleMapPath" : "\/Applications\/Xcode.app\/Contents\/Developer\/Platforms\/MacOSX.platform\/Developer\/SDKs\/MacOSX.sdk\/System\/Library\/Frameworks\/UniformTypeIdentifiers.framework\/Modules\/module.modulemap",
-    "clangModulePath" : "\/Users\/miilwaukee\/Documents\/Software 2\/aplicacion_proyecto\/build\/macos\/ModuleCache.noindex\/UniformTypeIdentifiers-3GEG0VSZ65B0L3TGITCK342HP.pcm",
+    "clangModulePath" : "\/Users\/miilwaukee\/Documents\/Software 2\/aplicacion_proyecto\/frontend\/build\/macos\/ModuleCache.noindex\/UniformTypeIdentifiers-3X7CIYL89ZI8A0DOVJ8HV4NQ8.pcm",
     "isBridgingHeaderDependency" : false,
     "isFramework" : false,
     "moduleName" : "UniformTypeIdentifiers"
   },
   {
     "clangModuleMapPath" : "\/Applications\/Xcode.app\/Contents\/Developer\/Platforms\/MacOSX.platform\/Developer\/SDKs\/MacOSX.sdk\/usr\/include\/xpc.modulemap",
-    "clangModulePath" : "\/Users\/miilwaukee\/Documents\/Software 2\/aplicacion_proyecto\/build\/macos\/ModuleCache.noindex\/XPC-AF2WFLN5EMOFPPPJQKEDQ97XI.pcm",
+    "clangModulePath" : "\/Users\/miilwaukee\/Documents\/Software 2\/aplicacion_proyecto\/frontend\/build\/macos\/ModuleCache.noindex\/XPC-8YQJB73FRLBXZKTMQ9IY8QE9.pcm",
     "isBridgingHeaderDependency" : false,
     "isFramework" : false,
     "moduleName" : "XPC"
   },
   {
     "clangModuleMapPath" : "\/Applications\/Xcode.app\/Contents\/Developer\/Platforms\/MacOSX.platform\/Developer\/SDKs\/MacOSX.sdk\/usr\/include\/DarwinFoundation1.modulemap",
-    "clangModulePath" : "\/Users\/miilwaukee\/Documents\/Software 2\/aplicacion_proyecto\/build\/macos\/ModuleCache.noindex\/_AvailabilityInternal-E1WH4BHIGGRP7A2G52SPYZM61.pcm",
+    "clangModulePath" : "\/Users\/miilwaukee\/Documents\/Software 2\/aplicacion_proyecto\/frontend\/build\/macos\/ModuleCache.noindex\/_AvailabilityInternal-69DXB1OTOK1N2B9TJJMZNQQUI.pcm",
     "isBridgingHeaderDependency" : false,
     "isFramework" : false,
     "moduleName" : "_AvailabilityInternal"
   },
   {
     "clangModuleMapPath" : "\/Applications\/Xcode.app\/Contents\/Developer\/Toolchains\/XcodeDefault.xctoolchain\/usr\/lib\/clang\/17\/include\/module.modulemap",
-    "clangModulePath" : "\/Users\/miilwaukee\/Documents\/Software 2\/aplicacion_proyecto\/build\/macos\/ModuleCache.noindex\/_Builtin_float-4E95MH38H0QDHR1Y67VFRMK06.pcm",
+    "clangModulePath" : "\/Users\/miilwaukee\/Documents\/Software 2\/aplicacion_proyecto\/frontend\/build\/macos\/ModuleCache.noindex\/_Builtin_float-218EX9MK3Q2PSO323L4O1X89U.pcm",
     "isBridgingHeaderDependency" : false,
     "isFramework" : false,
     "moduleName" : "_Builtin_float"
   },
   {
     "clangModuleMapPath" : "\/Applications\/Xcode.app\/Contents\/Developer\/Toolchains\/XcodeDefault.xctoolchain\/usr\/lib\/clang\/17\/include\/module.modulemap",
-    "clangModulePath" : "\/Users\/miilwaukee\/Documents\/Software 2\/aplicacion_proyecto\/build\/macos\/ModuleCache.noindex\/_Builtin_intrinsics-7QLCPD8UPK98GW2Z2K0LPA2BO.pcm",
+    "clangModulePath" : "\/Users\/miilwaukee\/Documents\/Software 2\/aplicacion_proyecto\/frontend\/build\/macos\/ModuleCache.noindex\/_Builtin_intrinsics-DTZ4JMM460RHXVLCJVES5L5A6.pcm",
     "isBridgingHeaderDependency" : false,
     "isFramework" : false,
     "moduleName" : "_Builtin_intrinsics"
   },
   {
     "clangModuleMapPath" : "\/Applications\/Xcode.app\/Contents\/Developer\/Toolchains\/XcodeDefault.xctoolchain\/usr\/lib\/clang\/17\/include\/module.modulemap",
-    "clangModulePath" : "\/Users\/miilwaukee\/Documents\/Software 2\/aplicacion_proyecto\/build\/macos\/ModuleCache.noindex\/_Builtin_inttypes-8CI5L4T239OG16Q7DL5KUJRLO.pcm",
+    "clangModulePath" : "\/Users\/miilwaukee\/Documents\/Software 2\/aplicacion_proyecto\/frontend\/build\/macos\/ModuleCache.noindex\/_Builtin_inttypes-8G7UZ8931GXYL2BSEG42JNU1C.pcm",
     "isBridgingHeaderDependency" : false,
     "isFramework" : false,
     "moduleName" : "_Builtin_inttypes"
   },
   {
     "clangModuleMapPath" : "\/Applications\/Xcode.app\/Contents\/Developer\/Toolchains\/XcodeDefault.xctoolchain\/usr\/lib\/clang\/17\/include\/module.modulemap",
-    "clangModulePath" : "\/Users\/miilwaukee\/Documents\/Software 2\/aplicacion_proyecto\/build\/macos\/ModuleCache.noindex\/_Builtin_limits-DJE3EKUG4ALVO40Q54GQAB7RD.pcm",
+    "clangModulePath" : "\/Users\/miilwaukee\/Documents\/Software 2\/aplicacion_proyecto\/frontend\/build\/macos\/ModuleCache.noindex\/_Builtin_limits-C1WP2LU5ZUDM737FUB3DRSW7H.pcm",
     "isBridgingHeaderDependency" : false,
     "isFramework" : false,
     "moduleName" : "_Builtin_limits"
   },
   {
     "clangModuleMapPath" : "\/Applications\/Xcode.app\/Contents\/Developer\/Toolchains\/XcodeDefault.xctoolchain\/usr\/lib\/clang\/17\/include\/module.modulemap",
-    "clangModulePath" : "\/Users\/miilwaukee\/Documents\/Software 2\/aplicacion_proyecto\/build\/macos\/ModuleCache.noindex\/_Builtin_stdarg-7C2EHFILSDZAUWIRM5LD7HKWB.pcm",
+    "clangModulePath" : "\/Users\/miilwaukee\/Documents\/Software 2\/aplicacion_proyecto\/frontend\/build\/macos\/ModuleCache.noindex\/_Builtin_stdarg-225UBBDJEC35F4TKGJL9NOPNR.pcm",
     "isBridgingHeaderDependency" : false,
     "isFramework" : false,
     "moduleName" : "_Builtin_stdarg"
   },
   {
     "clangModuleMapPath" : "\/Applications\/Xcode.app\/Contents\/Developer\/Toolchains\/XcodeDefault.xctoolchain\/usr\/lib\/clang\/17\/include\/module.modulemap",
-    "clangModulePath" : "\/Users\/miilwaukee\/Documents\/Software 2\/aplicacion_proyecto\/build\/macos\/ModuleCache.noindex\/_Builtin_stdatomic-B7W81OUAEEJD5LWA7S3FQ4490.pcm",
+    "clangModulePath" : "\/Users\/miilwaukee\/Documents\/Software 2\/aplicacion_proyecto\/frontend\/build\/macos\/ModuleCache.noindex\/_Builtin_stdatomic-86NE9KVFCH3ZLU0BEJBXH2ZNW.pcm",
     "isBridgingHeaderDependency" : false,
     "isFramework" : false,
     "moduleName" : "_Builtin_stdatomic"
   },
   {
     "clangModuleMapPath" : "\/Applications\/Xcode.app\/Contents\/Developer\/Toolchains\/XcodeDefault.xctoolchain\/usr\/lib\/clang\/17\/include\/module.modulemap",
-    "clangModulePath" : "\/Users\/miilwaukee\/Documents\/Software 2\/aplicacion_proyecto\/build\/macos\/ModuleCache.noindex\/_Builtin_stdbool-1UKOOB3I1TDR7ONJMJ2SOUJ9C.pcm",
+    "clangModulePath" : "\/Users\/miilwaukee\/Documents\/Software 2\/aplicacion_proyecto\/frontend\/build\/macos\/ModuleCache.noindex\/_Builtin_stdbool-3L4EKZ1L4MJGG5PT5EJKNNGYB.pcm",
     "isBridgingHeaderDependency" : false,
     "isFramework" : false,
     "moduleName" : "_Builtin_stdbool"
   },
   {
     "clangModuleMapPath" : "\/Applications\/Xcode.app\/Contents\/Developer\/Toolchains\/XcodeDefault.xctoolchain\/usr\/lib\/clang\/17\/include\/module.modulemap",
-    "clangModulePath" : "\/Users\/miilwaukee\/Documents\/Software 2\/aplicacion_proyecto\/build\/macos\/ModuleCache.noindex\/_Builtin_stddef-3ERVU7JLX0Q4886NK1LYLHDEM.pcm",
+    "clangModulePath" : "\/Users\/miilwaukee\/Documents\/Software 2\/aplicacion_proyecto\/frontend\/build\/macos\/ModuleCache.noindex\/_Builtin_stddef-EJS9KGTZM5H5OYNZ7B0O9MD9I.pcm",
     "isBridgingHeaderDependency" : false,
     "isFramework" : false,
     "moduleName" : "_Builtin_stddef"
   },
   {
     "clangModuleMapPath" : "\/Applications\/Xcode.app\/Contents\/Developer\/Toolchains\/XcodeDefault.xctoolchain\/usr\/lib\/clang\/17\/include\/module.modulemap",
-    "clangModulePath" : "\/Users\/miilwaukee\/Documents\/Software 2\/aplicacion_proyecto\/build\/macos\/ModuleCache.noindex\/_Builtin_stdint-32EUQAF87DCJED4T0INVKE8BN.pcm",
+    "clangModulePath" : "\/Users\/miilwaukee\/Documents\/Software 2\/aplicacion_proyecto\/frontend\/build\/macos\/ModuleCache.noindex\/_Builtin_stdint-2LNSILHQ0TQ0XQ4I3ZGAGVS9F.pcm",
     "isBridgingHeaderDependency" : false,
     "isFramework" : false,
     "moduleName" : "_Builtin_stdint"
   },
   {
     "clangModuleMapPath" : "\/Applications\/Xcode.app\/Contents\/Developer\/Toolchains\/XcodeDefault.xctoolchain\/usr\/lib\/clang\/17\/include\/module.modulemap",
-    "clangModulePath" : "\/Users\/miilwaukee\/Documents\/Software 2\/aplicacion_proyecto\/build\/macos\/ModuleCache.noindex\/_Builtin_tgmath-88GE8OT7PN8NQXN8IQJGT23R9.pcm",
+    "clangModulePath" : "\/Users\/miilwaukee\/Documents\/Software 2\/aplicacion_proyecto\/frontend\/build\/macos\/ModuleCache.noindex\/_Builtin_tgmath-C8VP30EHXW7PNE32J80XE8A4D.pcm",
     "isBridgingHeaderDependency" : false,
     "isFramework" : false,
     "moduleName" : "_Builtin_tgmath"
   },
   {
     "clangModuleMapPath" : "\/Applications\/Xcode.app\/Contents\/Developer\/Platforms\/MacOSX.platform\/Developer\/SDKs\/MacOSX.sdk\/usr\/include\/DarwinFoundation1.modulemap",
-    "clangModulePath" : "\/Users\/miilwaukee\/Documents\/Software 2\/aplicacion_proyecto\/build\/macos\/ModuleCache.noindex\/_DarwinFoundation1-418XXF8RR4B7SBOHYEX8UTK8V.pcm",
+    "clangModulePath" : "\/Users\/miilwaukee\/Documents\/Software 2\/aplicacion_proyecto\/frontend\/build\/macos\/ModuleCache.noindex\/_DarwinFoundation1-AXMCERKWW6SM13F14VNGU7ASV.pcm",
     "isBridgingHeaderDependency" : false,
     "isFramework" : false,
     "moduleName" : "_DarwinFoundation1"
   },
   {
     "clangModuleMapPath" : "\/Applications\/Xcode.app\/Contents\/Developer\/Platforms\/MacOSX.platform\/Developer\/SDKs\/MacOSX.sdk\/usr\/include\/DarwinFoundation2.modulemap",
-    "clangModulePath" : "\/Users\/miilwaukee\/Documents\/Software 2\/aplicacion_proyecto\/build\/macos\/ModuleCache.noindex\/_DarwinFoundation2-4O19FAFZ3YPEXX1VZQX91JH6X.pcm",
+    "clangModulePath" : "\/Users\/miilwaukee\/Documents\/Software 2\/aplicacion_proyecto\/frontend\/build\/macos\/ModuleCache.noindex\/_DarwinFoundation2-CGP1Z5CH35U7Z3USR12MNZEA8.pcm",
     "isBridgingHeaderDependency" : false,
     "isFramework" : false,
     "moduleName" : "_DarwinFoundation2"
   },
   {
     "clangModuleMapPath" : "\/Applications\/Xcode.app\/Contents\/Developer\/Platforms\/MacOSX.platform\/Developer\/SDKs\/MacOSX.sdk\/usr\/include\/DarwinFoundation3.modulemap",
-    "clangModulePath" : "\/Users\/miilwaukee\/Documents\/Software 2\/aplicacion_proyecto\/build\/macos\/ModuleCache.noindex\/_DarwinFoundation3-2LY256JUO24KATSHGFJR8E4JR.pcm",
+    "clangModulePath" : "\/Users\/miilwaukee\/Documents\/Software 2\/aplicacion_proyecto\/frontend\/build\/macos\/ModuleCache.noindex\/_DarwinFoundation3-B4RGFF3T66NCBSPK78K4FJTFD.pcm",
     "isBridgingHeaderDependency" : false,
     "isFramework" : false,
     "moduleName" : "_DarwinFoundation3"
   },
   {
     "clangModuleMapPath" : "\/Applications\/Xcode.app\/Contents\/Developer\/Platforms\/MacOSX.platform\/Developer\/SDKs\/MacOSX.sdk\/usr\/lib\/swift\/shims\/module.modulemap",
-    "clangModulePath" : "\/Users\/miilwaukee\/Documents\/Software 2\/aplicacion_proyecto\/build\/macos\/ModuleCache.noindex\/_SwiftConcurrencyShims-9KFZJ94OGL0D1L1T127A2I9I.pcm",
+    "clangModulePath" : "\/Users\/miilwaukee\/Documents\/Software 2\/aplicacion_proyecto\/frontend\/build\/macos\/ModuleCache.noindex\/_SwiftConcurrencyShims-6MI7HVMQIQ4GT1MYRG3CCBDFZ.pcm",
     "isBridgingHeaderDependency" : false,
     "isFramework" : false,
     "moduleName" : "_SwiftConcurrencyShims"
   },
   {
     "clangModuleMapPath" : "\/Applications\/Xcode.app\/Contents\/Developer\/Platforms\/MacOSX.platform\/Developer\/SDKs\/MacOSX.sdk\/usr\/include\/launch.modulemap",
-    "clangModulePath" : "\/Users\/miilwaukee\/Documents\/Software 2\/aplicacion_proyecto\/build\/macos\/ModuleCache.noindex\/launch-80ZOMPOL5CSLOG03RD8VUQ6OT.pcm",
+    "clangModulePath" : "\/Users\/miilwaukee\/Documents\/Software 2\/aplicacion_proyecto\/frontend\/build\/macos\/ModuleCache.noindex\/launch-82IILFAPDPQRMQSYLMDQM3FKV.pcm",
     "isBridgingHeaderDependency" : false,
     "isFramework" : false,
     "moduleName" : "launch"
   },
   {
     "clangModuleMapPath" : "\/Applications\/Xcode.app\/Contents\/Developer\/Platforms\/MacOSX.platform\/Developer\/SDKs\/MacOSX.sdk\/usr\/include\/libDER\/module.modulemap",
-    "clangModulePath" : "\/Users\/miilwaukee\/Documents\/Software 2\/aplicacion_proyecto\/build\/macos\/ModuleCache.noindex\/libDER-39K2OPWJSYDIWSIF1MHGHX06K.pcm",
+    "clangModulePath" : "\/Users\/miilwaukee\/Documents\/Software 2\/aplicacion_proyecto\/frontend\/build\/macos\/ModuleCache.noindex\/libDER-CCXHTL67Y4P38EHH3G9GE161B.pcm",
     "isBridgingHeaderDependency" : false,
     "isFramework" : false,
     "moduleName" : "libDER"
   },
   {
     "clangModuleMapPath" : "\/Applications\/Xcode.app\/Contents\/Developer\/Platforms\/MacOSX.platform\/Developer\/SDKs\/MacOSX.sdk\/usr\/include\/libkern.modulemap",
-    "clangModulePath" : "\/Users\/miilwaukee\/Documents\/Software 2\/aplicacion_proyecto\/build\/macos\/ModuleCache.noindex\/libkern-88UXRB3SCYOUOC9VQD4LNHXZS.pcm",
+    "clangModulePath" : "\/Users\/miilwaukee\/Documents\/Software 2\/aplicacion_proyecto\/frontend\/build\/macos\/ModuleCache.noindex\/libkern-BMIORATQXQP34FFXQG78EYXG6.pcm",
     "isBridgingHeaderDependency" : false,
     "isFramework" : false,
     "moduleName" : "libkern"
   },
   {
     "clangModuleMapPath" : "\/Applications\/Xcode.app\/Contents\/Developer\/Platforms\/MacOSX.platform\/Developer\/SDKs\/MacOSX.sdk\/usr\/include\/os.modulemap",
-    "clangModulePath" : "\/Users\/miilwaukee\/Documents\/Software 2\/aplicacion_proyecto\/build\/macos\/ModuleCache.noindex\/os-AJH41LSVDV4P4X0LGPKF1R9BE.pcm",
+    "clangModulePath" : "\/Users\/miilwaukee\/Documents\/Software 2\/aplicacion_proyecto\/frontend\/build\/macos\/ModuleCache.noindex\/os-2Q73T9SBLNJ3EHEVW1ETLO84E.pcm",
     "isBridgingHeaderDependency" : false,
     "isFramework" : false,
     "moduleName" : "os"
   },
   {
     "clangModuleMapPath" : "\/Applications\/Xcode.app\/Contents\/Developer\/Platforms\/MacOSX.platform\/Developer\/SDKs\/MacOSX.sdk\/usr\/include\/os.modulemap",
-    "clangModulePath" : "\/Users\/miilwaukee\/Documents\/Software 2\/aplicacion_proyecto\/build\/macos\/ModuleCache.noindex\/os_object-8SQ8ETPYWBKY1ODJH21HXTZ3L.pcm",
+    "clangModulePath" : "\/Users\/miilwaukee\/Documents\/Software 2\/aplicacion_proyecto\/frontend\/build\/macos\/ModuleCache.noindex\/os_object-837ENVSHJ1YVBACNY6LW8XTLN.pcm",
     "isBridgingHeaderDependency" : false,
     "isFramework" : false,
     "moduleName" : "os_object"
   },
   {
     "clangModuleMapPath" : "\/Applications\/Xcode.app\/Contents\/Developer\/Platforms\/MacOSX.platform\/Developer\/SDKs\/MacOSX.sdk\/usr\/include\/os.modulemap",
-    "clangModulePath" : "\/Users\/miilwaukee\/Documents\/Software 2\/aplicacion_proyecto\/build\/macos\/ModuleCache.noindex\/os_workgroup-7PYGNNC9QH5QLN4PUYBYNZ0A5.pcm",
+    "clangModulePath" : "\/Users\/miilwaukee\/Documents\/Software 2\/aplicacion_proyecto\/frontend\/build\/macos\/ModuleCache.noindex\/os_workgroup-A6GQLQPUSCU3ZT7FO9PQFEA85.pcm",
     "isBridgingHeaderDependency" : false,
     "isFramework" : false,
     "moduleName" : "os_workgroup"
   },
   {
     "clangModuleMapPath" : "\/Applications\/Xcode.app\/Contents\/Developer\/Toolchains\/XcodeDefault.xctoolchain\/usr\/lib\/clang\/17\/include\/module.modulemap",
-    "clangModulePath" : "\/Users\/miilwaukee\/Documents\/Software 2\/aplicacion_proyecto\/build\/macos\/ModuleCache.noindex\/ptrauth-CC5DO4QPX3IF2GIYKKWF8JONE.pcm",
+    "clangModulePath" : "\/Users\/miilwaukee\/Documents\/Software 2\/aplicacion_proyecto\/frontend\/build\/macos\/ModuleCache.noindex\/ptrauth-5VM7YOST0LRE59K32D013N8B8.pcm",
     "isBridgingHeaderDependency" : false,
     "isFramework" : false,
     "moduleName" : "ptrauth"
   },
   {
     "clangModuleMapPath" : "\/Applications\/Xcode.app\/Contents\/Developer\/Toolchains\/XcodeDefault.xctoolchain\/usr\/lib\/clang\/17\/include\/module.modulemap",
-    "clangModulePath" : "\/Users\/miilwaukee\/Documents\/Software 2\/aplicacion_proyecto\/build\/macos\/ModuleCache.noindex\/ptrcheck-AZ80O36PJ0KS8C1RBSNG7MM14.pcm",
+    "clangModulePath" : "\/Users\/miilwaukee\/Documents\/Software 2\/aplicacion_proyecto\/frontend\/build\/macos\/ModuleCache.noindex\/ptrcheck-3ARBV4EG8GY646UAFGX7IRCM.pcm",
     "isBridgingHeaderDependency" : false,
     "isFramework" : false,
     "moduleName" : "ptrcheck"
   },
   {
+    "clangModuleMapPath" : "\/Users\/miilwaukee\/Documents\/Software 2\/aplicacion_proyecto\/frontend\/build\/macos\/Build\/Products\/Debug\/shared_preferences_foundation\/shared_preferences_foundation.framework\/Modules\/module.modulemap",
+    "clangModulePath" : "\/Users\/miilwaukee\/Documents\/Software 2\/aplicacion_proyecto\/frontend\/build\/macos\/Build\/Intermediates.noindex\/SwiftExplicitPrecompiledModules\/shared_preferences_foundation-CSJQLR6DIL97KMDVR5TM1JJ0Q.pcm",
+    "isBridgingHeaderDependency" : false,
+    "isFramework" : false,
+    "moduleName" : "shared_preferences_foundation"
+  },
+  {
     "clangModuleMapPath" : "\/Applications\/Xcode.app\/Contents\/Developer\/Platforms\/MacOSX.platform\/Developer\/SDKs\/MacOSX.sdk\/usr\/include\/simd\/module.modulemap",
-    "clangModulePath" : "\/Users\/miilwaukee\/Documents\/Software 2\/aplicacion_proyecto\/build\/macos\/ModuleCache.noindex\/simd-6FF5W6CHVCORF23VRB0186VX3.pcm",
+    "clangModulePath" : "\/Users\/miilwaukee\/Documents\/Software 2\/aplicacion_proyecto\/frontend\/build\/macos\/ModuleCache.noindex\/simd-D3T4J5LNID2CSMSYD99H8F7EX.pcm",
     "isBridgingHeaderDependency" : false,
     "isFramework" : false,
     "moduleName" : "simd"
   },
   {
     "clangModuleMapPath" : "\/Applications\/Xcode.app\/Contents\/Developer\/Platforms\/MacOSX.platform\/Developer\/SDKs\/MacOSX.sdk\/usr\/include\/DarwinFoundation2.modulemap",
-    "clangModulePath" : "\/Users\/miilwaukee\/Documents\/Software 2\/aplicacion_proyecto\/build\/macos\/ModuleCache.noindex\/sys_types-13GL6NL1OE37X0SCC23EOMCQ2.pcm",
+    "clangModulePath" : "\/Users\/miilwaukee\/Documents\/Software 2\/aplicacion_proyecto\/frontend\/build\/macos\/ModuleCache.noindex\/sys_types-DRWY9ZR868NZJGWLG3UDAJH6O.pcm",
     "isBridgingHeaderDependency" : false,
     "isFramework" : false,
     "moduleName" : "sys_types"

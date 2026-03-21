@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'core/theme/app_theme.dart';
+import 'core/constants/app_strings.dart';
+import 'features/auth/login_screen.dart';
 
 void main() {
   runApp(const CleanPoolApp());
@@ -10,37 +13,10 @@ class CleanPoolApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'CleanPool',
+      title: AppStrings.appName,
       debugShowCheckedModeBanner: false,
-      home: const HomeScreen(),
-    );
-  }
-}
-
-class HomeScreen extends StatelessWidget {
-  const HomeScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.water_drop, size: 80, color: Colors.blue),
-            SizedBox(height: 20),
-            Text(
-              'CleanPool',
-              style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
-            ),
-            SizedBox(height: 10),
-            Text(
-              'Aplicación en construcción...',
-              style: TextStyle(fontSize: 16, color: Colors.grey),
-            ),
-          ],
-        ),
-      ),
+      theme: AppTheme.darkTheme,
+      home: const LoginScreen(),
     );
   }
 }
