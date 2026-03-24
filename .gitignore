@@ -52,3 +52,7 @@ venv/
 
 # Ephemeral Flutter files
 **/ephemeral/
+
+# Skills and Agents
+.agents/
+skills-lock.json
