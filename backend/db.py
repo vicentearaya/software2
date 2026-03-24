@@ -10,6 +10,7 @@ settings = get_settings()
 _client = MongoClient(
     str(settings.mongodb_uri),
     serverSelectionTimeoutMS=5_000,
+    tls=True,
     tlsCAFile=certifi.where()
 )
 

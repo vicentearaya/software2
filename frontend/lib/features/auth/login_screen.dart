@@ -120,16 +120,15 @@ class _LoginScreenState extends State<LoginScreen> {
       keyboardType: TextInputType.emailAddress,
       style: const TextStyle(color: AppColors.textPrimary),
       decoration: const InputDecoration(
-        hintText: 'Correo electrónico',
+        hintText: 'Usuario o Correo electrónico',
         prefixIcon: Icon(
-          Icons.mail_outline,
+          Icons.person_outline,
           color: AppColors.textMuted,
           size: 20,
         ),
       ),
       validator: (value) {
-        if (value == null || value.isEmpty) return 'Ingresa tu correo';
-        if (!value.contains('@')) return 'Correo inválido';
+        if (value == null || value.isEmpty) return 'Ingresa tu usuario o correo';
         return null;
       },
     );
