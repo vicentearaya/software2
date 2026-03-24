@@ -117,19 +117,18 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget _buildEmailField() {
     return TextFormField(
       controller: _emailController,
-      keyboardType: TextInputType.emailAddress,
+      keyboardType: TextInputType.name,
       style: const TextStyle(color: AppColors.textPrimary),
       decoration: const InputDecoration(
-        hintText: 'Correo electrónico',
+        hintText: 'Usuario o correo electrónico',
         prefixIcon: Icon(
-          Icons.mail_outline,
+          Icons.person_outline,
           color: AppColors.textMuted,
           size: 20,
         ),
       ),
       validator: (value) {
-        if (value == null || value.isEmpty) return 'Ingresa tu correo';
-        if (!value.contains('@')) return 'Correo inválido';
+        if (value == null || value.isEmpty) return 'Ingresa tu usuario';
         return null;
       },
     );
