@@ -7,28 +7,24 @@ class AuthService {
   static const String _tokenKey = 'auth_token';
   static const String _userKey = 'user_data';
 
-  // Login - MOCK temporal, reemplazar cuando el backend esté corriendo
+  // Login - conexión al backend real
   Future<Map<String, dynamic>> login(String email, String password) async {
-    await Future.delayed(const Duration(seconds: 1));
-    return {'success': true, 'data': {}};
-
-    // TODO: descomentar cuando el backend esté corriendo
-    // try {
-    //   final response = await http.post(
-    //     Uri.parse('$_baseUrl/auth/login'),
-    //     headers: {'Content-Type': 'application/json'},
-    //     body: jsonEncode({'username': email, 'password': password}),
-    //   );
-    //   final data = jsonDecode(response.body);
-    //   if (response.statusCode == 200) {
-    //     await _saveSession(data['access_token'], {});
-    //     return {'success': true, 'data': data};
-    //   } else {
-    //     return {'success': false, 'message': data['detail'] ?? 'Error al iniciar sesión'};
-    //   }
-    // } catch (e) {
-    //   return {'success': false, 'message': 'No se pudo conectar al servidor'};
-    // }
+    try {
+      final response = await http.post(
+        Uri.parse('$_baseUrl/auth/login'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'username': email, 'password': password}),
+      );
+      final data = jsonDecode(response.body);
+      if (response.statusCode == 200) {
+        await _saveSession(data['access_token'], {});
+        return {'success': true, 'data': data};
+      } else {
+        return {'success': false, 'message': data['detail'] ?? 'Error al iniciar sesión'};
+      }
+    } catch (e) {
+      return {'success': false, 'message': 'No se pudo conectar al servidor'};
+    }
   }
 
   // Registro
