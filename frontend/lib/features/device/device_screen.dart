@@ -182,9 +182,7 @@ class _DeviceScreenState extends State<DeviceScreen> {
             ),
             Icon(icon, color: AppColors.textMuted.withOpacity(0.5)),
           ],
-      backgroundColor: AppColors.background,
-      body: SafeArea(
-        child: _isDeviceLinked ? _buildLinkedState() : _buildUnlinkedState(),
+        ),
       ),
     );
   }

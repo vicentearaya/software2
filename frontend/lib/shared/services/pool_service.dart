@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 class PoolService {
-  static const String _baseUrl = 'http://localhost:8000';
+  static const String _baseUrl = String.fromEnvironment('API_URL', defaultValue: 'https://api.cleanpool.app');
 
   Future<Map<String, dynamic>> createPool(Map<String, dynamic> data, String token) async {
     try {

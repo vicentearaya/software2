@@ -3,7 +3,7 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
 class AuthService {
-  static const String _baseUrl = 'http://localhost:8000';
+  static const String _baseUrl = String.fromEnvironment('API_URL', defaultValue: 'https://api.cleanpool.app');
   static const String _tokenKey = 'auth_token';
   static const String _userKey = 'user_data';
 
