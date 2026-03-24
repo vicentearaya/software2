@@ -120,6 +120,7 @@ class _LoginScreenState extends State<LoginScreen> {
       keyboardType: TextInputType.name,
       style: const TextStyle(color: AppColors.textPrimary),
       decoration: const InputDecoration(
+        hintText: 'Usuario o Correo electrónico',
         hintText: 'Usuario o correo electrónico',
         prefixIcon: Icon(
           Icons.person_outline,
@@ -128,6 +129,7 @@ class _LoginScreenState extends State<LoginScreen> {
         ),
       ),
       validator: (value) {
+        if (value == null || value.isEmpty) return 'Ingresa tu usuario o correo';
         if (value == null || value.isEmpty) return 'Ingresa tu usuario';
         return null;
       },
