@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
 from config import get_settings
 from routers import auth, readings
@@ -20,6 +21,14 @@ app = FastAPI(
         "url": "https://github.com/software2-main",
     },
     debug=settings.debug,
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 app.include_router(readings.router)
