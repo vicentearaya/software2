@@ -121,3 +121,32 @@ def test_login_missing_fields():
     response = client.post("/auth/login", json={"username": "admin"})
     assert response.status_code == 422
     assert "detail" in response.json()
+
+
+# ── POST /auth/register ───────────────────────────────────────────────────────
+def test_register_usuario_existente():
+    """Si el usuario ya existe, retorna 400 Bad Request."""
+    _mock_db["usuarios"].find_one.return_value = {"username": "test@test.com"}
+
+    response = client.post(
+        "/auth/register",
+        json={"name": "Test User", "email": "test@test.com", "password": "password123"}
+    )
+    assert response.status_code == 400
+    assert response.json()["detail"] == "El correo ya está registrado."
+
+
+def test_register_exitoso():
+    """Registro exitoso retorna JWT y código 201."""
+    _mock_db["usuarios"].find_one.return_value = None
+    _mock_db["usuarios"].insert_one.return_value = MagicMock(inserted_id="fake_id")
+
+    response = client.post(
+        "/auth/register",
+        json={"name": "New User", "email": "new@test.com", "password": "password123"}
+    )
+    assert response.status_code == 201
+    body = response.json()
+    assert body["success"] is True
+    assert "token" in body
+    assert body["user"]["email"] == "new@test.com"

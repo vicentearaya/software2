@@ -4,6 +4,7 @@ import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_strings.dart';
 import '../../core/utils/app_utils.dart';
 import '../../shared/services/auth_service.dart';
+import '../../shared/widgets/main_screen.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -48,8 +49,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
     setState(() => _isLoading = false);
 
     if (result['success']) {
-      // TODO: navegar al home cuando esté implementado
-      AppUtils.showSnackBar(context, 'Cuenta creada exitosamente');
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (_) => const MainScreen()),
+        (route) => false,
+      );
     } else {
       AppUtils.showSnackBar(context, result['message'], isError: true);
     }
