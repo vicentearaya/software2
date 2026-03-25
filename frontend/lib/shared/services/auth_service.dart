@@ -7,10 +7,14 @@ class AuthService {
   static const String _tokenKey = 'auth_token';
   static const String _userKey = 'user_data';
 
+  final http.Client _client;
+
+  AuthService({http.Client? client}) : _client = client ?? http.Client();
+
   // Login - conexión al backend real
   Future<Map<String, dynamic>> login(String email, String password) async {
     try {
-      final response = await http.post(
+      final response = await _client.post(
         Uri.parse('$_baseUrl/auth/login'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({'username': email, 'password': password}),
@@ -34,7 +38,7 @@ class AuthService {
     String password,
   ) async {
     try {
-      final response = await http.post(
+      final response = await _client.post(
         Uri.parse('$_baseUrl/auth/register'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({'name': name, 'email': email, 'password': password}),
