@@ -19,6 +19,7 @@ import os
 # Set dummy environment variables so pydantic-settings doesn't fail parsing config
 os.environ["MONGODB_URI"] = "mongodb://localhost"
 os.environ["SECRET_KEY"] = "supersecretkey_for_testing_min_32_chars!!!"
+os.environ["API_KEY"] = "dummy_api_key"
 
 _mock_db = MagicMock()
 
@@ -113,3 +114,10 @@ def test_login_exitoso():
     assert "access_token" in body
     assert body["token_type"] == "bearer"
     assert len(body["access_token"]) > 20  # JWT tiene estructura real
+
+
+def test_login_missing_fields():
+    """Faltan campos requeridos (ej. password) → 422 Unprocessable Entity."""
+    response = client.post("/auth/login", json={"username": "admin"})
+    assert response.status_code == 422
+    assert "detail" in response.json()

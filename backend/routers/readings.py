@@ -54,7 +54,7 @@ def get_readings(id_piscina: str = Query(None, description="ID de la piscina (op
         if id_piscina:
             filtro["id_piscina"] = id_piscina
         
-        doc = db.lecturas.find_one(filtro, sort=[("timestamp", -1)])
+        doc = db["lecturas"].find_one(filtro, sort=[("timestamp", -1)])
         
         if not doc:
             return {"message": "Sin lecturas disponibles aún."}
