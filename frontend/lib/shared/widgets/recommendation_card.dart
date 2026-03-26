@@ -168,9 +168,11 @@ class _RecommendationCardState extends State<RecommendationCard>
                     ),
                     decoration: BoxDecoration(
                       color: theme.colorScheme.primary.withOpacity(0.1),
-                      borderLeft: BorderSide(
-                        color: theme.colorScheme.primary,
-                        width: 4.0,
+                      border: Border(
+                        left: BorderSide(
+                          color: theme.colorScheme.primary,
+                          width: 4.0,
+                        ),
                       ),
                       borderRadius: BorderRadius.circular(4.0),
                     ),

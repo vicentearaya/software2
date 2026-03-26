@@ -3,16 +3,10 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
 class AuthService {
-  static const String _baseUrl = String.fromEnvironment('API_URL', defaultValue: 'https://api.cleanpool.app');
+  static const String _baseUrl = String.fromEnvironment('API_URL', defaultValue: 'https://software2-backend-hxe7f4b9dug6dqat.eastus2-01.azurewebsites.net');
   static const String _tokenKey = 'auth_token';
   static const String _userKey = 'user_data';
 
-<<<<<<< HEAD
-  // Login - conexión al backend real
-  Future<Map<String, dynamic>> login(String email, String password) async {
-    try {
-      final response = await http.post(
-=======
   final http.Client _client;
 
   AuthService({http.Client? client}) : _client = client ?? http.Client();
@@ -21,7 +15,6 @@ class AuthService {
   Future<Map<String, dynamic>> login(String email, String password) async {
     try {
       final response = await _client.post(
->>>>>>> 8d6fa66eeb4773c14bbae33fd940f32bb7db3a6d
         Uri.parse('$_baseUrl/auth/login'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({'username': email, 'password': password}),
@@ -45,11 +38,7 @@ class AuthService {
     String password,
   ) async {
     try {
-<<<<<<< HEAD
-      final response = await http.post(
-=======
       final response = await _client.post(
->>>>>>> 8d6fa66eeb4773c14bbae33fd940f32bb7db3a6d
         Uri.parse('$_baseUrl/auth/register'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({'name': name, 'email': email, 'password': password}),

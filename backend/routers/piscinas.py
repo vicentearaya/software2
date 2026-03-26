@@ -14,6 +14,10 @@ class PiscinaIn(BaseModel):
     volumen: float
     tipo: str
     ubicacion: str
+    largo: float = 0.0
+    ancho: float = 0.0
+    profundidad: float = 0.0
+    filtro: bool = True
 
 class PiscinaOut(PiscinaIn):
     id: str
