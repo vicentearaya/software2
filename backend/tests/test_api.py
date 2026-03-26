@@ -19,7 +19,10 @@ import os
 # Set dummy environment variables so pydantic-settings doesn't fail parsing config
 os.environ["MONGODB_URI"] = "mongodb://localhost"
 os.environ["SECRET_KEY"] = "supersecretkey_for_testing_min_32_chars!!!"
+<<<<<<< HEAD
+=======
 os.environ["API_KEY"] = "dummy_api_key"
+>>>>>>> 8d6fa66eeb4773c14bbae33fd940f32bb7db3a6d
 
 _mock_db = MagicMock()
 
@@ -114,6 +117,8 @@ def test_login_exitoso():
     assert "access_token" in body
     assert body["token_type"] == "bearer"
     assert len(body["access_token"]) > 20  # JWT tiene estructura real
+<<<<<<< HEAD
+=======
 
 
 def test_login_missing_fields():
@@ -150,3 +155,4 @@ def test_register_exitoso():
     assert body["success"] is True
     assert "token" in body
     assert body["user"]["email"] == "new@test.com"
+>>>>>>> 8d6fa66eeb4773c14bbae33fd940f32bb7db3a6d
