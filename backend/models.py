@@ -140,7 +140,9 @@ class StatusGlobalResponse(BaseModel):
     detalle_sensores: dict[str, Optional[SensorEvaluacion]] = Field(
         description="Evaluación detallada de cada uno de los 4 sensores (pH, cloro, temperatura, conductividad)"
     )
-=======
+    model_config = ConfigDict(from_attributes=True)
+
+
 class UserRegister(BaseModel):
     name: str
     email: str
@@ -150,4 +152,3 @@ class UserRegister(BaseModel):
 class Token(BaseModel):
     access_token: str
     token_type: str = "bearer"
->>>>>>> 8d6fa66eeb4773c14bbae33fd940f32bb7db3a6d
