@@ -1,10 +1,6 @@
-<<<<<<< HEAD
 from pydantic import BaseModel, Field, ConfigDict
 from datetime import datetime
 from typing import Optional, Any
-=======
-from pydantic import BaseModel
->>>>>>> 8d6fa66eeb4773c14bbae33fd940f32bb7db3a6d
 
 
 class UserLogin(BaseModel):
@@ -12,7 +8,6 @@ class UserLogin(BaseModel):
     password: str
 
 
-<<<<<<< HEAD
 class Token(BaseModel):
     access_token: str
     token_type: str = "bearer"
