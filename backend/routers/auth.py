@@ -7,7 +7,11 @@ from passlib.context import CryptContext
 
 from config import get_settings
 from db import get_db
+<<<<<<< HEAD
 from models import Token, UserLogin
+=======
+from models import Token, UserLogin, UserRegister
+>>>>>>> 8d6fa66eeb4773c14bbae33fd940f32bb7db3a6d
 
 router = APIRouter(prefix="/auth", tags=["Auth"])
 
@@ -77,3 +81,39 @@ def login(credentials: UserLogin) -> Token:
 
     token = _create_access_token({"sub": credentials.username})
     return Token(access_token=token)
+<<<<<<< HEAD
+=======
+
+
+@router.post(
+    "/register",
+    status_code=status.HTTP_201_CREATED,
+    summary="Registro de nuevo usuario",
+    description="Crea un usuario nuevo en la colección `usuarios` y retorna un JWT y datos del usuario.",
+)
+def register(user_in: UserRegister) -> dict:
+    if _db["usuarios"].find_one({"username": user_in.email}):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="El correo ya está registrado.",
+        )
+
+    hashed_password = _pwd_context.hash(user_in.password)
+    new_user = {
+        "username": user_in.email,
+        "name": user_in.name,
+        "email": user_in.email,
+        "password": hashed_password
+    }
+    _db["usuarios"].insert_one(new_user)
+
+    token = _create_access_token({"sub": user_in.email})
+    return {
+        "success": True,
+        "token": token,
+        "user": {
+            "name": user_in.name,
+            "email": user_in.email
+        }
+    }
+>>>>>>> 8d6fa66eeb4773c14bbae33fd940f32bb7db3a6d

@@ -1,6 +1,10 @@
+<<<<<<< HEAD
 from pydantic import BaseModel, Field, ConfigDict
 from datetime import datetime
 from typing import Optional, Any
+=======
+from pydantic import BaseModel
+>>>>>>> 8d6fa66eeb4773c14bbae33fd940f32bb7db3a6d
 
 
 class UserLogin(BaseModel):
@@ -8,6 +12,7 @@ class UserLogin(BaseModel):
     password: str
 
 
+<<<<<<< HEAD
 class Token(BaseModel):
     access_token: str
     token_type: str = "bearer"
@@ -140,3 +145,14 @@ class StatusGlobalResponse(BaseModel):
     detalle_sensores: dict[str, Optional[SensorEvaluacion]] = Field(
         description="Evaluación detallada de cada uno de los 4 sensores (pH, cloro, temperatura, conductividad)"
     )
+=======
+class UserRegister(BaseModel):
+    name: str
+    email: str
+    password: str
+
+
+class Token(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+>>>>>>> 8d6fa66eeb4773c14bbae33fd940f32bb7db3a6d
