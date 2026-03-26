@@ -5,10 +5,7 @@ from config import get_settings
 from routers import auth, readings
 from routers import ingesta
 from routers import piscinas
-<<<<<<< HEAD
 from routers import pools
-=======
->>>>>>> 8d6fa66eeb4773c14bbae33fd940f32bb7db3a6d
 
 settings = get_settings()
 
@@ -39,10 +36,7 @@ app.include_router(readings.router)
 app.include_router(auth.router)
 app.include_router(ingesta.router, prefix="/api/v1")
 app.include_router(piscinas.router)
-<<<<<<< HEAD
 app.include_router(pools.router)
-=======
->>>>>>> 8d6fa66eeb4773c14bbae33fd940f32bb7db3a6d
 
 
 @app.get("/", summary="Health check", tags=["General"])

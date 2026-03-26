@@ -19,10 +19,7 @@ import os
 # Set dummy environment variables so pydantic-settings doesn't fail parsing config
 os.environ["MONGODB_URI"] = "mongodb://localhost"
 os.environ["SECRET_KEY"] = "supersecretkey_for_testing_min_32_chars!!!"
-<<<<<<< HEAD
-=======
 os.environ["API_KEY"] = "dummy_api_key"
->>>>>>> 8d6fa66eeb4773c14bbae33fd940f32bb7db3a6d
 
 _mock_db = MagicMock()
 
@@ -117,18 +114,16 @@ def test_login_exitoso():
     assert "access_token" in body
     assert body["token_type"] == "bearer"
     assert len(body["access_token"]) > 20  # JWT tiene estructura real
-<<<<<<< HEAD
-=======
 
 
 def test_login_missing_fields():
-    """Faltan campos requeridos (ej. password) → 422 Unprocessable Entity."""
+    """Faltan campos requeridos (ej. password) --> 422 Unprocessable Entity."""
     response = client.post("/auth/login", json={"username": "admin"})
     assert response.status_code == 422
     assert "detail" in response.json()
 
 
-# ── POST /auth/register ───────────────────────────────────────────────────────
+# -- POST /auth/register
 def test_register_usuario_existente():
     """Si el usuario ya existe, retorna 400 Bad Request."""
     _mock_db["usuarios"].find_one.return_value = {"username": "test@test.com"}
@@ -138,11 +133,11 @@ def test_register_usuario_existente():
         json={"name": "Test User", "email": "test@test.com", "password": "password123"}
     )
     assert response.status_code == 400
-    assert response.json()["detail"] == "El correo ya está registrado."
+    assert response.json()["detail"] == "El correo ya esta registrado."
 
 
 def test_register_exitoso():
-    """Registro exitoso retorna JWT y código 201."""
+    """Registro exitoso retorna JWT y codigo 201."""
     _mock_db["usuarios"].find_one.return_value = None
     _mock_db["usuarios"].insert_one.return_value = MagicMock(inserted_id="fake_id")
 
@@ -155,4 +150,3 @@ def test_register_exitoso():
     assert body["success"] is True
     assert "token" in body
     assert body["user"]["email"] == "new@test.com"
->>>>>>> 8d6fa66eeb4773c14bbae33fd940f32bb7db3a6d

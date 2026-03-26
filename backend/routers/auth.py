@@ -7,11 +7,7 @@ from passlib.context import CryptContext
 
 from config import get_settings
 from db import get_db
-<<<<<<< HEAD
-from models import Token, UserLogin
-=======
 from models import Token, UserLogin, UserRegister
->>>>>>> 8d6fa66eeb4773c14bbae33fd940f32bb7db3a6d
 
 router = APIRouter(prefix="/auth", tags=["Auth"])
 
@@ -81,8 +77,6 @@ def login(credentials: UserLogin) -> Token:
 
     token = _create_access_token({"sub": credentials.username})
     return Token(access_token=token)
-<<<<<<< HEAD
-=======
 
 
 @router.post(
@@ -116,4 +110,3 @@ def register(user_in: UserRegister) -> dict:
             "email": user_in.email
         }
     }
->>>>>>> 8d6fa66eeb4773c14bbae33fd940f32bb7db3a6d
