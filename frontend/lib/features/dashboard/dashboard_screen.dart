@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -83,6 +84,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Future<void> _loadPool() async {
     setState(() => _loading = true);
 
+    // Leer caché local primero (para poder combinar luego)
+    final prefs = await SharedPreferences.getInstance();
+    PoolData? localPool;
+    final rawLocal = prefs.getString(_prefKey);
+    if (rawLocal != null) {
+      try { localPool = PoolData.fromJson(jsonDecode(rawLocal)); } catch (_) {}
+    }
+
     // 1. Intentar cargar desde el backend
     final token = await _authService.getToken();
     if (token != null) {
@@ -91,17 +100,31 @@ class _DashboardScreenState extends State<DashboardScreen> {
         final List<dynamic> pools = result['data'] as List<dynamic>;
         if (pools.isNotEmpty) {
           final doc = pools.first as Map<String, dynamic>;
+
+          // Dimensiones del backend (pueden ser 0 si es backend antiguo no desplegado)
+          final backendLargo = (doc['largo'] as num?)?.toDouble() ?? 0;
+          final backendAncho = (doc['ancho'] as num?)?.toDouble() ?? 0;
+          final backendProf  = (doc['profundidad'] as num?)?.toDouble() ?? 0;
+
+          // Si el backend devuelve 0 pero el caché local tiene datos válidos,
+          // conservar las dimensiones locales (el backend aún no las retorna)
+          final largo      = backendLargo > 0 ? backendLargo : (localPool?.largo ?? 0);
+          final ancho      = backendAncho > 0 ? backendAncho : (localPool?.ancho ?? 0);
+          final prof       = backendProf  > 0 ? backendProf  : (localPool?.profundidad ?? 0);
+          final esInterior = (doc['tipo'] as String?) == 'interior';
+          final filtro     = (doc['filtro'] as bool?) ?? (localPool?.tieneFiltro ?? true);
+
           final pool = PoolData(
             nombre: doc['nombre'] as String? ?? '',
-            largo: (doc['largo'] as num?)?.toDouble() ?? 0,
-            ancho: (doc['ancho'] as num?)?.toDouble() ?? 0,
-            profundidad: (doc['profundidad'] as num?)?.toDouble() ?? 0,
-            esInterior: (doc['tipo'] as String?) == 'interior',
-            tieneFiltro: (doc['filtro'] as bool?) ?? true,
+            largo: largo,
+            ancho: ancho,
+            profundidad: prof,
+            esInterior: esInterior,
+            tieneFiltro: filtro,
           );
           _backendPoolId = doc['id'] as String?;
-          // Actualizar caché local con datos del servidor
-          final prefs = await SharedPreferences.getInstance();
+
+          // Actualizar caché local con la versión combinada
           await prefs.setString(_prefKey, jsonEncode(pool.toJson()));
           setState(() {
             _pool = pool;
@@ -113,11 +136,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
     }
 
     // 2. Fallback: caché local (sin conexión o sin piscina en backend)
-    final prefs = await SharedPreferences.getInstance();
-    final raw = prefs.getString(_prefKey);
-    if (raw != null) {
+    if (localPool != null) {
       setState(() {
-        _pool = PoolData.fromJson(jsonDecode(raw) as Map<String, dynamic>);
+        _pool = localPool;
         _loading = false;
       });
     } else {
@@ -136,19 +157,28 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final token = await _authService.getToken();
     if (token == null) return;
 
-    final result = await _poolService.createPool({
+    final payload = {
       'nombre': pool.nombre,
-      'volumen': pool.volumenM3,          // m³
+      'volumen': pool.volumenM3,
       'tipo': pool.esInterior ? 'interior' : 'exterior',
-      'ubicacion': '',                    // campo requerido por el backend
+      'ubicacion': '',
       'largo': pool.largo,
       'ancho': pool.ancho,
       'profundidad': pool.profundidad,
       'filtro': pool.tieneFiltro,
-    }, token);
+    };
 
-    if (result['success'] == true) {
-      _backendPoolId = (result['data'] as Map<String, dynamic>?)?['id'] as String?;
+    Map<String, dynamic> result;
+
+    if (_backendPoolId != null) {
+      // Ya existe: actualizar (PUT)
+      result = await _poolService.updatePool(_backendPoolId!, payload, token);
+    } else {
+      // Nueva piscina: crear (POST)
+      result = await _poolService.createPool(payload, token);
+      if (result['success'] == true) {
+        _backendPoolId = (result['data'] as Map<String, dynamic>?)?['id'] as String?;
+      }
     }
     // Si falla el backend, la piscina igual queda en caché local
   }
@@ -164,7 +194,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
   void _openAddPoolForm() {
     Navigator.of(context).push(
       PageRouteBuilder(
-        pageBuilder: (_, animation, __) => AddPoolScreen(onSave: _savePool),
+        pageBuilder: (_, animation, __) => AddPoolScreen(
+          onSave: _savePool,
+          initialData: _pool, // Pre-poblar con los datos actuales al editar
+        ),
         transitionsBuilder: (_, animation, __, child) {
           return SlideTransition(
             position: Tween<Offset>(
@@ -345,6 +378,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
                 child: _PoolCard(pool: pool, litrosStr: litrosStr),
+              ),
+            ),
+
+            // ── Representación visual de la piscina ──
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+                child: _PoolVisualCard(pool: pool),
               ),
             ),
 
@@ -573,7 +614,242 @@ class _PoolCard extends StatelessWidget {
   }
 }
 
+// ─────────────────────────────────────────────
+// Representación visual isométrica de la piscina
+// ─────────────────────────────────────────────
+class _PoolVisualCard extends StatefulWidget {
+  final PoolData pool;
+  const _PoolVisualCard({required this.pool});
 
+  @override
+  State<_PoolVisualCard> createState() => _PoolVisualCardState();
+}
+
+class _PoolVisualCardState extends State<_PoolVisualCard>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _ctrl;
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 4),
+    )..repeat();
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceElevated,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.border, width: 1),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.view_in_ar_rounded,
+                  color: AppColors.primary, size: 16),
+              const SizedBox(width: 8),
+              Text(
+                'Vista de la piscina',
+                style: GoogleFonts.syne(
+                  color: AppColors.textSecondary,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: 0.4,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          ClipRect(
+            child: SizedBox(
+              width: double.infinity,
+              height: 160,
+              child: AnimatedBuilder(
+                animation: _ctrl,
+                builder: (_, __) => CustomPaint(
+                  painter: _PoolPainter(animValue: _ctrl.value),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _PoolPainter extends CustomPainter {
+  final double animValue;
+  const _PoolPainter({required this.animValue});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final w = size.width;
+    final h = size.height;
+    const border = 12.0;   // grosor del borde de azulejo
+    const r = 14.0;        // radio esquinas externas
+    const ri = 8.0;        // radio esquinas internas (agua)
+
+    // ── 1. Fondo exterior (borde tipo azulejo) ─
+    final outerRect = RRect.fromRectAndRadius(
+      Rect.fromLTWH(0, 0, w, h), const Radius.circular(r));
+    canvas.drawRRect(
+      outerRect,
+      Paint()
+        ..shader = const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFF1E3A5F), Color(0xFF112240)],
+        ).createShader(Rect.fromLTWH(0, 0, w, h)),
+    );
+
+    // Líneas de rejilla del borde (efecto azulejo)
+    final tilePaint = Paint()
+      ..color = const Color(0xFF2A4A70)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 0.8;
+    // horizontales
+    for (double y = border; y < h - border; y += border) {
+      canvas.drawLine(Offset(0, y), Offset(w, y), tilePaint);
+    }
+    // verticales
+    for (double x = border; x < w - border; x += border) {
+      canvas.drawLine(Offset(x, 0), Offset(x, h), tilePaint);
+    }
+
+    // ── 2. Área de agua ────────────────────────
+    final waterRect = Rect.fromLTWH(border, border,
+        w - border * 2, h - border * 2);
+    final waterRRect = RRect.fromRectAndRadius(
+        waterRect, const Radius.circular(ri));
+
+    // Gradiente de agua animado
+    final shimmer = (math.sin(animValue * 2 * math.pi) + 1) / 2;
+    final c1 = Color.lerp(
+        const Color(0xFF1565C0), const Color(0xFF0288D1), shimmer)!;
+    final c2 = Color.lerp(
+        const Color(0xFF29B6F6), const Color(0xFF00ACC1), shimmer)!;
+
+    canvas.drawRRect(
+      waterRRect,
+      Paint()
+        ..shader = LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [c1, c2],
+        ).createShader(waterRect),
+    );
+
+    // ── 3. Ondas animadas ──────────────────────
+    canvas.save();
+    canvas.clipRRect(waterRRect);
+
+    final wavePaint = Paint()
+      ..color = Colors.white.withOpacity(0.14)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2.5
+      ..strokeCap = StrokeCap.round;
+
+    final waveCount = 4;
+    for (int i = 0; i < waveCount; i++) {
+      // Cada ola se desplaza con la animación
+      final yFrac = ((animValue + i / waveCount) % 1.0);
+      final yPos = waterRect.top + yFrac * waterRect.height;
+      final path = Path();
+      path.moveTo(waterRect.left, yPos);
+      const segments = 4;
+      final segW = waterRect.width / segments;
+      for (int s = 0; s < segments; s++) {
+        final x1 = waterRect.left + s * segW + segW * 0.25;
+        final x2 = waterRect.left + s * segW + segW * 0.75;
+        final x3 = waterRect.left + (s + 1) * segW;
+        final crest = (s % 2 == 0) ? -5.0 : 5.0;
+        path.cubicTo(x1, yPos + crest, x2, yPos - crest, x3, yPos);
+      }
+      canvas.drawPath(path, wavePaint);
+    }
+
+    // ── 4. Reflejo de luz diagonal ─────────────
+    final reflectShift = animValue * waterRect.width * 0.3;
+    final reflectPaint = Paint()
+      ..shader = LinearGradient(
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+        colors: [
+          Colors.white.withOpacity(0.0),
+          Colors.white.withOpacity(0.07),
+          Colors.white.withOpacity(0.0),
+        ],
+        stops: const [0.0, 0.5, 1.0],
+      ).createShader(waterRect)
+      ..style = PaintingStyle.fill;
+    canvas.drawRect(
+      Rect.fromLTWH(
+        waterRect.left + reflectShift,
+        waterRect.top,
+        waterRect.width * 0.4,
+        waterRect.height,
+      ),
+      reflectPaint,
+    );
+
+    canvas.restore();
+
+    // ── 5. Escalerilla (esquina sup-derecha) ───
+    final ladderX = waterRect.right - 14;
+    final ladderPaint = Paint()
+      ..color = const Color(0xFF90CAF9).withOpacity(0.7)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2.0
+      ..strokeCap = StrokeCap.round;
+    // Dos rieles verticales
+    canvas.drawLine(
+        Offset(ladderX - 5, border - 4),
+        Offset(ladderX - 5, waterRect.top + 22), ladderPaint);
+    canvas.drawLine(
+        Offset(ladderX + 5, border - 4),
+        Offset(ladderX + 5, waterRect.top + 22), ladderPaint);
+    // Peldaños horizontales
+    for (int s = 0; s < 3; s++) {
+      final sy = waterRect.top + 4 + s * 9.0;
+      canvas.drawLine(
+          Offset(ladderX - 5, sy), Offset(ladderX + 5, sy), ladderPaint);
+    }
+
+    // ── 6. Borde azulejo contorno ──────────────
+    canvas.drawRRect(
+      outerRect,
+      Paint()
+        ..color = const Color(0xFF4FC3F7).withOpacity(0.35)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1.2,
+    );
+    canvas.drawRRect(
+      waterRRect,
+      Paint()
+        ..color = const Color(0xFF80DEEA).withOpacity(0.45)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1.0,
+    );
+  }
+
+  @override
+  bool shouldRepaint(_PoolPainter old) => old.animValue != animValue;
+}
 
 // ─────────────────────────────────────────────
 // Fila de información

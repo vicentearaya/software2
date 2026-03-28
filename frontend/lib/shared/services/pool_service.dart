@@ -30,6 +30,32 @@ class PoolService {
     }
   }
 
+  Future<Map<String, dynamic>> updatePool(String poolId, Map<String, dynamic> data, String token) async {
+    try {
+      final response = await http.put(
+        Uri.parse('$_baseUrl/piscinas/$poolId'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode(data),
+      );
+
+      final responseData = jsonDecode(response.body);
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return {'success': true, 'data': responseData};
+      } else {
+        return {
+          'success': false,
+          'message': responseData['detail'] ?? 'Error al actualizar la piscina',
+        };
+      }
+    } catch (e) {
+      return {'success': false, 'message': 'No se pudo conectar al servidor'};
+    }
+  }
+
   Future<Map<String, dynamic>> getPools(String token) async {
     try {
       final response = await http.get(
