@@ -66,7 +66,12 @@ def get_current_user(token: str = Depends(_oauth2_scheme)) -> dict:
 )
 def login(credentials: UserLogin) -> Token:
     # Schema esperado: {"username": str, "password": str (bcrypt hash)}
-    user = _db["usuarios"].find_one({"username": credentials.username})
+    user = _db["usuarios"].find_one({
+        "$or": [
+            {"username": credentials.username},
+            {"email": credentials.username}
+        ]
+    })
 
     if not user or not _verify_password(credentials.password, user.get("password", "")):
         raise HTTPException(
@@ -75,7 +80,8 @@ def login(credentials: UserLogin) -> Token:
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-    token = _create_access_token({"sub": credentials.username})
+    real_username = user.get("username")
+    token = _create_access_token({"sub": real_username})
     return Token(access_token=token)
 
 
@@ -86,27 +92,33 @@ def login(credentials: UserLogin) -> Token:
     description="Crea un usuario nuevo en la colección `usuarios` y retorna un JWT y datos del usuario.",
 )
 def register(user_in: UserRegister) -> dict:
-    if _db["usuarios"].find_one({"username": user_in.email}):
+    if _db["usuarios"].find_one({
+        "$or": [
+            {"email": user_in.email},
+            {"username": user_in.username}
+        ]
+    }):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="El correo ya está registrado.",
+            detail="El correo o nombre de usuario ya está registrado.",
         )
 
     hashed_password = _pwd_context.hash(user_in.password)
     new_user = {
-        "username": user_in.email,
+        "username": user_in.username,
         "name": user_in.name,
         "email": user_in.email,
         "password": hashed_password
     }
     _db["usuarios"].insert_one(new_user)
 
-    token = _create_access_token({"sub": user_in.email})
+    token = _create_access_token({"sub": user_in.username})
     return {
         "success": True,
         "token": token,
         "user": {
             "name": user_in.name,
+            "username": user_in.username,
             "email": user_in.email
         }
     }

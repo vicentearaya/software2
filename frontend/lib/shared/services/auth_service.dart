@@ -34,6 +34,7 @@ class AuthService {
   // Registro
   Future<Map<String, dynamic>> register(
     String name,
+    String username,
     String email,
     String password,
   ) async {
@@ -41,7 +42,7 @@ class AuthService {
       final response = await _client.post(
         Uri.parse('$_baseUrl/auth/register'),
         headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'name': name, 'email': email, 'password': password}),
+        body: jsonEncode({'name': name, 'username': username, 'email': email, 'password': password}),
       );
 
       final data = jsonDecode(response.body);
@@ -76,8 +77,7 @@ class AuthService {
   // Cerrar sesión
   Future<void> logout() async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.remove(_tokenKey);
-    await prefs.remove(_userKey);
+    await prefs.clear();
   }
 
   // Obtener token

@@ -6,6 +6,7 @@ class AppStrings {
   // Auth
   static const String login = 'Iniciar sesión';
   static const String register = 'Crear cuenta';
+  static const String username = 'Nombre de usuario';
   static const String email = 'Correo electrónico';
   static const String password = 'Contraseña';
   static const String forgotPassword = '¿Olvidaste tu contraseña?';

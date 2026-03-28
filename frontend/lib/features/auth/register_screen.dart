@@ -15,6 +15,7 @@ class RegisterScreen extends StatefulWidget {
 
 class _RegisterScreenState extends State<RegisterScreen> {
   final _nameController = TextEditingController();
+  final _usernameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
@@ -28,6 +29,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   @override
   void dispose() {
     _nameController.dispose();
+    _usernameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
@@ -41,6 +43,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
     final result = await _authService.register(
       _nameController.text.trim(),
+      _usernameController.text.trim(),
       _emailController.text.trim(),
       _passwordController.text,
     );
@@ -76,6 +79,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 _buildHeader(),
                 const SizedBox(height: 40),
                 _buildNameField(),
+                const SizedBox(height: 16),
+                _buildUsernameField(),
                 const SizedBox(height: 16),
                 _buildEmailField(),
                 const SizedBox(height: 16),
@@ -135,6 +140,27 @@ class _RegisterScreenState extends State<RegisterScreen> {
       validator: (value) {
         if (value == null || value.isEmpty) return 'Ingresa tu nombre';
         if (value.length < 2) return 'Nombre muy corto';
+        return null;
+      },
+    );
+  }
+
+  Widget _buildUsernameField() {
+    return TextFormField(
+      controller: _usernameController,
+      style: const TextStyle(color: AppColors.textPrimary),
+      decoration: const InputDecoration(
+        hintText: AppStrings.username,
+        prefixIcon: Icon(
+          Icons.badge_outlined,
+          color: AppColors.textMuted,
+          size: 20,
+        ),
+      ),
+      validator: (value) {
+        if (value == null || value.trim().isEmpty) return 'Ingresa tu nombre de usuario';
+        if (value.length < 3) return 'Usuario muy corto';
+        if (value.contains(' ')) return 'No debe contener espacios';
         return null;
       },
     );

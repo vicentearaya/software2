@@ -71,8 +71,6 @@ class _LoginScreenState extends State<LoginScreen> {
                 _buildEmailField(),
                 const SizedBox(height: 16),
                 _buildPasswordField(),
-                const SizedBox(height: 12),
-                _buildForgotPassword(),
                 const SizedBox(height: 32),
                 _buildLoginButton(),
                 const SizedBox(height: 24),
@@ -162,23 +160,6 @@ class _LoginScreenState extends State<LoginScreen> {
         if (value.length < 6) return 'Mínimo 6 caracteres';
         return null;
       },
-    );
-  }
-
-  Widget _buildForgotPassword() {
-    return Align(
-      alignment: Alignment.centerRight,
-      child: TextButton(
-        onPressed: () {},
-        style: TextButton.styleFrom(
-          foregroundColor: AppColors.primary,
-          padding: EdgeInsets.zero,
-        ),
-        child: Text(
-          AppStrings.forgotPassword,
-          style: GoogleFonts.interTight(fontSize: 13),
-        ),
-      ),
     );
   }
 
