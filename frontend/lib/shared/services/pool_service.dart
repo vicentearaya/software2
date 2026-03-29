@@ -79,4 +79,33 @@ class PoolService {
       return {'success': false, 'message': 'No se pudo conectar al servidor'};
     }
   }
+
+  Future<Map<String, dynamic>> calcularYRegistrarTratamiento(String poolId, double ph, double cloro, String token) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$_baseUrl/piscinas/$poolId/tratamiento'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode({
+          'ph': ph,
+          'cloro': cloro,
+        }),
+      );
+
+      final responseData = jsonDecode(response.body);
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return {'success': true, 'data': responseData};
+      } else {
+        return {
+          'success': false,
+          'message': responseData['detail'] ?? 'Error al calcular la receta',
+        };
+      }
+    } catch (e) {
+      return {'success': false, 'message': 'Houve um erro no cálculo. Compruebe la conexión.'};
+    }
+  }
 }
