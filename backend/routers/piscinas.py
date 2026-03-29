@@ -99,3 +99,67 @@ def update_pool(
         username=current_user["username"],
         **update_data
     )
+
+from models import TratamientoManualRequest
+from services.calculator import calcular_tratamiento
+
+@router.post("/piscinas/{pool_id}/tratamiento", status_code=status.HTTP_201_CREATED)
+def calcular_y_guardar_tratamiento(
+    pool_id: str,
+    request: TratamientoManualRequest,
+    current_user: dict = Depends(get_current_user),
+    db = Depends(get_db)
+):
+    """
+    Guarda un mantenimiento nuevo con los datos ingresados de pH y Cloro,
+    luego de retornar las acciones dictadas por `calcular_tratamiento`.
+    """
+    try:
+        try:
+            oid = ObjectId(pool_id)
+        except Exception:
+            raise HTTPException(status_code=400, detail="ID de piscina inválido")
+
+        # Verificar que el pool existe y obtener su volumen
+        pool = db.piscinas.find_one({"_id": oid, "username": current_user["username"]})
+        if not pool:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Piscina no encontrada"
+            )
+        
+        volumen_m3 = pool.get("volumen", 0.0)
+        if volumen_m3 <= 0:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="La piscina tiene un volumen de 0 m³, no se puede calcular dosis."
+            )
+            
+        # Calcular dosis con las reglas configuradas
+        tratamiento_pasos = calcular_tratamiento(request.ph, request.cloro, volumen_m3)
+        
+        # Registrar el mantenimiento en la colección "mantenimientos"
+        mantenimiento_doc = {
+            "pool_id": pool_id,
+            "username": current_user["username"],
+            "fecha": datetime.now(timezone.utc),
+            "ph_medido": request.ph,
+            "cloro_medido": request.cloro,
+            "acciones": tratamiento_pasos
+        }
+        
+        db.mantenimientos.insert_one(mantenimiento_doc)
+        
+        return {
+            "ok": True,
+            "mensaje": "Mantenimiento calculado y guardado exitosamente.",
+            "tratamiento": tratamiento_pasos
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error al procesar el tratamiento manual: {str(e)}"
+        )
