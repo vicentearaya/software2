@@ -61,17 +61,21 @@ def get_lecturas_estado(
                 # Sensor offline o sin dato
                 detalle_sensores[sensor] = None
 
+        # Obtener información de la piscina para extraer el volumen
+        pool = db.pools.find_one({"pool_id": pool_id})
+        volumen_m3 = pool.get("volumen_m3", 0.0) if pool else 0.0
+
         # Llamar al servicio para evaluar aptitud global
-        status_global = evaluar_aptitud_global(detalle_sensores)
+        status_global = evaluar_aptitud_global(detalle_sensores, volumen_m3=volumen_m3)
 
         # Construir respuesta completa
         return {
             "piscina_apta": status_global["piscina_apta"],
             "sensores_criticos": status_global["sensores_criticos"],
             "motivo": status_global["motivo"],
-            "detalle_sensores": detalle_sensores
+            "detalle_sensores": detalle_sensores,
+            "tratamiento": status_global.get("tratamiento", [])
         }
-        raise
     except ValueError as e:
         raise HTTPException(status_code=400, detail=f"Error de validación: {str(e)}")
     except PyMongoError as exc:

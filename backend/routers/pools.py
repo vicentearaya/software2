@@ -15,7 +15,9 @@ from datetime import datetime
 from typing import List, Optional
 
 from db import get_db
-from models import Pool, PoolIn, PoolSettings
+from models import Pool, PoolIn, PoolSettings, TratamientoManualRequest
+from routers.auth import get_current_user
+from services.calculator import calcular_tratamiento
 
 
 router = APIRouter(prefix="/api/v1/pools", tags=["pools"])
@@ -390,4 +392,66 @@ def eliminar_pool(pool_id: str, db: Database = Depends(get_db)):
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error al eliminar pool: {str(e)}"
+        )
+
+
+@router.post(
+    "/{pool_id}/tratamiento",
+    status_code=status.HTTP_201_CREATED,
+    summary="Calcular y Guardar Tratamiento Manual",
+    description="Calcula el tratamiento manual con base en ph y cloro, y guarda el registro de mantenimiento vinculado al usuario."
+)
+def calcular_y_guardar_tratamiento(
+    pool_id: str,
+    request: TratamientoManualRequest,
+    current_user: dict = Depends(get_current_user),
+    db: Database = Depends(get_db)
+):
+    """
+    Guarda un mantenimiento nuevo con los datos ingresados de pH y Cloro,
+    luego de retornar las acciones dictadas por `calcular_tratamiento`.
+    """
+    try:
+        # Verificar que el pool existe y obtener su volumen
+        pool = db.pools.find_one({"pool_id": pool_id})
+        if not pool:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Pool '{pool_id}' no encontrado"
+            )
+        
+        volumen_m3 = pool.get("volumen_m3", 0.0)
+        if volumen_m3 <= 0:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="La piscina tiene un volumen de 0 m³, no se puede calcular dosis."
+            )
+            
+        # Calcular dosis con las reglas configuradas
+        tratamiento_pasos = calcular_tratamiento(request.ph, request.cloro, volumen_m3)
+        
+        # Registrar el mantenimiento en la colección "mantenimientos"
+        mantenimiento_doc = {
+            "pool_id": pool_id,
+            "username": current_user.get("username"),
+            "fecha": datetime.utcnow(),
+            "ph_medido": request.ph,
+            "cloro_medido": request.cloro,
+            "acciones": tratamiento_pasos
+        }
+        
+        db.mantenimientos.insert_one(mantenimiento_doc)
+        
+        return {
+            "ok": True,
+            "mensaje": "Mantenimiento calculado y guardado exitosamente.",
+            "tratamiento": tratamiento_pasos
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error al procesar el tratamiento manual: {str(e)}"
         )

@@ -140,6 +140,10 @@ class StatusGlobalResponse(BaseModel):
     detalle_sensores: dict[str, Optional[SensorEvaluacion]] = Field(
         description="Evaluación detallada de cada uno de los 4 sensores (pH, cloro, temperatura, conductividad)"
     )
+    tratamiento: list[dict] = Field(
+        default_factory=list,
+        description="Lista ordenada de pasos y productos recomendados para tratar el agua, si aplica."
+    )
     model_config = ConfigDict(from_attributes=True)
 
 
@@ -148,3 +152,7 @@ class UserRegister(BaseModel):
     username: str
     email: str
     password: str
+
+class TratamientoManualRequest(BaseModel):
+    ph: float = Field(..., description="Valor actual de pH medido manualmente")
+    cloro: float = Field(..., description="Valor actual de Cloro medido manualmente en ppm")
