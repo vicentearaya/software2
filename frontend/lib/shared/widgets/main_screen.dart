@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../core/constants/app_colors.dart';
 import '../../features/device/device_screen.dart';
 import '../../features/dashboard/dashboard_screen.dart';
+import '../../features/guides/guides_screen.dart';
 import '../../features/profile/profile_screen.dart';
 
 class MainScreen extends StatefulWidget {
@@ -18,6 +19,7 @@ class _MainScreenState extends State<MainScreen> {
   final List<Widget> _screens = const [
     DeviceScreen(),
     DashboardScreen(),
+    GuidesScreen(),
     ProfileScreen(),
   ];
 
@@ -60,6 +62,11 @@ class _MainScreenState extends State<MainScreen> {
             icon: Icon(Icons.bar_chart_outlined),
             activeIcon: Icon(Icons.bar_chart),
             label: 'Dashboard',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.menu_book_outlined),
+            activeIcon: Icon(Icons.menu_book),
+            label: 'Guías',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.person_outline),

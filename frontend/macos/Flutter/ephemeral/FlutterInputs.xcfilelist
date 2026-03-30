@@ -419,6 +419,8 @@
 /Users/miilwaukee/Documents/Software 2/aplicacion_proyecto/frontend/lib/features/auth/register_screen.dart
 /Users/miilwaukee/Documents/Software 2/aplicacion_proyecto/frontend/lib/features/dashboard/dashboard_screen.dart
 /Users/miilwaukee/Documents/Software 2/aplicacion_proyecto/frontend/lib/features/device/device_screen.dart
+/Users/miilwaukee/Documents/Software 2/aplicacion_proyecto/frontend/lib/features/guides/frequent_problems_screen.dart
+/Users/miilwaukee/Documents/Software 2/aplicacion_proyecto/frontend/lib/features/guides/guides_screen.dart
 /Users/miilwaukee/Documents/Software 2/aplicacion_proyecto/frontend/lib/features/profile/profile_screen.dart
 /Users/miilwaukee/Documents/Software 2/aplicacion_proyecto/frontend/lib/main.dart
 /Users/miilwaukee/Documents/Software 2/aplicacion_proyecto/frontend/lib/shared/services/auth_service.dart
