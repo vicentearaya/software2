@@ -329,7 +329,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           ),
                         ),
                         Text(
-                          'État de l\'eau en tiempo real',
+                          "Estado del agua de tu piscina",
                           style: GoogleFonts.interTight(
                             color: AppColors.textSecondary,
                             fontSize: 13,
@@ -450,7 +450,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ]),
               ),
             ),
-            
+
             // ── Tarjeta de Limpieza Manual Express ──
             if (_backendPoolId != null)
               SliverToBoxAdapter(
@@ -1608,7 +1608,7 @@ class _ManualTreatmentCardState extends State<_ManualTreatmentCard> {
                     color: AppColors.statusDanger, fontSize: 13),
               ),
             ),
-          
+
           // Resultado Animado
           AnimatedSize(
             duration: const Duration(milliseconds: 300),
