@@ -4,6 +4,7 @@ import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_strings.dart';
 import '../../core/utils/app_utils.dart';
 import '../../shared/services/auth_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../shared/widgets/main_screen.dart';
 
 class RegisterScreen extends StatefulWidget {
@@ -52,6 +53,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
     setState(() => _isLoading = false);
 
     if (result['success']) {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove('pool_data');
+      if (!mounted) return;
       Navigator.pushAndRemoveUntil(
         context,
         MaterialPageRoute(builder: (_) => const MainScreen()),

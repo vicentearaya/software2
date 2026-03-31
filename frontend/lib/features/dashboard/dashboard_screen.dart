@@ -452,11 +452,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ),
 
             // ── Tarjeta de Limpieza Manual Express ──
-            if (_backendPoolId != null)
+            if (_pool != null)
               SliverToBoxAdapter(
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
-                  child: _ManualTreatmentCard(poolId: _backendPoolId!),
+                  child: _ManualTreatmentCard(poolId: _backendPoolId),
                 ),
               ),
 
@@ -1426,7 +1426,7 @@ class _VerticalDivider extends StatelessWidget {
 // Tarjeta de Limpieza Manual Exprés
 // ─────────────────────────────────────────────
 class _ManualTreatmentCard extends StatefulWidget {
-  final String poolId;
+  final String? poolId;
 
   const _ManualTreatmentCard({required this.poolId});
 
@@ -1483,8 +1483,15 @@ class _ManualTreatmentCardState extends State<_ManualTreatmentCard> {
       return;
     }
 
+    if (widget.poolId == null) {
+      setState(() {
+        _isLoading = false;
+        _errorMessage = 'Sin conexión con el servidor';
+      });
+      return;
+    }
     final res = await _poolService.calcularYRegistrarTratamiento(
-        widget.poolId, ph, cloro, token);
+        widget.poolId!, ph, cloro, token);
 
     setState(() {
       _isLoading = false;
@@ -1535,7 +1542,7 @@ class _ManualTreatmentCardState extends State<_ManualTreatmentCard> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Limpieza Express',
+                      'Limpieza de tu piscina',
                       style: GoogleFonts.syne(
                         color: AppColors.textPrimary,
                         fontSize: 18,
