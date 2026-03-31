@@ -154,5 +154,5 @@ class UserRegister(BaseModel):
     password: str
 
 class TratamientoManualRequest(BaseModel):
-    ph: float = Field(..., description="Valor actual de pH medido manualmente")
-    cloro: float = Field(..., description="Valor actual de Cloro medido manualmente en ppm")
+    ph: float = Field(..., ge=0.0, le=14.0, description="Valor actual de pH medido manualmente (0-14)")
+    cloro: float = Field(..., ge=0.0, le=10.0, description="Valor actual de Cloro medido manualmente en ppm (0-10)")
