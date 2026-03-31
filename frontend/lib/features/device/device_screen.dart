@@ -80,7 +80,7 @@ class _DeviceScreenState extends State<DeviceScreen> {
             ),
             const SizedBox(height: 12),
             Text(
-              'Sigue estos pasos para recibir las lecturas del agua de tu piscina en tiempo real.',
+              'Sigue estos pasos para recibir las lecturas del agua de tu piscina desde tu dispositivo.',
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                     color: AppColors.textMuted,
@@ -91,7 +91,7 @@ class _DeviceScreenState extends State<DeviceScreen> {
               context,
               stepNumber: '1',
               title: 'Activa el Modo Wi-Fi',
-              description: 'Presiona el botón en tu dispositivo Arduino hasta que la luz indicadora comience a parpadear.',
+              description: 'Presiona el botón en tu dispositivo Arduino para que comience a emitir red Wi-Fi',
               icon: Icons.power_settings_new,
             ),
             const SizedBox(height: 16),

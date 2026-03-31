@@ -421,7 +421,7 @@ class PoolCleaningScreen extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           _buildProTipItem(
-            title: 'Mucha tierra?',
+            title: '¿Mucha tierra?',
             content:
                 'No aspires en modo Filtración, hazlo en modo Desagüe (Waste) para que la suciedad vaya directo a la calle.',
           ),

@@ -329,7 +329,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           ),
                         ),
                         Text(
-                          "Estado del agua de tu piscina",
+                          "Monitorea tu piscina",
                           style: GoogleFonts.interTight(
                             color: AppColors.textSecondary,
                             fontSize: 13,

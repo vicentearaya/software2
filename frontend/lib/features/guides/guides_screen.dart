@@ -29,7 +29,7 @@ class GuidesScreen extends StatelessWidget {
         child: Column(
           children: [
             Text(
-              'Aprende a mantener tu piscina en óptimas condiciones corporativas y estéticas.',
+              'Aprende a mantener tu piscina en óptimas condiciones.',
               style: GoogleFonts.inter(
                 color: AppColors.textSecondary,
                 fontSize: 14,
@@ -76,7 +76,7 @@ class GuidesScreen extends StatelessWidget {
                   _buildGuideCard(
                     context,
                     title: 'Limpieza piscina',
-                    description: 'Técnicas y rutinas para la limpieza estructural de la piscina.',
+                    description: 'Técnicas y rutinas para la limpieza de tu piscina.',
                     icon: Icons.cleaning_services_outlined,
                     color: AppColors.statusGood,
                     onTap: () {
