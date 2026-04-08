@@ -17,7 +17,7 @@ from typing import List, Optional
 from db import get_db
 from models import Pool, PoolIn, PoolSettings, TratamientoManualRequest
 from routers.auth import get_current_user
-from services.calculator import calcular_tratamiento
+from services.calculator import calcular_tratamiento, evaluarAptitud, evaluar_parametros_individuales
 
 
 router = APIRouter(prefix="/api/v1/pools", tags=["pools"])
@@ -393,3 +393,92 @@ def eliminar_pool(pool_id: str, db: Database = Depends(get_db)):
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error al eliminar pool: {str(e)}"
         )
+
+
+@router.get(
+    "/{pool_id}/status",
+    response_model=dict,
+    summary="Obtener estado actual de los parámetros",
+    description="Retorna el estado de la piscina evaluado por calculator.py, tomando última lectura de sensor o manual y dando prioridad al sensor."
+)
+def get_pool_status(pool_id: str, db: Database = Depends(get_db)):
+    try:
+        # Verificar que el pool existe
+        pool = db.pools.find_one({"pool_id": pool_id})
+        if not pool:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Pool '{pool_id}' no encontrado"
+            )
+
+        # Buscar la última lectura de sensor
+        lectura_sensor = db.lecturas.find_one({"pool_id": pool_id}, sort=[("timestamp", -1)])
+        # Buscar el último mantenimiento manual
+        lectura_manual = db.mantenimientos.find_one({"pool_id": pool_id}, sort=[("fecha", -1)])
+
+        # Variables base
+        ph, cloro, temperatura = None, None, None
+        fuente_ph, fuente_cloro, fuente_temperatura = "ninguna", "ninguna", "ninguna"
+
+        # 1. Asignar manual si existe
+        if lectura_manual:
+            if lectura_manual.get("ph_medido") is not None:
+                ph = lectura_manual.get("ph_medido")
+                fuente_ph = "manual"
+            if lectura_manual.get("cloro_medido") is not None:
+                cloro = lectura_manual.get("cloro_medido")
+                fuente_cloro = "manual"
+            # Generalmente no hay temp manual en Mantenimiento actual, pero por consistencia:
+            if lectura_manual.get("temperatura_medida") is not None:
+                temperatura = lectura_manual.get("temperatura_medida")
+                fuente_temperatura = "manual"
+
+        # 2. Asignar sensor si existe (Sobrescribe manual - Prioridad Sensor)
+        if lectura_sensor:
+            if lectura_sensor.get("ph") is not None:
+                ph = lectura_sensor.get("ph")
+                fuente_ph = "sensor"
+            if lectura_sensor.get("cloro") is not None:
+                cloro = lectura_sensor.get("cloro")
+                fuente_cloro = "sensor"
+            if lectura_sensor.get("temperatura") is not None:
+                temperatura = lectura_sensor.get("temperatura")
+                fuente_temperatura = "sensor"
+
+        # Evaluar aptitud global con calculator.py
+        estado_global = evaluarAptitud(ph, cloro, temperatura)
+
+        # Evaluar estados individuales con calculator.py
+        estados_individuales = evaluar_parametros_individuales(ph, cloro, temperatura)
+
+        return {
+            "ok": True,
+            "pool_id": pool_id,
+            "estado": estado_global,
+            "parametros": {
+                "ph": {
+                    "valor": ph,
+                    "estado": estados_individuales["ph"],
+                    "fuente": fuente_ph
+                },
+                "cloro": {
+                    "valor": cloro,
+                    "estado": estados_individuales["cloro"],
+                    "fuente": fuente_cloro
+                },
+                "temperatura": {
+                    "valor": temperatura,
+                    "estado": estados_individuales["temperatura"],
+                    "fuente": fuente_temperatura
+                }
+            }
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error al obtener estado de pool: {str(e)}"
+        )
+
