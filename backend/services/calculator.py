@@ -9,6 +9,20 @@ No tiene dependencias externas. Solo librería estándar.
 """
 
 
+def evaluarAptitud(ph, cloro, temperatura):
+    """
+    Evalúa si la piscina está APTA o NO APTA en base a que todos los parámetros 
+    se encuentren estrictamente dentro de los rangos ideales.
+    Rangos:
+      - pH: 7.2 - 7.8
+      - Cloro: 1 - 3 ppm
+      - Temperatura: 24 - 30 °C
+    """
+    if (7.2 <= ph <= 7.8) and (1.0 <= cloro <= 3.0) and (24.0 <= temperatura <= 30.0):
+        return "APTA"
+    return "NO APTA"
+
+
 def calcular_tratamiento(ph: float | None, cloro: float | None, volumen_m3: float) -> list[dict]:
     """
     Calcula el tratamiento necesario basándose en reglas específicas de control de agua
