@@ -108,4 +108,33 @@ class PoolService {
       return {'success': false, 'message': 'Houve um erro no cálculo. Compruebe la conexión.'};
     }
   }
+
+  Future<Map<String, dynamic>> getPoolStatus(String poolId, {String? token}) async {
+    try {
+      final headers = <String, String>{
+        'Content-Type': 'application/json',
+      };
+      if (token != null) {
+        headers['Authorization'] = 'Bearer $token';
+      }
+
+      final response = await http.get(
+        Uri.parse('$_baseUrl/api/v1/pools/$poolId/status'),
+        headers: headers,
+      );
+
+      final responseData = jsonDecode(response.body);
+
+      if (response.statusCode == 200) {
+        return {'success': true, 'data': responseData};
+      } else {
+        return {
+          'success': false,
+          'message': responseData['detail'] ?? 'Error al obtener el estado de la piscina',
+        };
+      }
+    } catch (e) {
+      return {'success': false, 'message': 'No se pudo conectar al servidor'};
+    }
+  }
 }
