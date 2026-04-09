@@ -518,7 +518,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
     String text = "Sin datos disponibles";
     String subText = "No hay lecturas registradas";
 
+    Map<String, dynamic>? parametros;
+
     if (_poolStatus != null && _poolStatus!['estado'] != null) {
+      parametros = _poolStatus!['parametros'] as Map<String, dynamic>?;
       final estado = _poolStatus!['estado'];
       if (estado == 'APTA') {
         bgColor = const Color(0xFF1B5E20); // Verde oscuro brillante
@@ -527,7 +530,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
         text = "¡Apta para baño! Disfruta tu piscina 🏊";
         subText = "Los niveles químicos son óptimos.";
       } else if (estado == 'NO APTA') {
-        final parametros = _poolStatus!['parametros'] as Map<String, dynamic>?;
         bool hasData = false;
         if (parametros != null) {
           final ph = parametros['ph']?['valor'];
@@ -567,35 +569,99 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ),
         ],
       ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, color: iconColor, size: 36),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+          Row(
+            children: [
+              Icon(icon, color: iconColor, size: 36),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      text,
+                      style: GoogleFonts.syne(
+                        color: Colors.white,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      subText,
+                      style: GoogleFonts.interTight(
+                        color: Colors.white.withOpacity(0.85),
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          if (parametros != null && (parametros['ph']?['valor'] != null || parametros['cloro']?['valor'] != null)) ...[
+            const SizedBox(height: 16),
+            Container(color: Colors.white24, height: 1),
+            const SizedBox(height: 12),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
-                Text(
-                  text,
-                  style: GoogleFonts.syne(
-                    color: Colors.white,
-                    fontSize: 15,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  subText,
-                  style: GoogleFonts.interTight(
-                    color: Colors.white.withOpacity(0.85),
-                    fontSize: 12,
-                  ),
-                ),
+                _buildParamIndicator('pH', parametros['ph']),
+                _buildParamIndicator('Cloro', parametros['cloro']),
+                _buildParamIndicator('Temp.', parametros['temperatura']),
               ],
             ),
-          ),
+          ],
         ],
       ),
+    );
+  }
+
+  Widget _buildParamIndicator(String name, Map<String, dynamic>? paramData) {
+    if (paramData == null || paramData['valor'] == null) {
+      return Column(
+        children: [
+          Text(name, style: GoogleFonts.interTight(color: Colors.white70, fontSize: 12)),
+          const SizedBox(height: 4),
+          const Text("-", style: TextStyle(color: Colors.white, fontSize: 14)),
+        ],
+      );
+    }
+
+    final double valor = (paramData['valor'] as num).toDouble();
+    final String estado = paramData['estado'] as String? ?? 'SIN DATOS';
+    
+    // Check if it's normal
+    final bool isNormal = estado == 'NORMAL';
+    final IconData pIcon = isNormal ? Icons.check_circle : Icons.cancel;
+    final Color pColor = isNormal ? const Color(0xFF81C784) : const Color(0xFFE57373); // Colores más claros para mejor contraste oscuro
+    
+    String valStr = valor.toString();
+    if (name == 'Temp.') valStr += '°C';
+    else if (name == 'Cloro') valStr += ' ppm';
+
+    return Column(
+      children: [
+        Text(name, style: GoogleFonts.interTight(color: Colors.white70, fontSize: 12)),
+        const SizedBox(height: 2),
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              valStr,
+              style: GoogleFonts.syne(
+                color: Colors.white,
+                fontWeight: FontWeight.w600,
+                fontSize: 14,
+              ),
+            ),
+            const SizedBox(width: 4),
+            Icon(pIcon, color: pColor, size: 14),
+          ],
+        ),
+      ],
     );
   }
 
