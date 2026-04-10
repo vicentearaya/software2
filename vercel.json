@@ -1,0 +1,8 @@
+{
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/Frontend/build/web/index.html"
+    }
+  ]
+}
