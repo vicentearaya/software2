@@ -59,7 +59,11 @@ class PoolService {
   Future<Map<String, dynamic>> getPools(String token) async {
     try {
       final response = await http.get(
+<<<<<<< HEAD
         Uri.parse('$_baseUrl/pools'),  // ✅ Nuevo endpoint simplificado
+=======
+        Uri.parse('$_baseUrl/piscinas'),
+>>>>>>> b27f6820b0d96529ef6203c1520e8f04a6bc3fc9
         headers: {
           'Authorization': 'Bearer $token',
         },
@@ -80,6 +84,7 @@ class PoolService {
     }
   }
 
+<<<<<<< HEAD
   /// ✅ NUEVO: Obtener una piscina específica por ID
   Future<Map<String, dynamic>> getPoolById(String poolId, String token) async {
     try {
@@ -110,6 +115,8 @@ class PoolService {
     }
   }
 
+=======
+>>>>>>> b27f6820b0d96529ef6203c1520e8f04a6bc3fc9
   Future<Map<String, dynamic>> calcularYRegistrarTratamiento(String poolId, double ph, double cloro, String token) async {
     try {
       final response = await http.post(
@@ -138,4 +145,36 @@ class PoolService {
       return {'success': false, 'message': 'Houve um erro no cálculo. Compruebe la conexión.'};
     }
   }
+<<<<<<< HEAD
+=======
+
+  Future<Map<String, dynamic>> getPoolStatus(String poolId, {String? token}) async {
+    try {
+      final headers = <String, String>{
+        'Content-Type': 'application/json',
+      };
+      if (token != null) {
+        headers['Authorization'] = 'Bearer $token';
+      }
+
+      final response = await http.get(
+        Uri.parse('$_baseUrl/api/v1/pools/$poolId/status'),
+        headers: headers,
+      );
+
+      final responseData = jsonDecode(response.body);
+
+      if (response.statusCode == 200) {
+        return {'success': true, 'data': responseData};
+      } else {
+        return {
+          'success': false,
+          'message': responseData['detail'] ?? 'Error al obtener el estado de la piscina',
+        };
+      }
+    } catch (e) {
+      return {'success': false, 'message': 'No se pudo conectar al servidor'};
+    }
+  }
+>>>>>>> b27f6820b0d96529ef6203c1520e8f04a6bc3fc9
 }

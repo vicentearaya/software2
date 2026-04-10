@@ -18,6 +18,7 @@ _client = MongoClient(
 def get_db() -> Database:
     """Devuelve la instancia de la base de datos MongoDB (singleton por proceso)."""
     return _client[settings.database_name]
+<<<<<<< HEAD
 
 
 def ensure_indexes(db: Database) -> None:
@@ -54,3 +55,5 @@ def ensure_indexes(db: Database) -> None:
         print("✓ Índices de MongoDB creados/verificados")
     except Exception as e:
         print(f"⚠ Error creando índices (no bloquea startup): {str(e)}")
+=======
+>>>>>>> b27f6820b0d96529ef6203c1520e8f04a6bc3fc9

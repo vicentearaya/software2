@@ -36,7 +36,10 @@ dependencies:
   shared_preferences: ^2.3.2
   http: ^1.2.2
   app_settings: ^7.0.0
+<<<<<<< HEAD
   provider: ^6.0.0  # ✅ Para estado global de piscinas
+=======
+>>>>>>> b27f6820b0d96529ef6203c1520e8f04a6bc3fc9
 dev_dependencies:
   flutter_test:
     sdk: flutter

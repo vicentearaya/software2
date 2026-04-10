@@ -65,6 +65,7 @@ def get_current_user(token: str = Depends(_oauth2_scheme)) -> dict:
     description="Autentica contra la colección `usuarios`. Retorna JWT firmado con HS256.",
 )
 def login(credentials: UserLogin) -> Token:
+<<<<<<< HEAD
     """
     Autentica usuario contra MongoDB (colección 'usuarios').
     
@@ -97,6 +98,15 @@ def login(credentials: UserLogin) -> Token:
             }
         }
         user = DEMO_USERS.get(credentials.username)
+=======
+    # Schema esperado: {"username": str, "password": str (bcrypt hash)}
+    user = _db["usuarios"].find_one({
+        "$or": [
+            {"username": credentials.username},
+            {"email": credentials.username}
+        ]
+    })
+>>>>>>> b27f6820b0d96529ef6203c1520e8f04a6bc3fc9
 
     if not user or not _verify_password(credentials.password, user.get("password", "")):
         raise HTTPException(
