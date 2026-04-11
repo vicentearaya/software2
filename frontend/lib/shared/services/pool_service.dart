@@ -109,6 +109,31 @@ class PoolService {
     }
   }
 
+
+  Future<Map<String, dynamic>> deletePool(String poolId, String token) async {
+    try {
+      final response = await http.delete(
+        Uri.parse('$_baseUrl/piscinas/$poolId'),
+        headers: {
+          'Authorization': 'Bearer $token',
+        },
+      );
+
+      final responseData = jsonDecode(response.body);
+
+      if (response.statusCode == 200) {
+        return {'success': true, 'data': responseData};
+      } else {
+        return {
+          'success': false,
+          'message': responseData['detail'] ?? 'Error al eliminar la piscina',
+        };
+      }
+    } catch (e) {
+      return {'success': false, 'message': 'No se pudo conectar al servidor'};
+    }
+  }
+
   Future<Map<String, dynamic>> getPoolStatus(String poolId, {String? token}) async {
     try {
       final headers = <String, String>{

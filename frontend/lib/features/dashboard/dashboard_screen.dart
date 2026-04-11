@@ -65,31 +65,29 @@ class DashboardScreen extends StatefulWidget {
 }
 
 class _DashboardScreenState extends State<DashboardScreen> {
-  static const _prefKey = 'pool_data';
-
-  PoolData? _pool;
+  List<Map<String, dynamic>> _pools = [];
+  Map<String, dynamic>? _selectedPool;
   bool _loading = true;
-  String? _backendPoolId; // ID del documento en MongoDB
+  bool _loadingStatus = false;
+  Map<String, dynamic>? _poolStatus;
+
   final _authService = AuthService();
   final _poolService = PoolService();
-
-  Map<String, dynamic>? _poolStatus;
-  bool _loadingStatus = true;
 
   @override
   void initState() {
     super.initState();
-    _loadPool();
+    _loadPools();
   }
 
   Future<void> _loadPoolStatus() async {
-    if (_backendPoolId == null) {
+    if (_selectedPool == null || _selectedPool!['id'] == null) {
       if (mounted) setState(() => _loadingStatus = false);
       return;
     }
     if (mounted) setState(() => _loadingStatus = true);
     final token = await _authService.getToken();
-    final result = await _poolService.getPoolStatus(_backendPoolId!, token: token);
+    final result = await _poolService.getPoolStatus(_selectedPool!['id'], token: token);
     if (result['success'] == true) {
       if (mounted) {
         setState(() {
@@ -102,86 +100,47 @@ class _DashboardScreenState extends State<DashboardScreen> {
     }
   }
 
-  /// Carga la piscina: primero intenta el backend, cae en caché local si falla.
-  Future<void> _loadPool() async {
-    setState(() => _loading = true);
+  Future<void> _loadPools({String? selectId}) async {
+    if (mounted) setState(() => _loading = true);
 
-    // Leer caché local primero (para poder combinar luego)
-    final prefs = await SharedPreferences.getInstance();
-    PoolData? localPool;
-    final rawLocal = prefs.getString(_prefKey);
-    if (rawLocal != null) {
-      try { localPool = PoolData.fromJson(jsonDecode(rawLocal)); } catch (_) {}
-    }
-
-    // 1. Intentar cargar desde el backend
     final token = await _authService.getToken();
-    if (token != null) {
-      final result = await _poolService.getPools(token);
-      if (result['success'] == true) {
-        final List<dynamic> pools = result['data'] as List<dynamic>;
-        if (pools.isNotEmpty) {
-          final doc = pools.first as Map<String, dynamic>;
+    if (token == null) {
+      if (mounted) setState(() {
+        _loading = false;
+        _pools = [];
+        _selectedPool = null;
+      });
+      return;
+    }
 
-          // Dimensiones del backend (pueden ser 0 si es backend antiguo no desplegado)
-          final backendLargo = (doc['largo'] as num?)?.toDouble() ?? 0;
-          final backendAncho = (doc['ancho'] as num?)?.toDouble() ?? 0;
-          final backendProf  = (doc['profundidad'] as num?)?.toDouble() ?? 0;
+    final result = await _poolService.getPools(token);
+    if (result['success'] == true) {
+      final List<dynamic> fetched = result['data'] as List<dynamic>;
+      _pools = fetched.map((e) => e as Map<String, dynamic>).toList();
 
-          // Si el backend devuelve 0 pero el caché local tiene datos válidos,
-          // conservar las dimensiones locales (el backend aún no las retorna)
-          final largo      = backendLargo > 0 ? backendLargo : (localPool?.largo ?? 0);
-          final ancho      = backendAncho > 0 ? backendAncho : (localPool?.ancho ?? 0);
-          final prof       = backendProf  > 0 ? backendProf  : (localPool?.profundidad ?? 0);
-          final esInterior = (doc['tipo'] as String?) == 'interior';
-          final filtro     = (doc['filtro'] as bool?) ?? (localPool?.tieneFiltro ?? true);
-
-          final pool = PoolData(
-            nombre: doc['nombre'] as String? ?? '',
-            largo: largo,
-            ancho: ancho,
-            profundidad: prof,
-            esInterior: esInterior,
-            tieneFiltro: filtro,
-          );
-          _backendPoolId = doc['id'] as String?;
-
-          // Actualizar caché local con la versión combinada
-          await prefs.setString(_prefKey, jsonEncode(pool.toJson()));
-          if (mounted) {
-            setState(() {
-              _pool = pool;
-              _loading = false;
-            });
-          }
-          _loadPoolStatus();
-          return;
-        }
+      if (_pools.isNotEmpty) {
+        final prefs = await SharedPreferences.getInstance();
+        final lastId = selectId ?? prefs.getString('last_pool_id');
+        
+        _selectedPool = _pools.firstWhere(
+          (p) => p['id'] == lastId, 
+          orElse: () => _pools.first
+        );
+        
+        await prefs.setString('last_pool_id', _selectedPool!['id']);
+      } else {
+        _selectedPool = null;
       }
     }
 
-    // 2. Fallback: caché local (sin conexión o sin piscina en backend)
-    if (localPool != null) {
-      if (mounted) {
-        setState(() {
-          _pool = localPool;
-          _loading = false;
-        });
-      }
+    if (mounted) {
+      setState(() => _loading = false);
       _loadPoolStatus();
-    } else {
-      if (mounted) setState(() => _loading = false);
     }
   }
 
-  /// Guarda la piscina en el backend Y en caché local.
+  /// Guarda la piscina en el backend.
   Future<void> _savePool(PoolData pool) async {
-    // Guardar en caché local inmediatamente (UX responsiva)
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_prefKey, jsonEncode(pool.toJson()));
-    setState(() => _pool = pool);
-
-    // Intentar guardar en el backend
     final token = await _authService.getToken();
     if (token == null) return;
 
@@ -197,26 +156,32 @@ class _DashboardScreenState extends State<DashboardScreen> {
     };
 
     Map<String, dynamic> result;
-
-    if (_backendPoolId != null) {
-      // Ya existe: actualizar (PUT)
-      result = await _poolService.updatePool(_backendPoolId!, payload, token);
+    if (_selectedPool != null && _selectedPool!['nombre'] == pool.nombre) {
+      // Actualizar si es la misma seleccionada (o podrías pasar el ID explícito)
+      result = await _poolService.updatePool(_selectedPool!['id'], payload, token);
     } else {
-      // Nueva piscina: crear (POST)
       result = await _poolService.createPool(payload, token);
-      if (result['success'] == true) {
-        _backendPoolId = (result['data'] as Map<String, dynamic>?)?['id'] as String?;
-      }
     }
-    // Si falla el backend, la piscina igual queda en caché local
+
+    if (result['success'] == true) {
+      final newPool = result['data'] as Map<String, dynamic>;
+      await _loadPools(selectId: newPool['id']);
+    }
   }
 
-  /// Elimina la piscina del caché local (el backend no tiene DELETE en /piscinas aún).
+  /// Elimina la piscina del backend.
   Future<void> _deletePool() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove(_prefKey);
-    _backendPoolId = null;
-    setState(() => _pool = null);
+    if (_selectedPool == null) return;
+    
+    final token = await _authService.getToken();
+    if (token == null) return;
+
+    final res = await _poolService.deletePool(_selectedPool!['id'], token);
+    if (res['success'] == true) {
+      await _loadPools();
+    } else {
+      if (mounted) AppUtils.showSnackBar(context, res['message'], isError: true);
+    }
   }
 
   void _openAddPoolForm() {
@@ -224,7 +189,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
       PageRouteBuilder(
         pageBuilder: (_, animation, __) => AddPoolScreen(
           onSave: _savePool,
-          initialData: _pool, // Pre-poblar con los datos actuales al editar
+          initialData: _selectedPool != null ? PoolData(
+            nombre: _selectedPool!['nombre'] ?? '',
+            largo: (_selectedPool!['largo'] as num?)?.toDouble() ?? 0,
+            ancho: (_selectedPool!['ancho'] as num?)?.toDouble() ?? 0,
+            profundidad: (_selectedPool!['profundidad'] as num?)?.toDouble() ?? 0,
+            esInterior: (_selectedPool!['tipo'] as String?) == 'interior',
+            tieneFiltro: (_selectedPool!['filtro'] as bool?) ?? true,
+          ) : null,
         ),
         transitionsBuilder: (_, animation, __, child) {
           return SlideTransition(
@@ -248,8 +220,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         ),
       );
     }
-
-    return _pool == null ? _buildEmptyState() : _buildDashboard();
+    return _selectedPool == null ? _buildEmptyState() : _buildDashboard();
   }
 
   // ── Estado vacío ─────────────────────────────
@@ -328,11 +299,25 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   // ── Dashboard con datos de piscina ────────────
   Widget _buildDashboard() {
-    final pool = _pool!;
-    final litros = pool.volumenLitros;
+    final selectedPoolMap = _selectedPool!;
+    final largo = (selectedPoolMap['largo'] as num?)?.toDouble() ?? 0.0;
+    final ancho = (selectedPoolMap['ancho'] as num?)?.toDouble() ?? 0.0;
+    final prof = (selectedPoolMap['profundidad'] as num?)?.toDouble() ?? 0.0;
+    final volumenM3 = (selectedPoolMap['volumen'] as num?)?.toDouble() ?? (largo * ancho * prof);
+    final litros = volumenM3 * 1000;
+    
     final litrosStr = litros >= 1000
         ? '${(litros / 1000).toStringAsFixed(2)} m³ (${_formatNumber(litros)} L)'
         : '${_formatNumber(litros)} L';
+
+    final pool = PoolData(
+      nombre: selectedPoolMap['nombre'] ?? '',
+      largo: largo,
+      ancho: ancho,
+      profundidad: prof,
+      esInterior: selectedPoolMap['tipo'] == 'interior',
+      tieneFiltro: (selectedPoolMap['filtro'] as bool?) ?? true,
+    );
 
     return Scaffold(
       body: SafeArea(
@@ -345,27 +330,116 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Dashboard',
-                          style: GoogleFonts.syne(
-                            color: AppColors.textPrimary,
-                            fontSize: 26,
-                            fontWeight: FontWeight.w700,
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Text(
+                                'Dashboard',
+                                style: GoogleFonts.syne(
+                                  color: AppColors.textPrimary,
+                                  fontSize: 26,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              if (_pools.length < 3)
+                                IconButton(
+                                  onPressed: _openAddPoolForm,
+                                  icon: const Icon(Icons.add_circle_outline_rounded, color: AppColors.primary, size: 24),
+                                  tooltip: 'Agregar piscina',
+                                  constraints: const BoxConstraints(),
+                                  padding: EdgeInsets.zero,
+                                ),
+                            ],
                           ),
-                        ),
-                        Text(
-                          "Monitorea tu piscina",
-                          style: GoogleFonts.interTight(
-                            color: AppColors.textSecondary,
-                            fontSize: 13,
+                          // Selector de piscina
+                          GestureDetector(
+                            onTap: () {
+                              showModalBottomSheet(
+                                context: context,
+                                backgroundColor: AppColors.surface,
+                                shape: const RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+                                ),
+                                builder: (context) => Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    const SizedBox(height: 12),
+                                    Container(
+                                      width: 40,
+                                      height: 4,
+                                      decoration: BoxDecoration(
+                                        color: AppColors.border,
+                                        borderRadius: BorderRadius.circular(2),
+                                      ),
+                                    ),
+                                    Padding(
+                                      padding: const EdgeInsets.all(20),
+                                      child: Text(
+                                        'Seleccionar Piscina',
+                                        style: GoogleFonts.syne(
+                                          color: AppColors.textPrimary,
+                                          fontSize: 18,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ),
+                                    const Divider(height: 1),
+                                    Flexible(
+                                      child: ListView.builder(
+                                        shrinkWrap: true,
+                                        itemCount: _pools.length,
+                                        itemBuilder: (context, index) {
+                                          final p = _pools[index];
+                                          final isSelected = p['id'] == _selectedPool!['id'];
+                                          return ListTile(
+                                            leading: Icon(
+                                              Icons.pool_rounded,
+                                              color: isSelected ? AppColors.primary : AppColors.textMuted,
+                                            ),
+                                            title: Text(
+                                              p['nombre'] ?? 'Sin nombre',
+                                              style: GoogleFonts.interTight(
+                                                color: isSelected ? AppColors.primary : AppColors.textPrimary,
+                                                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                                              ),
+                                            ),
+                                            trailing: isSelected ? const Icon(Icons.check, color: AppColors.primary) : null,
+                                            onTap: () {
+                                              Navigator.pop(context);
+                                              _loadPools(selectId: p['id']);
+                                            },
+                                          );
+                                        },
+                                      ),
+                                    ),
+                                    const SizedBox(height: 20),
+                                  ],
+                                ),
+                              );
+                            },
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  _selectedPool!['nombre'] ?? "",
+                                  style: GoogleFonts.interTight(
+                                    color: AppColors.primary,
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                                const Icon(Icons.keyboard_arrow_down_rounded, color: AppColors.primary, size: 18),
+                              ],
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                    // Botón eliminar piscina
+                    // Botón opciones
                     PopupMenuButton<String>(
                       onSelected: (value) {
                         if (value == 'delete') _confirmDeletePool();
@@ -488,11 +562,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ),
 
             // ── Tarjeta de Limpieza Manual Express ──
-            if (_pool != null)
+            if (_selectedPool != null)
               SliverToBoxAdapter(
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
-                  child: _ManualTreatmentCard(poolId: _backendPoolId),
+                  child: _ManualTreatmentCard(poolId: _selectedPool!['id']),
                 ),
               ),
 
