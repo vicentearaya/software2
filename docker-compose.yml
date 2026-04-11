@@ -1,0 +1,28 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: cleanpool_backend
+    ports:
+      - "8000:8000"
+    restart: always
+    # Puedes configurar tus env_vars aquí para localmente si es necesario
+    # environment:
+    #   - MONGODB_URI=...
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        # URL donde el backend estará expuesto para que Flutter le pegue
+        - API_URL=http://10.51.0.25:8000
+    container_name: cleanpool_frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    restart: always
