@@ -156,3 +156,23 @@ class UserRegister(BaseModel):
 class TratamientoManualRequest(BaseModel):
     ph: float = Field(..., ge=0.0, le=14.0, description="Valor actual de pH medido manualmente (0-14)")
     cloro: float = Field(..., ge=0.0, le=10.0, description="Valor actual de Cloro medido manualmente en ppm (0-10)")
+
+
+class MantencionIn(BaseModel):
+    """
+    Modelo para registrar un mantenimiento de piscina.
+    Tarea #2: Definir y validar schema con Pydantic.
+    """
+    id_piscina: str = Field(..., description="Identificador de la piscina")
+    productos: list[str] = Field(..., description="Lista de productos utilizados (ej: Cloro granulado, Reductor pH)")
+    cantidades: list[str] = Field(..., description="Cantidades correspondientes a cada producto (ej: 500g, 1L)")
+    fecha: datetime = Field(default_factory=datetime.utcnow, description="Fecha y hora del mantenimiento")
+
+
+class Mantencion(MantencionIn):
+    """
+    Modelo persistido de mantenimiento.
+    Incluye el username del técnico que realizó la acción.
+    """
+    username: str = Field(..., description="Nombre de usuario del técnico")
+    creado_en: datetime = Field(default_factory=datetime.utcnow)
