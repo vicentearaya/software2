@@ -402,25 +402,37 @@ def eliminar_pool(pool_id: str, db: Database = Depends(get_db)):
     description="Retorna el estado de la piscina evaluado por calculator.py, tomando última lectura de sensor o manual y dando prioridad al sensor."
 )
 def get_pool_status(pool_id: str, db: Database = Depends(get_db)):
+    """
+    Tarea #2: Evaluar parámetros con prioridad sensor > manual.
+    Busca en 'lecturas' (sensores) y 'mantenimientos' (manual).
+    """
+    from bson import ObjectId
     try:
-        # Verificar que el pool existe
-        pool = db.pools.find_one({"pool_id": pool_id})
+        # 1. Verificar que el pool existe (Usamos la colección piscinas que usa el frontend)
+        try:
+            oid = ObjectId(pool_id)
+            pool = db.piscinas.find_one({"_id": oid})
+        except:
+            # Si no es un ObjectId válido, intentamos búsqueda por pool_id como string (legacy fallback)
+            pool = db.piscinas.find_one({"pool_id": pool_id})
+
         if not pool:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Pool '{pool_id}' no encontrado"
+                detail=f"Piscina con ID '{pool_id}' no encontrada en la colección de usuario."
             )
 
-        # Buscar la última lectura de sensor
+        # 2. Buscar última lectura de sensor (IoT)
         lectura_sensor = db.lecturas.find_one({"pool_id": pool_id}, sort=[("timestamp", -1)])
-        # Buscar el último mantenimiento manual
+        
+        # 3. Buscar último mantenimiento manual registrado en piscinas.py
         lectura_manual = db.mantenimientos.find_one({"pool_id": pool_id}, sort=[("fecha", -1)])
 
         # Variables base
         ph, cloro, temperatura = None, None, None
         fuente_ph, fuente_cloro, fuente_temperatura = "ninguna", "ninguna", "ninguna"
 
-        # 1. Asignar manual si existe
+        # 4. Asignar manual si existe (ph_medido, cloro_medido)
         if lectura_manual:
             if lectura_manual.get("ph_medido") is not None:
                 ph = lectura_manual.get("ph_medido")
@@ -428,12 +440,12 @@ def get_pool_status(pool_id: str, db: Database = Depends(get_db)):
             if lectura_manual.get("cloro_medido") is not None:
                 cloro = lectura_manual.get("cloro_medido")
                 fuente_cloro = "manual"
-            # Generalmente no hay temp manual en Mantenimiento actual, pero por consistencia:
+            # Temperatura manual no se suele registrar, pero si se agregara:
             if lectura_manual.get("temperatura_medida") is not None:
                 temperatura = lectura_manual.get("temperatura_medida")
                 fuente_temperatura = "manual"
 
-        # 2. Asignar sensor si existe (Sobrescribe manual - Prioridad Sensor)
+        # 5. Asignar sensor si existe (PRIORIDAD SENSOR - Sobrescribe manual)
         if lectura_sensor:
             if lectura_sensor.get("ph") is not None:
                 ph = lectura_sensor.get("ph")
@@ -445,10 +457,8 @@ def get_pool_status(pool_id: str, db: Database = Depends(get_db)):
                 temperatura = lectura_sensor.get("temperatura")
                 fuente_temperatura = "sensor"
 
-        # Evaluar aptitud global con calculator.py
+        # 6. Evaluar con calculator.py
         estado_global = evaluarAptitud(ph, cloro, temperatura)
-
-        # Evaluar estados individuales con calculator.py
         estados_individuales = evaluar_parametros_individuales(ph, cloro, temperatura)
 
         return {
