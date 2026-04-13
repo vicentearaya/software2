@@ -80,7 +80,7 @@ def test_obtener_historial_vacio():
     
     assert response.status_code == 200
     assert response.json() == []
-    _mock_db["mantenciones"].find.assert_called_with({"username": "usuario_nuevo"})
+    _mock_db["mantenciones"].find.assert_called_with({"username": "usuario_nuevo"}, {"_id": 0})
 
 
 def test_obtener_historial_con_datos():

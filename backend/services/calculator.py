@@ -12,18 +12,29 @@ No tiene dependencias externas. Solo librería estándar.
 def evaluarAptitud(ph, cloro, temperatura):
     """
     Evalúa si la piscina está APTA o NO APTA en base a que todos los parámetros 
-    se encuentren estrictamente dentro de los rangos ideales.
+    disponibles se encuentren dentro de los rangos ideales.
     Rangos:
       - pH: 7.2 - 7.8
       - Cloro: 1 - 3 ppm
       - Temperatura: 24 - 30 °C
-    """
-    if ph is None or cloro is None or temperatura is None:
-        return "NO APTA"
     
-    if (7.2 <= ph <= 7.8) and (1.0 <= cloro <= 3.0) and (24.0 <= temperatura <= 30.0):
-        return "APTA"
-    return "NO APTA"
+    Si un parámetro es None, se ignora (no penaliza).
+    Si no hay ningún dato, retorna None (sin datos).
+    """
+    # Si no hay ningún dato, no podemos evaluar
+    if ph is None and cloro is None and temperatura is None:
+        return None
+    
+    # Evaluar solo los parámetros que tienen valor
+    parametros_ok = True
+    if ph is not None and not (7.2 <= ph <= 7.8):
+        parametros_ok = False
+    if cloro is not None and not (1.0 <= cloro <= 3.0):
+        parametros_ok = False
+    if temperatura is not None and not (24.0 <= temperatura <= 30.0):
+        parametros_ok = False
+    
+    return "APTA" if parametros_ok else "NO APTA"
 
 def evaluar_parametros_individuales(ph, cloro, temperatura):
     """

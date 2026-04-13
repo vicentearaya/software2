@@ -408,12 +408,12 @@ def get_pool_status(pool_id: str, db: Database = Depends(get_db)):
     """
     from bson import ObjectId
     try:
-        # 1. Verificar que el pool existe (Usamos la colección piscinas que usa el frontend)
+        # 1. Verificar que el pool existe en la colección piscinas (frontend)
+        pool = None
         try:
             oid = ObjectId(pool_id)
             pool = db.piscinas.find_one({"_id": oid})
-        except:
-            # Si no es un ObjectId válido, intentamos búsqueda por pool_id como string (legacy fallback)
+        except Exception:
             pool = db.piscinas.find_one({"pool_id": pool_id})
 
         if not pool:
@@ -423,10 +423,16 @@ def get_pool_status(pool_id: str, db: Database = Depends(get_db)):
             )
 
         # 2. Buscar última lectura de sensor (IoT)
-        lectura_sensor = db.lecturas.find_one({"pool_id": pool_id}, sort=[("timestamp", -1)])
-        
-        # 3. Buscar último mantenimiento manual registrado en piscinas.py
-        lectura_manual = db.mantenimientos.find_one({"pool_id": pool_id}, sort=[("fecha", -1)])
+        # Las lecturas pueden estar guardadas con el ObjectId string O con un pool_id custom
+        lectura_sensor = db.lecturas.find_one(
+            {"pool_id": pool_id}, sort=[("timestamp", -1)]
+        )
+
+        # 3. Buscar último mantenimiento manual (registrado desde /piscinas/{id}/tratamiento)
+        # Los mantenimientos se guardan con pool_id = ObjectId string
+        lectura_manual = db.mantenimientos.find_one(
+            {"pool_id": pool_id}, sort=[("fecha", -1)]
+        )
 
         # Variables base
         ph, cloro, temperatura = None, None, None
@@ -440,7 +446,6 @@ def get_pool_status(pool_id: str, db: Database = Depends(get_db)):
             if lectura_manual.get("cloro_medido") is not None:
                 cloro = lectura_manual.get("cloro_medido")
                 fuente_cloro = "manual"
-            # Temperatura manual no se suele registrar, pero si se agregara:
             if lectura_manual.get("temperatura_medida") is not None:
                 temperatura = lectura_manual.get("temperatura_medida")
                 fuente_temperatura = "manual"

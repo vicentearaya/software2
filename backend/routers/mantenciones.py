@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, status
+from datetime import datetime
 from db import get_db
 from models import MantencionIn, Mantencion
 from routers.auth import get_current_user
@@ -22,6 +23,7 @@ def crear_mantencion(mantencion_in: MantencionIn, current_user: dict = Depends(g
     # Almacenar el username del token en el registro de mantención
     mantencion_data = mantencion_in.model_dump()
     mantencion_data["username"] = current_user["username"]
+    mantencion_data["creado_en"] = datetime.utcnow()
     
     try:
         _db["mantenciones"].insert_one(mantencion_data)
@@ -30,6 +32,9 @@ def crear_mantencion(mantencion_in: MantencionIn, current_user: dict = Depends(g
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error al persistir mantenimiento: {str(e)}"
         )
+    
+    # Remover _id de MongoDB (ObjectId no es JSON-serializable)
+    mantencion_data.pop("_id", None)
     
     return mantencion_data
 
@@ -45,8 +50,10 @@ def obtener_historial(current_user: dict = Depends(get_current_user)):
     Retorna el historial completo del usuario.
     Implementa Tarea #4.
     """
-    # Filtrar por el username del usuario autenticado
-    cursor = _db["mantenciones"].find({"username": current_user["username"]}).sort("fecha", -1)
+    # Filtrar por el username del usuario autenticado, excluyendo _id de MongoDB
+    cursor = _db["mantenciones"].find(
+        {"username": current_user["username"]}, {"_id": 0}
+    ).sort("fecha", -1)
     
     mantenciones = list(cursor)
     return mantenciones
