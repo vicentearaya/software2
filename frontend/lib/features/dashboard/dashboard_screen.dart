@@ -65,11 +65,15 @@ class DashboardScreen extends StatefulWidget {
 }
 
 class _DashboardScreenState extends State<DashboardScreen> {
-  static const _prefKey = 'pool_data';
-
-  PoolData? _pool;
+  List<Map<String, dynamic>> _pools = [];
+  Map<String, dynamic>? _selectedPool;
   bool _loading = true;
+<<<<<<< HEAD
   String? _backendPoolId; // ID del documento en MongoDB
+=======
+  bool _loadingStatus = false;
+  Map<String, dynamic>? _poolStatus;
+>>>>>>> origin/main
 
   final _authService = AuthService();
   final _poolService = PoolService();
@@ -77,35 +81,54 @@ class _DashboardScreenState extends State<DashboardScreen> {
   @override
   void initState() {
     super.initState();
-    _loadPool();
+    _loadPools();
   }
 
+<<<<<<< HEAD
   /// Carga la piscina: primero intenta el backend, cae en caché local si falla.
   Future<void> _loadPool() async {
     setState(() => _loading = true);
+=======
+  Future<void> _loadPoolStatus() async {
+    if (_selectedPool == null || _selectedPool!['id'] == null) {
+      if (mounted) setState(() => _loadingStatus = false);
+      return;
+    }
+    if (mounted) setState(() => _loadingStatus = true);
+    final token = await _authService.getToken();
+    final result = await _poolService.getPoolStatus(_selectedPool!['id'], token: token);
+    if (result['success'] == true) {
+      if (mounted) {
+        setState(() {
+          _poolStatus = result['data'];
+          _loadingStatus = false;
+        });
+      }
+    } else {
+      if (mounted) setState(() => _loadingStatus = false);
+    }
+  }
 
-    // Leer caché local primero (para poder combinar luego)
-    final prefs = await SharedPreferences.getInstance();
-    PoolData? localPool;
-    final rawLocal = prefs.getString(_prefKey);
-    if (rawLocal != null) {
-      try { localPool = PoolData.fromJson(jsonDecode(rawLocal)); } catch (_) {}
+  Future<void> _loadPools({String? selectId}) async {
+    if (mounted) setState(() => _loading = true);
+>>>>>>> origin/main
+
+    final token = await _authService.getToken();
+    if (token == null) {
+      if (mounted) setState(() {
+        _loading = false;
+        _pools = [];
+        _selectedPool = null;
+      });
+      return;
     }
 
-    // 1. Intentar cargar desde el backend
-    final token = await _authService.getToken();
-    if (token != null) {
-      final result = await _poolService.getPools(token);
-      if (result['success'] == true) {
-        final List<dynamic> pools = result['data'] as List<dynamic>;
-        if (pools.isNotEmpty) {
-          final doc = pools.first as Map<String, dynamic>;
+    final result = await _poolService.getPools(token);
+    if (result['success'] == true) {
+      final List<dynamic> fetched = result['data'] as List<dynamic>;
+      _pools = fetched.map((e) => e as Map<String, dynamic>).toList();
 
-          // Dimensiones del backend (pueden ser 0 si es backend antiguo no desplegado)
-          final backendLargo = (doc['largo'] as num?)?.toDouble() ?? 0;
-          final backendAncho = (doc['ancho'] as num?)?.toDouble() ?? 0;
-          final backendProf  = (doc['profundidad'] as num?)?.toDouble() ?? 0;
-
+<<<<<<< HEAD
           // Si el backend devuelve 0 pero el caché local tiene datos válidos,
           // conservar las dimensiones locales (el backend aún no las retorna)
           final largo      = backendLargo > 0 ? backendLargo : (localPool?.largo ?? 0);
@@ -143,17 +166,31 @@ class _DashboardScreenState extends State<DashboardScreen> {
       });
     } else {
       setState(() => _loading = false);
+=======
+      if (_pools.isNotEmpty) {
+        final prefs = await SharedPreferences.getInstance();
+        final lastId = selectId ?? prefs.getString('last_pool_id');
+        
+        _selectedPool = _pools.firstWhere(
+          (p) => p['id'] == lastId, 
+          orElse: () => _pools.first
+        );
+        
+        await prefs.setString('last_pool_id', _selectedPool!['id']);
+      } else {
+        _selectedPool = null;
+      }
+    }
+
+    if (mounted) {
+      setState(() => _loading = false);
+      _loadPoolStatus();
+>>>>>>> origin/main
     }
   }
 
-  /// Guarda la piscina en el backend Y en caché local.
+  /// Guarda la piscina en el backend.
   Future<void> _savePool(PoolData pool) async {
-    // Guardar en caché local inmediatamente (UX responsiva)
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_prefKey, jsonEncode(pool.toJson()));
-    setState(() => _pool = pool);
-
-    // Intentar guardar en el backend
     final token = await _authService.getToken();
     if (token == null) return;
 
@@ -169,26 +206,32 @@ class _DashboardScreenState extends State<DashboardScreen> {
     };
 
     Map<String, dynamic> result;
-
-    if (_backendPoolId != null) {
-      // Ya existe: actualizar (PUT)
-      result = await _poolService.updatePool(_backendPoolId!, payload, token);
+    if (_selectedPool != null && _selectedPool!['nombre'] == pool.nombre) {
+      // Actualizar si es la misma seleccionada (o podrías pasar el ID explícito)
+      result = await _poolService.updatePool(_selectedPool!['id'], payload, token);
     } else {
-      // Nueva piscina: crear (POST)
       result = await _poolService.createPool(payload, token);
-      if (result['success'] == true) {
-        _backendPoolId = (result['data'] as Map<String, dynamic>?)?['id'] as String?;
-      }
     }
-    // Si falla el backend, la piscina igual queda en caché local
+
+    if (result['success'] == true) {
+      final newPool = result['data'] as Map<String, dynamic>;
+      await _loadPools(selectId: newPool['id']);
+    }
   }
 
-  /// Elimina la piscina del caché local (el backend no tiene DELETE en /piscinas aún).
+  /// Elimina la piscina del backend.
   Future<void> _deletePool() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove(_prefKey);
-    _backendPoolId = null;
-    setState(() => _pool = null);
+    if (_selectedPool == null) return;
+    
+    final token = await _authService.getToken();
+    if (token == null) return;
+
+    final res = await _poolService.deletePool(_selectedPool!['id'], token);
+    if (res['success'] == true) {
+      await _loadPools();
+    } else {
+      if (mounted) AppUtils.showSnackBar(context, res['message'], isError: true);
+    }
   }
 
   void _openAddPoolForm() {
@@ -196,7 +239,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
       PageRouteBuilder(
         pageBuilder: (_, animation, __) => AddPoolScreen(
           onSave: _savePool,
-          initialData: _pool, // Pre-poblar con los datos actuales al editar
+          initialData: _selectedPool != null ? PoolData(
+            nombre: _selectedPool!['nombre'] ?? '',
+            largo: (_selectedPool!['largo'] as num?)?.toDouble() ?? 0,
+            ancho: (_selectedPool!['ancho'] as num?)?.toDouble() ?? 0,
+            profundidad: (_selectedPool!['profundidad'] as num?)?.toDouble() ?? 0,
+            esInterior: (_selectedPool!['tipo'] as String?) == 'interior',
+            tieneFiltro: (_selectedPool!['filtro'] as bool?) ?? true,
+          ) : null,
         ),
         transitionsBuilder: (_, animation, __, child) {
           return SlideTransition(
@@ -220,8 +270,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         ),
       );
     }
-
-    return _pool == null ? _buildEmptyState() : _buildDashboard();
+    return _selectedPool == null ? _buildEmptyState() : _buildDashboard();
   }
 
   // ── Estado vacío ─────────────────────────────
@@ -300,11 +349,25 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   // ── Dashboard con datos de piscina ────────────
   Widget _buildDashboard() {
-    final pool = _pool!;
-    final litros = pool.volumenLitros;
+    final selectedPoolMap = _selectedPool!;
+    final largo = (selectedPoolMap['largo'] as num?)?.toDouble() ?? 0.0;
+    final ancho = (selectedPoolMap['ancho'] as num?)?.toDouble() ?? 0.0;
+    final prof = (selectedPoolMap['profundidad'] as num?)?.toDouble() ?? 0.0;
+    final volumenM3 = (selectedPoolMap['volumen'] as num?)?.toDouble() ?? (largo * ancho * prof);
+    final litros = volumenM3 * 1000;
+    
     final litrosStr = litros >= 1000
         ? '${(litros / 1000).toStringAsFixed(2)} m³ (${_formatNumber(litros)} L)'
         : '${_formatNumber(litros)} L';
+
+    final pool = PoolData(
+      nombre: selectedPoolMap['nombre'] ?? '',
+      largo: largo,
+      ancho: ancho,
+      profundidad: prof,
+      esInterior: selectedPoolMap['tipo'] == 'interior',
+      tieneFiltro: (selectedPoolMap['filtro'] as bool?) ?? true,
+    );
 
     return Scaffold(
       body: SafeArea(
@@ -317,27 +380,116 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Dashboard',
-                          style: GoogleFonts.syne(
-                            color: AppColors.textPrimary,
-                            fontSize: 26,
-                            fontWeight: FontWeight.w700,
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Text(
+                                'Dashboard',
+                                style: GoogleFonts.syne(
+                                  color: AppColors.textPrimary,
+                                  fontSize: 26,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              if (_pools.length < 3)
+                                IconButton(
+                                  onPressed: _openAddPoolForm,
+                                  icon: const Icon(Icons.add_circle_outline_rounded, color: AppColors.primary, size: 24),
+                                  tooltip: 'Agregar piscina',
+                                  constraints: const BoxConstraints(),
+                                  padding: EdgeInsets.zero,
+                                ),
+                            ],
                           ),
-                        ),
-                        Text(
-                          "Monitorea tu piscina",
-                          style: GoogleFonts.interTight(
-                            color: AppColors.textSecondary,
-                            fontSize: 13,
+                          // Selector de piscina
+                          GestureDetector(
+                            onTap: () {
+                              showModalBottomSheet(
+                                context: context,
+                                backgroundColor: AppColors.surface,
+                                shape: const RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+                                ),
+                                builder: (context) => Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    const SizedBox(height: 12),
+                                    Container(
+                                      width: 40,
+                                      height: 4,
+                                      decoration: BoxDecoration(
+                                        color: AppColors.border,
+                                        borderRadius: BorderRadius.circular(2),
+                                      ),
+                                    ),
+                                    Padding(
+                                      padding: const EdgeInsets.all(20),
+                                      child: Text(
+                                        'Seleccionar Piscina',
+                                        style: GoogleFonts.syne(
+                                          color: AppColors.textPrimary,
+                                          fontSize: 18,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ),
+                                    const Divider(height: 1),
+                                    Flexible(
+                                      child: ListView.builder(
+                                        shrinkWrap: true,
+                                        itemCount: _pools.length,
+                                        itemBuilder: (context, index) {
+                                          final p = _pools[index];
+                                          final isSelected = p['id'] == _selectedPool!['id'];
+                                          return ListTile(
+                                            leading: Icon(
+                                              Icons.pool_rounded,
+                                              color: isSelected ? AppColors.primary : AppColors.textMuted,
+                                            ),
+                                            title: Text(
+                                              p['nombre'] ?? 'Sin nombre',
+                                              style: GoogleFonts.interTight(
+                                                color: isSelected ? AppColors.primary : AppColors.textPrimary,
+                                                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                                              ),
+                                            ),
+                                            trailing: isSelected ? const Icon(Icons.check, color: AppColors.primary) : null,
+                                            onTap: () {
+                                              Navigator.pop(context);
+                                              _loadPools(selectId: p['id']);
+                                            },
+                                          );
+                                        },
+                                      ),
+                                    ),
+                                    const SizedBox(height: 20),
+                                  ],
+                                ),
+                              );
+                            },
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  _selectedPool!['nombre'] ?? "",
+                                  style: GoogleFonts.interTight(
+                                    color: AppColors.primary,
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                                const Icon(Icons.keyboard_arrow_down_rounded, color: AppColors.primary, size: 18),
+                              ],
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                    // Botón eliminar piscina
+                    // Botón opciones
                     PopupMenuButton<String>(
                       onSelected: (value) {
                         if (value == 'delete') _confirmDeletePool();
@@ -452,11 +604,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ),
 
             // ── Tarjeta de Limpieza Manual Express ──
-            if (_pool != null)
+            if (_selectedPool != null)
               SliverToBoxAdapter(
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
-                  child: _ManualTreatmentCard(poolId: _backendPoolId),
+                  child: _ManualTreatmentCard(poolId: _selectedPool!['id']),
                 ),
               ),
 
@@ -466,6 +618,174 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
+<<<<<<< HEAD
+=======
+  Widget _buildStatusWidget() {
+    if (_loadingStatus) {
+      return Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(vertical: 30),
+        decoration: BoxDecoration(
+          color: AppColors.surfaceElevated,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: AppColors.border),
+        ),
+        child: const Center(child: CircularProgressIndicator(color: AppColors.primary)),
+      );
+    }
+
+    // Default: Sin datos (Gris)
+    Color bgColor = const Color(0xFF4B5563); 
+    Color iconColor = Colors.white.withOpacity(0.9);
+    IconData icon = Icons.info_outline_rounded;
+    String text = "Sin datos disponibles";
+    String subText = "No hay registros recientes para evaluar";
+
+    Map<String, dynamic>? parametros;
+
+    if (_poolStatus != null && _poolStatus!['estado'] != null) {
+      parametros = _poolStatus!['parametros'] as Map<String, dynamic>?;
+      final estado = _poolStatus!['estado'];
+      
+      if (estado == 'APTA') {
+        bgColor = const Color(0xFF10B981); // Esmeralda / Verde Brillante
+        iconColor = Colors.white;
+        icon = Icons.check_circle_rounded;
+        text = "¡Apta para baño! Disfruta tu piscina 🏊";
+        subText = "Todos los parámetros están en rango óptimo.";
+      } else if (estado == 'NO APTA') {
+        bgColor = const Color(0xFFEF4444); // Rojo Brillante
+        iconColor = Colors.white;
+        icon = Icons.warning_rounded;
+        text = "No apta para baño";
+        subText = "Se requiere ajuste de parámetros químicos.";
+      }
+    }
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: bgColor,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: bgColor.withOpacity(0.4),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.2),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(icon, color: iconColor, size: 32),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      text,
+                      style: GoogleFonts.syne(
+                        color: Colors.white,
+                        fontSize: 18,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      subText,
+                      style: GoogleFonts.interTight(
+                        color: Colors.white.withOpacity(0.9),
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 24),
+          Container(
+            padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 10),
+            decoration: BoxDecoration(
+              color: Colors.black.withOpacity(0.15),
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                _buildDetailedParam('pH', 'ph', parametros?['ph']),
+                _buildDetailedParam('Cloro', 'cloro', parametros?['cloro']),
+                _buildDetailedParam('Temp.', 'temperatura', parametros?['temperatura']),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDetailedParam(String label, String key, Map<String, dynamic>? data) {
+    final bool hasData = data != null && data['valor'] != null;
+    final valor = hasData ? data['valor'] : null;
+    final estado = hasData ? data['estado'] : 'SIN DATOS';
+    final isNormal = estado == 'NORMAL';
+
+    String displayValue = "-";
+    if (hasData) {
+      if (key == 'ph') displayValue = valor.toStringAsFixed(1);
+      else if (key == 'cloro') displayValue = "${valor.toStringAsFixed(1)} ppm";
+      else if (key == 'temperatura') displayValue = "${valor.toStringAsFixed(1)}°C";
+    }
+
+    return Column(
+      children: [
+        Text(
+          label,
+          style: GoogleFonts.interTight(
+            color: Colors.white.withOpacity(0.7),
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        const SizedBox(height: 6),
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              displayValue,
+              style: GoogleFonts.syne(
+                color: Colors.white,
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            if (hasData) ...[
+              const SizedBox(width: 4),
+              Icon(
+                isNormal ? Icons.check_rounded : Icons.close_rounded,
+                color: isNormal ? const Color(0xFF34D399) : const Color(0xFFFCA5A5),
+                size: 18,
+              ),
+            ],
+          ],
+        ),
+      ],
+    );
+  }
+
+>>>>>>> origin/main
   void _confirmDeletePool() {
     showDialog(
       context: context,

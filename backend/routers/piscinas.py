@@ -100,6 +100,28 @@ def update_pool(
         **update_data
     )
 
+
+@router.delete("/piscinas/{pool_id}", status_code=status.HTTP_200_OK)
+def delete_pool(pool_id: str, current_user: dict = Depends(get_current_user), db = Depends(get_db)):
+    """Elimina una piscina y sus registros asociados (mantenimientos y lecturas)."""
+    try:
+        oid = ObjectId(pool_id)
+    except Exception:
+        raise HTTPException(status_code=400, detail="ID inválido")
+
+    existing = db.piscinas.find_one({"_id": oid, "username": current_user["username"]})
+    if not existing:
+        raise HTTPException(status_code=404, detail="Piscina no encontrada")
+
+    # Eliminar la piscina
+    db.piscinas.delete_one({"_id": oid})
+    
+    # Eliminar registros asociados
+    db.mantenimientos.delete_many({"pool_id": pool_id})
+    db.lecturas.delete_many({"pool_id": pool_id})
+
+    return {"ok": True, "message": "Piscina eliminada correctamente"}
+
 from models import TratamientoManualRequest
 from services.calculator import calcular_tratamiento
 

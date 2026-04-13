@@ -424,6 +424,7 @@ def eliminar_pool(pool_id: str, db: Database = Depends(get_db), current_user: di
     summary="Listar piscinas del usuario",
     description="Retorna lista de todas las piscinas del usuario autenticado (endpoint simplificado)"
 )
+<<<<<<< HEAD
 def get_pools_simple(
     db: Database = Depends(get_db),
     current_user: dict = Depends(get_current_user)
@@ -533,6 +534,96 @@ def get_pool_simple(
         
         return pool
     
+=======
+def get_pool_status(pool_id: str, db: Database = Depends(get_db)):
+    """
+    Tarea #2: Evaluar parámetros con prioridad sensor > manual.
+    Busca en 'lecturas' (sensores) y 'mantenimientos' (manual).
+    """
+    from bson import ObjectId
+    try:
+        # 1. Verificar que el pool existe en la colección piscinas (frontend)
+        pool = None
+        try:
+            oid = ObjectId(pool_id)
+            pool = db.piscinas.find_one({"_id": oid})
+        except Exception:
+            pool = db.piscinas.find_one({"pool_id": pool_id})
+
+        if not pool:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Piscina con ID '{pool_id}' no encontrada en la colección de usuario."
+            )
+
+        # 2. Buscar última lectura de sensor (IoT)
+        # Las lecturas pueden estar guardadas con el ObjectId string O con un pool_id custom
+        lectura_sensor = db.lecturas.find_one(
+            {"pool_id": pool_id}, sort=[("timestamp", -1)]
+        )
+
+        # 3. Buscar último mantenimiento manual (registrado desde /piscinas/{id}/tratamiento)
+        # Los mantenimientos se guardan con pool_id = ObjectId string
+        lectura_manual = db.mantenimientos.find_one(
+            {"pool_id": pool_id}, sort=[("fecha", -1)]
+        )
+
+        # Variables base
+        ph, cloro, temperatura = None, None, None
+        fuente_ph, fuente_cloro, fuente_temperatura = "ninguna", "ninguna", "ninguna"
+
+        # 4. Asignar manual si existe (ph_medido, cloro_medido)
+        if lectura_manual:
+            if lectura_manual.get("ph_medido") is not None:
+                ph = lectura_manual.get("ph_medido")
+                fuente_ph = "manual"
+            if lectura_manual.get("cloro_medido") is not None:
+                cloro = lectura_manual.get("cloro_medido")
+                fuente_cloro = "manual"
+            if lectura_manual.get("temperatura_medida") is not None:
+                temperatura = lectura_manual.get("temperatura_medida")
+                fuente_temperatura = "manual"
+
+        # 5. Asignar sensor si existe (PRIORIDAD SENSOR - Sobrescribe manual)
+        if lectura_sensor:
+            if lectura_sensor.get("ph") is not None:
+                ph = lectura_sensor.get("ph")
+                fuente_ph = "sensor"
+            if lectura_sensor.get("cloro") is not None:
+                cloro = lectura_sensor.get("cloro")
+                fuente_cloro = "sensor"
+            if lectura_sensor.get("temperatura") is not None:
+                temperatura = lectura_sensor.get("temperatura")
+                fuente_temperatura = "sensor"
+
+        # 6. Evaluar con calculator.py
+        estado_global = evaluarAptitud(ph, cloro, temperatura)
+        estados_individuales = evaluar_parametros_individuales(ph, cloro, temperatura)
+
+        return {
+            "ok": True,
+            "pool_id": pool_id,
+            "estado": estado_global,
+            "parametros": {
+                "ph": {
+                    "valor": ph,
+                    "estado": estados_individuales["ph"],
+                    "fuente": fuente_ph
+                },
+                "cloro": {
+                    "valor": cloro,
+                    "estado": estados_individuales["cloro"],
+                    "fuente": fuente_cloro
+                },
+                "temperatura": {
+                    "valor": temperatura,
+                    "estado": estados_individuales["temperatura"],
+                    "fuente": fuente_temperatura
+                }
+            }
+        }
+
+>>>>>>> origin/main
     except HTTPException:
         raise
     except Exception as e:

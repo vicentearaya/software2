@@ -9,6 +9,57 @@ No tiene dependencias externas. Solo librería estándar.
 """
 
 
+def evaluarAptitud(ph, cloro, temperatura):
+    """
+    Evalúa si la piscina está APTA o NO APTA en base a que todos los parámetros 
+    disponibles se encuentren dentro de los rangos ideales.
+    Rangos:
+      - pH: 7.2 - 7.8
+      - Cloro: 1 - 3 ppm
+      - Temperatura: 24 - 30 °C
+    
+    Si un parámetro es None, se ignora (no penaliza).
+    Si no hay ningún dato, retorna None (sin datos).
+    """
+    # Si no hay ningún dato, no podemos evaluar
+    if ph is None and cloro is None and temperatura is None:
+        return None
+    
+    # Evaluar solo los parámetros que tienen valor
+    parametros_ok = True
+    if ph is not None and not (7.2 <= ph <= 7.8):
+        parametros_ok = False
+    if cloro is not None and not (1.0 <= cloro <= 3.0):
+        parametros_ok = False
+    if temperatura is not None and not (24.0 <= temperatura <= 30.0):
+        parametros_ok = False
+    
+    return "APTA" if parametros_ok else "NO APTA"
+
+def evaluar_parametros_individuales(ph, cloro, temperatura):
+    """
+    Evalúa cada parámetro individualmente y retorna su estado basado en los rangos ideales.
+    """
+    estados = {}
+    
+    if ph is not None:
+        estados["ph"] = "NORMAL" if (7.2 <= ph <= 7.8) else ("BAJO" if ph < 7.2 else "ALTO")
+    else:
+        estados["ph"] = "SIN DATOS"
+        
+    if cloro is not None:
+        estados["cloro"] = "NORMAL" if (1.0 <= cloro <= 3.0) else ("BAJO" if cloro < 1.0 else "ALTO")
+    else:
+        estados["cloro"] = "SIN DATOS"
+        
+    if temperatura is not None:
+        estados["temperatura"] = "NORMAL" if (24.0 <= temperatura <= 30.0) else ("BAJO" if temperatura < 24.0 else "ALTO")
+    else:
+        estados["temperatura"] = "SIN DATOS"
+        
+    return estados
+
+
 def calcular_tratamiento(ph: float | None, cloro: float | None, volumen_m3: float) -> list[dict]:
     """
     Calcula el tratamiento necesario basándose en reglas específicas de control de agua
@@ -172,3 +223,4 @@ if __name__ == "__main__":
     print("\\n" + "=" * 70)
     print("✅ TODOS LOS CASOS CORRIDOS")
     print("=" * 70)
+
