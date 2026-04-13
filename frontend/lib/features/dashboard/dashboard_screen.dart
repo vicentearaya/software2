@@ -70,48 +70,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
   PoolData? _pool;
   bool _loading = true;
   String? _backendPoolId; // ID del documento en MongoDB
-<<<<<<< HEAD
 
   final _authService = AuthService();
   final _poolService = PoolService();
 
-=======
-  final _authService = AuthService();
-  final _poolService = PoolService();
-
-  Map<String, dynamic>? _poolStatus;
-  bool _loadingStatus = true;
-
->>>>>>> b27f6820b0d96529ef6203c1520e8f04a6bc3fc9
   @override
   void initState() {
     super.initState();
     _loadPool();
   }
 
-<<<<<<< HEAD
-=======
-  Future<void> _loadPoolStatus() async {
-    if (_backendPoolId == null) {
-      if (mounted) setState(() => _loadingStatus = false);
-      return;
-    }
-    if (mounted) setState(() => _loadingStatus = true);
-    final token = await _authService.getToken();
-    final result = await _poolService.getPoolStatus(_backendPoolId!, token: token);
-    if (result['success'] == true) {
-      if (mounted) {
-        setState(() {
-          _poolStatus = result['data'];
-          _loadingStatus = false;
-        });
-      }
-    } else {
-      if (mounted) setState(() => _loadingStatus = false);
-    }
-  }
-
->>>>>>> b27f6820b0d96529ef6203c1520e8f04a6bc3fc9
   /// Carga la piscina: primero intenta el backend, cae en caché local si falla.
   Future<void> _loadPool() async {
     setState(() => _loading = true);
@@ -158,20 +126,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
           // Actualizar caché local con la versión combinada
           await prefs.setString(_prefKey, jsonEncode(pool.toJson()));
-<<<<<<< HEAD
           setState(() {
             _pool = pool;
             _loading = false;
           });
-=======
-          if (mounted) {
-            setState(() {
-              _pool = pool;
-              _loading = false;
-            });
-          }
-          _loadPoolStatus();
->>>>>>> b27f6820b0d96529ef6203c1520e8f04a6bc3fc9
           return;
         }
       }
@@ -179,24 +137,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
     // 2. Fallback: caché local (sin conexión o sin piscina en backend)
     if (localPool != null) {
-<<<<<<< HEAD
       setState(() {
         _pool = localPool;
         _loading = false;
       });
     } else {
       setState(() => _loading = false);
-=======
-      if (mounted) {
-        setState(() {
-          _pool = localPool;
-          _loading = false;
-        });
-      }
-      _loadPoolStatus();
-    } else {
-      if (mounted) setState(() => _loading = false);
->>>>>>> b27f6820b0d96529ef6203c1520e8f04a6bc3fc9
     }
   }
 
@@ -427,17 +373,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ),
             ),
 
-<<<<<<< HEAD
-=======
-            // ── Indicador de Aptitud ────────────────
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
-                child: _buildStatusWidget(),
-              ),
-            ),
-
->>>>>>> b27f6820b0d96529ef6203c1520e8f04a6bc3fc9
             // ── Tarjeta principal de la piscina ──
             SliverToBoxAdapter(
               child: Padding(
@@ -531,172 +466,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-<<<<<<< HEAD
-=======
-  Widget _buildStatusWidget() {
-    if (_loadingStatus) {
-      return Container(
-        width: double.infinity,
-        padding: const EdgeInsets.symmetric(vertical: 20),
-        child: const Center(child: CircularProgressIndicator(color: AppColors.primary)),
-      );
-    }
-
-    // Default: gris
-    Color bgColor = const Color(0xFF374151); // Gris neutro
-    Color iconColor = Colors.white70;
-    IconData icon = Icons.help_outline;
-    String text = "Sin datos disponibles";
-    String subText = "No hay lecturas registradas";
-
-    Map<String, dynamic>? parametros;
-
-    if (_poolStatus != null && _poolStatus!['estado'] != null) {
-      parametros = _poolStatus!['parametros'] as Map<String, dynamic>?;
-      final estado = _poolStatus!['estado'];
-      if (estado == 'APTA') {
-        bgColor = const Color(0xFF1B5E20); // Verde oscuro brillante
-        iconColor = Colors.white;
-        icon = Icons.check_circle_outline;
-        text = "¡Apta para baño! Disfruta tu piscina 🏊";
-        subText = "Los niveles químicos son óptimos.";
-      } else if (estado == 'NO APTA') {
-        bool hasData = false;
-        if (parametros != null) {
-          final ph = parametros['ph']?['valor'];
-          final cloro = parametros['cloro']?['valor'];
-          if (ph != null || cloro != null) {
-            hasData = true;
-          }
-        }
-        if (hasData) {
-          bgColor = const Color(0xFFB71C1C); // Rojo oscuro brillante
-          iconColor = Colors.white;
-          icon = Icons.warning_amber_rounded;
-          text = "No apta para baño";
-          subText = "Revisa los parámetros químicos.";
-        } else {
-          // No apta pero por falta de datos
-          bgColor = const Color(0xFF424242); 
-          iconColor = Colors.white70;
-          icon = Icons.info_outline;
-          text = "Sin datos disponibles";
-          subText = "Agrega una lectura o revisa los sensores.";
-        }
-      }
-    }
-
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-      decoration: BoxDecoration(
-        color: bgColor,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: bgColor.withOpacity(0.3),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(icon, color: iconColor, size: 36),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      text,
-                      style: GoogleFonts.syne(
-                        color: Colors.white,
-                        fontSize: 15,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      subText,
-                      style: GoogleFonts.interTight(
-                        color: Colors.white.withOpacity(0.85),
-                        fontSize: 12,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          if (parametros != null && (parametros['ph']?['valor'] != null || parametros['cloro']?['valor'] != null)) ...[
-            const SizedBox(height: 16),
-            Container(color: Colors.white24, height: 1),
-            const SizedBox(height: 12),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                _buildParamIndicator('pH', parametros['ph']),
-                _buildParamIndicator('Cloro', parametros['cloro']),
-                _buildParamIndicator('Temp.', parametros['temperatura']),
-              ],
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-
-  Widget _buildParamIndicator(String name, Map<String, dynamic>? paramData) {
-    if (paramData == null || paramData['valor'] == null) {
-      return Column(
-        children: [
-          Text(name, style: GoogleFonts.interTight(color: Colors.white70, fontSize: 12)),
-          const SizedBox(height: 4),
-          const Text("-", style: TextStyle(color: Colors.white, fontSize: 14)),
-        ],
-      );
-    }
-
-    final double valor = (paramData['valor'] as num).toDouble();
-    final String estado = paramData['estado'] as String? ?? 'SIN DATOS';
-    
-    // Check if it's normal
-    final bool isNormal = estado == 'NORMAL';
-    final IconData pIcon = isNormal ? Icons.check_circle : Icons.cancel;
-    final Color pColor = isNormal ? const Color(0xFF81C784) : const Color(0xFFE57373); // Colores más claros para mejor contraste oscuro
-    
-    String valStr = valor.toString();
-    if (name == 'Temp.') valStr += '°C';
-    else if (name == 'Cloro') valStr += ' ppm';
-
-    return Column(
-      children: [
-        Text(name, style: GoogleFonts.interTight(color: Colors.white70, fontSize: 12)),
-        const SizedBox(height: 2),
-        Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              valStr,
-              style: GoogleFonts.syne(
-                color: Colors.white,
-                fontWeight: FontWeight.w600,
-                fontSize: 14,
-              ),
-            ),
-            const SizedBox(width: 4),
-            Icon(pIcon, color: pColor, size: 14),
-          ],
-        ),
-      ],
-    );
-  }
-
->>>>>>> b27f6820b0d96529ef6203c1520e8f04a6bc3fc9
   void _confirmDeletePool() {
     showDialog(
       context: context,

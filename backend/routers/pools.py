@@ -7,14 +7,11 @@ de calculadora de dosis químicas funcione correctamente.
 
 El volumen de la piscina es esencial para calcular dosificaciones
 de químicos en router/readings.py
-<<<<<<< HEAD
 
 CAMBIOS (Opción A - Asociar pools a usuarios):
 - Todos los endpoints requieren autenticación (Depends(get_current_user))
 - Unicidad de pool_id es POR USUARIO (no global)
 - Las operaciones se filtran por username del usuario autenticado
-=======
->>>>>>> b27f6820b0d96529ef6203c1520e8f04a6bc3fc9
 """
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
@@ -25,18 +22,11 @@ from typing import List, Optional
 from db import get_db
 from models import Pool, PoolIn, PoolSettings, TratamientoManualRequest
 from routers.auth import get_current_user
-<<<<<<< HEAD
 from services.calculator import calcular_tratamiento
 
 
 router = APIRouter(prefix="/api/v1/pools", tags=["pools"])
 router_simple = APIRouter(prefix="/pools", tags=["pools"])
-=======
-from services.calculator import calcular_tratamiento, evaluarAptitud, evaluar_parametros_individuales
-
-
-router = APIRouter(prefix="/api/v1/pools", tags=["pools"])
->>>>>>> b27f6820b0d96529ef6203c1520e8f04a6bc3fc9
 
 
 @router.post(
@@ -46,11 +36,7 @@ router = APIRouter(prefix="/api/v1/pools", tags=["pools"])
     summary="Crear nueva piscina",
     description="Crea un nuevo registro de piscina con volumen especificado y configuración personalizada de rangos"
 )
-<<<<<<< HEAD
 def crear_pool(pool_in: PoolIn, db: Database = Depends(get_db), current_user: dict = Depends(get_current_user)):
-=======
-def crear_pool(pool_in: PoolIn, db: Database = Depends(get_db)):
->>>>>>> b27f6820b0d96529ef6203c1520e8f04a6bc3fc9
     """
     Crea una nueva piscina en la base de datos.
     
@@ -94,7 +80,6 @@ def crear_pool(pool_in: PoolIn, db: Database = Depends(get_db)):
     - 500: Error de BD
     """
     try:
-<<<<<<< HEAD
         # ✅ Verificar límite de piscinas por usuario (máximo 3)
         pool_count = db.pools.count_documents({"username": current_user["username"]})
         if pool_count >= 3:
@@ -105,10 +90,6 @@ def crear_pool(pool_in: PoolIn, db: Database = Depends(get_db)):
         
         # Verificar que no existe ya para este usuario
         existing = db.pools.find_one({"pool_id": pool_in.pool_id, "username": current_user["username"]}, {"_id": 0})
-=======
-        # Verificar que no existe ya
-        existing = db.pools.find_one({"pool_id": pool_in.pool_id})
->>>>>>> b27f6820b0d96529ef6203c1520e8f04a6bc3fc9
         if existing:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
@@ -118,10 +99,7 @@ def crear_pool(pool_in: PoolIn, db: Database = Depends(get_db)):
         # Convertir modelo Pydantic a diccionario
         # model_dump() maneja correctamente el objeto anidado settings
         doc = pool_in.model_dump()
-<<<<<<< HEAD
         doc["username"] = current_user["username"]
-=======
->>>>>>> b27f6820b0d96529ef6203c1520e8f04a6bc3fc9
         doc["creado_en"] = datetime.utcnow()
         doc["actualizado_en"] = None
         
@@ -154,12 +132,8 @@ def crear_pool(pool_in: PoolIn, db: Database = Depends(get_db)):
 )
 def listar_pools(
     activas_solo: bool = Query(False, description="Mostrar solo pools activos"),
-<<<<<<< HEAD
     db: Database = Depends(get_db),
     current_user: dict = Depends(get_current_user)
-=======
-    db: Database = Depends(get_db)
->>>>>>> b27f6820b0d96529ef6203c1520e8f04a6bc3fc9
 ):
     """
     Obtiene lista de todos los pools registrados con sus rangos de configuración.
@@ -214,12 +188,8 @@ def listar_pools(
     - 500: Error de BD
     """
     try:
-<<<<<<< HEAD
         # Filtrar por usuario autenticado
         query = {"username": current_user["username"]}
-=======
-        query = {}
->>>>>>> b27f6820b0d96529ef6203c1520e8f04a6bc3fc9
         if activas_solo:
             query["activo"] = True
         
@@ -249,11 +219,7 @@ def listar_pools(
     summary="Obtener detalles de piscina",
     description="Retorna la configuración completa de una piscina específica"
 )
-<<<<<<< HEAD
 def obtener_pool(pool_id: str, db: Database = Depends(get_db), current_user: dict = Depends(get_current_user)):
-=======
-def obtener_pool(pool_id: str, db: Database = Depends(get_db)):
->>>>>>> b27f6820b0d96529ef6203c1520e8f04a6bc3fc9
     """
     Obtiene los detalles de una piscina específica.
     
@@ -277,12 +243,8 @@ def obtener_pool(pool_id: str, db: Database = Depends(get_db)):
     - 500: Error de BD
     """
     try:
-<<<<<<< HEAD
         # Buscar solo en pools del usuario autenticado
         pool = db.pools.find_one({"pool_id": pool_id, "username": current_user["username"]}, {"_id": 0})
-=======
-        pool = db.pools.find_one({"pool_id": pool_id}, {"_id": 0})
->>>>>>> b27f6820b0d96529ef6203c1520e8f04a6bc3fc9
         
         if not pool:
             raise HTTPException(
@@ -310,12 +272,8 @@ def obtener_pool(pool_id: str, db: Database = Depends(get_db)):
 def actualizar_pool(
     pool_id: str,
     pool_in: PoolIn,
-<<<<<<< HEAD
     db: Database = Depends(get_db),
     current_user: dict = Depends(get_current_user)
-=======
-    db: Database = Depends(get_db)
->>>>>>> b27f6820b0d96529ef6203c1520e8f04a6bc3fc9
 ):
     """
     Actualiza la configuración de una piscina existente.
@@ -347,13 +305,8 @@ def actualizar_pool(
     - 500: Error de BD
     """
     try:
-<<<<<<< HEAD
         # Verificar que existe y pertenece al usuario
         existing = db.pools.find_one({"pool_id": pool_id, "username": current_user["username"]}, {"_id": 0})
-=======
-        # Verificar que existe
-        existing = db.pools.find_one({"pool_id": pool_id})
->>>>>>> b27f6820b0d96529ef6203c1520e8f04a6bc3fc9
         if not existing:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
@@ -364,15 +317,9 @@ def actualizar_pool(
         update_data = pool_in.model_dump()
         update_data["actualizado_en"] = datetime.utcnow()
         
-<<<<<<< HEAD
         # Actualizar en BD (solo el pool del usuario autenticado)
         result = db.pools.update_one(
             {"pool_id": pool_id, "username": current_user["username"]},
-=======
-        # Actualizar en BD
-        result = db.pools.update_one(
-            {"pool_id": pool_id},
->>>>>>> b27f6820b0d96529ef6203c1520e8f04a6bc3fc9
             {"$set": update_data}
         )
         
@@ -383,11 +330,7 @@ def actualizar_pool(
             )
         
         # Recuperar documento actualizado
-<<<<<<< HEAD
         updated_pool = db.pools.find_one({"pool_id": pool_id, "username": current_user["username"]}, {"_id": 0})
-=======
-        updated_pool = db.pools.find_one({"pool_id": pool_id}, {"_id": 0})
->>>>>>> b27f6820b0d96529ef6203c1520e8f04a6bc3fc9
         
         return {
             "ok": True,
@@ -415,11 +358,7 @@ def actualizar_pool(
     summary="Eliminar piscina",
     description="Elimina una piscina y sus registros asociados"
 )
-<<<<<<< HEAD
 def eliminar_pool(pool_id: str, db: Database = Depends(get_db), current_user: dict = Depends(get_current_user)):
-=======
-def eliminar_pool(pool_id: str, db: Database = Depends(get_db)):
->>>>>>> b27f6820b0d96529ef6203c1520e8f04a6bc3fc9
     """
     Elimina una piscina de la base de datos.
     
@@ -445,26 +384,16 @@ def eliminar_pool(pool_id: str, db: Database = Depends(get_db)):
     - 500: Error de BD
     """
     try:
-<<<<<<< HEAD
         # Verificar que existe y pertenece al usuario
         pool = db.pools.find_one({"pool_id": pool_id, "username": current_user["username"]}, {"_id": 0})
-=======
-        # Verificar que existe
-        pool = db.pools.find_one({"pool_id": pool_id})
->>>>>>> b27f6820b0d96529ef6203c1520e8f04a6bc3fc9
         if not pool:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"Pool '{pool_id}' no encontrado"
             )
         
-<<<<<<< HEAD
         # Eliminar pool (solo del usuario autenticado)
         db.pools.delete_one({"pool_id": pool_id, "username": current_user["username"]})
-=======
-        # Eliminar pool
-        db.pools.delete_one({"pool_id": pool_id})
->>>>>>> b27f6820b0d96529ef6203c1520e8f04a6bc3fc9
         
         # Eliminar todas las lecturas asociadas
         deleted_lecturas = db.lecturas.delete_many({"pool_id": pool_id})
@@ -485,7 +414,6 @@ def eliminar_pool(pool_id: str, db: Database = Depends(get_db)):
         )
 
 
-<<<<<<< HEAD
 # ============================================================
 # ENDPOINT ALTERNATIVO SIMPLE (sin /api/v1)
 # ============================================================
@@ -605,97 +533,10 @@ def get_pool_simple(
         
         return pool
     
-=======
-@router.get(
-    "/{pool_id}/status",
-    response_model=dict,
-    summary="Obtener estado actual de los parámetros",
-    description="Retorna el estado de la piscina evaluado por calculator.py, tomando última lectura de sensor o manual y dando prioridad al sensor."
-)
-def get_pool_status(pool_id: str, db: Database = Depends(get_db)):
-    try:
-        # Verificar que el pool existe
-        pool = db.pools.find_one({"pool_id": pool_id})
-        if not pool:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Pool '{pool_id}' no encontrado"
-            )
-
-        # Buscar la última lectura de sensor
-        lectura_sensor = db.lecturas.find_one({"pool_id": pool_id}, sort=[("timestamp", -1)])
-        # Buscar el último mantenimiento manual
-        lectura_manual = db.mantenimientos.find_one({"pool_id": pool_id}, sort=[("fecha", -1)])
-
-        # Variables base
-        ph, cloro, temperatura = None, None, None
-        fuente_ph, fuente_cloro, fuente_temperatura = "ninguna", "ninguna", "ninguna"
-
-        # 1. Asignar manual si existe
-        if lectura_manual:
-            if lectura_manual.get("ph_medido") is not None:
-                ph = lectura_manual.get("ph_medido")
-                fuente_ph = "manual"
-            if lectura_manual.get("cloro_medido") is not None:
-                cloro = lectura_manual.get("cloro_medido")
-                fuente_cloro = "manual"
-            # Generalmente no hay temp manual en Mantenimiento actual, pero por consistencia:
-            if lectura_manual.get("temperatura_medida") is not None:
-                temperatura = lectura_manual.get("temperatura_medida")
-                fuente_temperatura = "manual"
-
-        # 2. Asignar sensor si existe (Sobrescribe manual - Prioridad Sensor)
-        if lectura_sensor:
-            if lectura_sensor.get("ph") is not None:
-                ph = lectura_sensor.get("ph")
-                fuente_ph = "sensor"
-            if lectura_sensor.get("cloro") is not None:
-                cloro = lectura_sensor.get("cloro")
-                fuente_cloro = "sensor"
-            if lectura_sensor.get("temperatura") is not None:
-                temperatura = lectura_sensor.get("temperatura")
-                fuente_temperatura = "sensor"
-
-        # Evaluar aptitud global con calculator.py
-        estado_global = evaluarAptitud(ph, cloro, temperatura)
-
-        # Evaluar estados individuales con calculator.py
-        estados_individuales = evaluar_parametros_individuales(ph, cloro, temperatura)
-
-        return {
-            "ok": True,
-            "pool_id": pool_id,
-            "estado": estado_global,
-            "parametros": {
-                "ph": {
-                    "valor": ph,
-                    "estado": estados_individuales["ph"],
-                    "fuente": fuente_ph
-                },
-                "cloro": {
-                    "valor": cloro,
-                    "estado": estados_individuales["cloro"],
-                    "fuente": fuente_cloro
-                },
-                "temperatura": {
-                    "valor": temperatura,
-                    "estado": estados_individuales["temperatura"],
-                    "fuente": fuente_temperatura
-                }
-            }
-        }
-
->>>>>>> b27f6820b0d96529ef6203c1520e8f04a6bc3fc9
     except HTTPException:
         raise
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-<<<<<<< HEAD
             detail=f"Error al obtener pool: {str(e)}"
         )
-=======
-            detail=f"Error al obtener estado de pool: {str(e)}"
-        )
-
->>>>>>> b27f6820b0d96529ef6203c1520e8f04a6bc3fc9

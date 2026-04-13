@@ -19,10 +19,7 @@ from core.config_pool import evaluar_sensor, EstadoAgua
 
 # Configuración de datos de prueba
 POOL_ID = "piscina_test_01"
-<<<<<<< HEAD
 USERNAME_SEED = "seed_user"  # Usuario propietario del pool de prueba
-=======
->>>>>>> b27f6820b0d96529ef6203c1520e8f04a6bc3fc9
 
 # Configuración de la piscina
 POOL_CONFIG = {
@@ -30,10 +27,7 @@ POOL_CONFIG = {
     "nombre": "Piscina Principal (Test)",
     "volumen_m3": 50.0,
     "activo": True,
-<<<<<<< HEAD
     "username": USERNAME_SEED,  # ✅ Asociar a usuario propietario
-=======
->>>>>>> b27f6820b0d96529ef6203c1520e8f04a6bc3fc9
 }
 
 # 3 ESCENARIOS DE PRUEBA
@@ -59,31 +53,21 @@ ESCENARIOS = {
 }
 
 
-<<<<<<< HEAD
 def limpiar_pools(db, pool_id: str, username: str = None) -> int:
     """
     Elimina la configuración de un pool.
     Si username se proporciona, solo elimina el pool de ese usuario.
     Si no, elimina todos los pools con ese pool_id.
-=======
-def limpiar_pools(db, pool_id: str) -> int:
-    """
-    Elimina la configuración de un pool.
->>>>>>> b27f6820b0d96529ef6203c1520e8f04a6bc3fc9
     
     Args:
         db: Instancia de base de datos MongoDB
         pool_id: ID del pool a limpiar
-<<<<<<< HEAD
         username: (Opcional) Usuario propietario. Si se omite, limpia todos.
-=======
->>>>>>> b27f6820b0d96529ef6203c1520e8f04a6bc3fc9
         
     Returns:
         Número de documentos eliminados
     """
     try:
-<<<<<<< HEAD
         filter_query = {"pool_id": pool_id}
         if username:
             filter_query["username"] = username
@@ -92,11 +76,6 @@ def limpiar_pools(db, pool_id: str) -> int:
         if result.deleted_count > 0:
             user_str = f" de usuario '{username}'" if username else ""
             print(f"✓ Pool '{pool_id}'{user_str} eliminado (limpieza)")
-=======
-        result = db.pools.delete_many({"pool_id": pool_id})
-        if result.deleted_count > 0:
-            print(f"✓ Pool '{pool_id}' eliminado (limpieza)")
->>>>>>> b27f6820b0d96529ef6203c1520e8f04a6bc3fc9
         return result.deleted_count
     except PyMongoError as e:
         print(f"✗ Error eliminando pool: {str(e)}")
@@ -106,18 +85,11 @@ def limpiar_pools(db, pool_id: str) -> int:
 def crear_pool(db, pool_config: dict) -> bool:
     """
     Crea o actualiza la configuración de un pool.
-<<<<<<< HEAD
     Usa composite key (pool_id, username) para unicidad per-usuario.
     
     Args:
         db: Instancia de base de datos MongoDB
         pool_config: Dict con pool_id, nombre, volumen_m3, activo, username
-=======
-    
-    Args:
-        db: Instancia de base de datos MongoDB
-        pool_config: Dict con pool_id, nombre, volumen_m3, activo
->>>>>>> b27f6820b0d96529ef6203c1520e8f04a6bc3fc9
         
     Returns:
         True si se creó/actualizó exitosamente
@@ -127,27 +99,17 @@ def crear_pool(db, pool_config: dict) -> bool:
         pool_config["creado_en"] = datetime.now(timezone.utc)
         pool_config["actualizado_en"] = None
         
-<<<<<<< HEAD
         # ✅ Usar upsert con composite key (pool_id, username) para per-user unicidad
         result = db.pools.update_one(
             {
                 "pool_id": pool_config["pool_id"],
                 "username": pool_config["username"]
             },
-=======
-        # Usar upsert para crear si no existe, actualizar si existe
-        result = db.pools.update_one(
-            {"pool_id": pool_config["pool_id"]},
->>>>>>> b27f6820b0d96529ef6203c1520e8f04a6bc3fc9
             {"$set": pool_config},
             upsert=True
         )
         
-<<<<<<< HEAD
         print(f"✓ Pool '{pool_config['pool_id']}' configurado para usuario '{pool_config['username']}': {pool_config['nombre']} ({pool_config['volumen_m3']} m³)")
-=======
-        print(f"✓ Pool '{pool_config['pool_id']}' configurado: {pool_config['nombre']} ({pool_config['volumen_m3']} m³)")
->>>>>>> b27f6820b0d96529ef6203c1520e8f04a6bc3fc9
         return True
         
     except PyMongoError as e:

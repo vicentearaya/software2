@@ -310,7 +310,6 @@ class TestPoolSettingsValidation:
         assert settings.temperatura_max == 30.0
         assert settings.conductividad_min == 1000.0
         assert settings.conductividad_max == 2000.0
-<<<<<<< HEAD
 
 
 class TestPoolUserAssociation:
@@ -530,5 +529,3 @@ class TestPoolUserAssociation:
         query_filter = call_args[0][0]
         assert "username" in query_filter, "Query debe incluir filtro 'username'"
         assert query_filter["username"] == "operator", "Query debe filtrar por 'operator'"
-=======
->>>>>>> b27f6820b0d96529ef6203c1520e8f04a6bc3fc9

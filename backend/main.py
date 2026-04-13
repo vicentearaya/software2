@@ -6,7 +6,6 @@ from routers import auth, readings
 from routers import ingesta
 from routers import piscinas
 from routers import pools
-<<<<<<< HEAD
 from db import get_db, ensure_indexes
 
 settings = get_settings()
@@ -15,11 +14,6 @@ settings = get_settings()
 _db = get_db()
 ensure_indexes(_db)
 
-=======
-
-settings = get_settings()
-
->>>>>>> b27f6820b0d96529ef6203c1520e8f04a6bc3fc9
 app = FastAPI(
     title="CleanPool API",
     description=(
@@ -48,10 +42,7 @@ app.include_router(auth.router)
 app.include_router(ingesta.router, prefix="/api/v1")
 app.include_router(piscinas.router)
 app.include_router(pools.router)
-<<<<<<< HEAD
 app.include_router(pools.router_simple)  # ✅ Endpoint simplificado GET /pools
-=======
->>>>>>> b27f6820b0d96529ef6203c1520e8f04a6bc3fc9
 
 
 @app.get("/", summary="Health check", tags=["General"])

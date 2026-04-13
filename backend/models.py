@@ -77,10 +77,7 @@ class PoolIn(BaseModel):
 
 class Pool(PoolIn):
     """Modelo para respuesta de piscina (con metadata)"""
-<<<<<<< HEAD
     username: Optional[str] = Field(default=None, description="Usuario propietario de la piscina")
-=======
->>>>>>> b27f6820b0d96529ef6203c1520e8f04a6bc3fc9
     creado_en: datetime = Field(default_factory=datetime.utcnow)
     actualizado_en: Optional[datetime] = None
     
