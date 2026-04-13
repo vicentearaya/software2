@@ -15,7 +15,7 @@ class ProfileScreen extends StatefulWidget {
 class _ProfileScreenState extends State<ProfileScreen> {
   final AuthService _authService = AuthService();
   final MaintenanceService _maintenanceService = MaintenanceService();
-  
+
   List<Maintenance> _history = [];
   Map<String, dynamic>? _user;
   bool _isLoading = true;
@@ -37,7 +37,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     try {
       final user = await _authService.getUser();
       final token = await _authService.getToken();
-      
+
       if (token != null) {
         final result = await _maintenanceService.getMaintenanceHistory(token);
         if (result['success']) {
@@ -139,7 +139,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 Text(
                   _user?['name'] ?? 'Usuario',
                   style: const TextStyle(
-                    fontSize: 20, 
+                    fontSize: 20,
                     fontWeight: FontWeight.bold,
                     color: AppColors.textPrimary,
                   ),
@@ -180,13 +180,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
             const Icon(Icons.error_outline, color: AppColors.statusDanger, size: 40),
             const SizedBox(height: 10),
             Text(
-              _error!, 
+              _error!,
               textAlign: TextAlign.center,
               style: const TextStyle(color: AppColors.textSecondary),
             ),
             const SizedBox(height: 10),
             TextButton(
-              onPressed: _loadData, 
+              onPressed: _loadData,
               child: const Text('Reintentar', style: TextStyle(color: AppColors.primary)),
             ),
           ],
@@ -201,7 +201,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         decoration: BoxDecoration(
           color: AppColors.surface,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: AppColors.border.withOpacity(0.5), style: BorderStyle.merge(BorderStyle.none, BorderStyle.none)),
+          border: Border.all(color: AppColors.border.withOpacity(0.5)),
         ),
         child: const Column(
           children: [
