@@ -566,7 +566,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
               SliverToBoxAdapter(
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
-                  child: _ManualTreatmentCard(poolId: _selectedPool!['id']),
+                  child: _ManualTreatmentCard(
+                    poolId: _selectedPool!['id'],
+                    onCalculated: _loadPoolStatus,
+                  ),
                 ),
               ),
 
@@ -1710,8 +1713,9 @@ class _VerticalDivider extends StatelessWidget {
 // ─────────────────────────────────────────────
 class _ManualTreatmentCard extends StatefulWidget {
   final String? poolId;
+  final VoidCallback? onCalculated;
 
-  const _ManualTreatmentCard({required this.poolId});
+  const _ManualTreatmentCard({required this.poolId, this.onCalculated});
 
   @override
   State<_ManualTreatmentCard> createState() => _ManualTreatmentCardState();
@@ -1780,6 +1784,9 @@ class _ManualTreatmentCardState extends State<_ManualTreatmentCard> {
       _isLoading = false;
       if (res['success'] == true) {
         _tratamiento = res['data']['tratamiento'] as List<dynamic>?;
+        if (widget.onCalculated != null) {
+          widget.onCalculated!();
+        }
       } else {
         _errorMessage = res['message'];
       }
