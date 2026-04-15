@@ -1,10 +1,4 @@
 /Users/miilwaukee/.pub-cache/hosted/pub.dev/app_settings-7.0.0/LICENSE
-/Users/miilwaukee/.pub-cache/hosted/pub.dev/app_settings-7.0.0/lib/app_settings.dart
-/Users/miilwaukee/.pub-cache/hosted/pub.dev/app_settings-7.0.0/lib/app_settings_method_channel.dart
-/Users/miilwaukee/.pub-cache/hosted/pub.dev/app_settings-7.0.0/lib/app_settings_platform_interface.dart
-/Users/miilwaukee/.pub-cache/hosted/pub.dev/app_settings-7.0.0/lib/src/app_settings.dart
-/Users/miilwaukee/.pub-cache/hosted/pub.dev/app_settings-7.0.0/lib/src/app_settings_panel_type.dart
-/Users/miilwaukee/.pub-cache/hosted/pub.dev/app_settings-7.0.0/lib/src/app_settings_type.dart
 /Users/miilwaukee/.pub-cache/hosted/pub.dev/async-2.13.0/LICENSE
 /Users/miilwaukee/.pub-cache/hosted/pub.dev/boolean_selector-2.1.2/LICENSE
 /Users/miilwaukee/.pub-cache/hosted/pub.dev/characters-1.4.1/LICENSE
@@ -425,7 +419,9 @@
 /Users/miilwaukee/Documents/Software 2/aplicacion_proyecto/frontend/lib/features/guides/pool_filter_screen.dart
 /Users/miilwaukee/Documents/Software 2/aplicacion_proyecto/frontend/lib/features/profile/profile_screen.dart
 /Users/miilwaukee/Documents/Software 2/aplicacion_proyecto/frontend/lib/main.dart
+/Users/miilwaukee/Documents/Software 2/aplicacion_proyecto/frontend/lib/models/maintenance.dart
 /Users/miilwaukee/Documents/Software 2/aplicacion_proyecto/frontend/lib/shared/services/auth_service.dart
+/Users/miilwaukee/Documents/Software 2/aplicacion_proyecto/frontend/lib/shared/services/maintenance_service.dart
 /Users/miilwaukee/Documents/Software 2/aplicacion_proyecto/frontend/lib/shared/services/pool_service.dart
 /Users/miilwaukee/Documents/Software 2/aplicacion_proyecto/frontend/lib/shared/widgets/main_screen.dart
 /Users/miilwaukee/Documents/Software 2/aplicacion_proyecto/frontend/pubspec.yaml

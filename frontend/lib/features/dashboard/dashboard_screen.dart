@@ -590,32 +590,40 @@ class _DashboardScreenState extends State<DashboardScreen> {
       );
     }
 
+    /*
     // Default: Sin datos (Gris)
     Color bgColor = const Color(0xFF4B5563); 
     Color iconColor = Colors.white.withOpacity(0.9);
     IconData icon = Icons.info_outline_rounded;
     String text = "Sin datos disponibles";
     String subText = "No hay registros recientes para evaluar";
+    */
 
-    Map<String, dynamic>? parametros;
+    if (_poolStatus == null || _poolStatus!['estado'] == null) {
+      return const SizedBox.shrink();
+    }
 
-    if (_poolStatus != null && _poolStatus!['estado'] != null) {
-      parametros = _poolStatus!['parametros'] as Map<String, dynamic>?;
-      final estado = _poolStatus!['estado'];
-      
-      if (estado == 'APTA') {
-        bgColor = const Color(0xFF10B981); // Esmeralda / Verde Brillante
-        iconColor = Colors.white;
-        icon = Icons.check_circle_rounded;
-        text = "¡Apta para baño! Disfruta tu piscina 🏊";
-        subText = "Todos los parámetros están en rango óptimo.";
-      } else if (estado == 'NO APTA') {
-        bgColor = const Color(0xFFEF4444); // Rojo Brillante
-        iconColor = Colors.white;
-        icon = Icons.warning_rounded;
-        text = "No apta para baño";
-        subText = "Se requiere ajuste de parámetros químicos.";
-      }
+    Color bgColor = const Color(0xFF4B5563); 
+    Color iconColor = Colors.white.withOpacity(0.9);
+    IconData icon = Icons.info_outline_rounded;
+    String text = "";
+    String subText = "";
+
+    Map<String, dynamic>? parametros = _poolStatus!['parametros'] as Map<String, dynamic>?;
+    final estado = _poolStatus!['estado'];
+    
+    if (estado == 'APTA') {
+      bgColor = const Color(0xFF10B981); // Esmeralda / Verde Brillante
+      iconColor = Colors.white;
+      icon = Icons.check_circle_rounded;
+      text = "¡Apta para baño! Disfruta tu piscina 🏊";
+      subText = "Todos los parámetros están en rango óptimo.";
+    } else if (estado == 'NO APTA') {
+      bgColor = const Color(0xFFEF4444); // Rojo Brillante
+      iconColor = Colors.white;
+      icon = Icons.warning_rounded;
+      text = "No apta para baño";
+      subText = "Se requiere ajuste de parámetros químicos.";
     }
 
     return Container(
