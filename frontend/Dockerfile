@@ -4,7 +4,7 @@ WORKDIR /app
 COPY . .
 
 # Pasamos la URL del backend por argumento de build
-ARG API_URL="http://10.51.0.25:8000"
+ARG API_URL=""
 
 RUN flutter config --enable-web
 RUN flutter pub get
