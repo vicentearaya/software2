@@ -1,0 +1,27 @@
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: cleanpool_backend
+    ports:
+      - "8000:8000"
+    restart: always
+    environment:
+      - DOMAIN=${DOMAIN}
+      - MONGODB_URI=${MONGODB_URI}
+      - SECRET_KEY=${SECRET_KEY}
+      - API_KEY=${API_KEY}
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        - API_URL=${API_URL}
+    container_name: cleanpool_frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    restart: always
