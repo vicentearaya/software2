@@ -3,7 +3,7 @@ from datetime import datetime, timezone
 from db import get_db
 from config import get_settings
 from core.config_pool import evaluar_sensor, EstadoAgua
-from models import LecturaIn, LecturaInCompat, LecturaResponse
+from models import LecturaIn, LecturaInCompat, LecturaTemperaturaIn, LecturaResponse
 
 router = APIRouter(tags=["Ingesta IoT"])
 
@@ -84,6 +84,31 @@ def ingest_lectura(lectura: LecturaIn, db=Depends(get_db), _=Depends(verify_api_
         is_critical=es_critico
     )
 
+
+
+@router.post("/lectura/temperatura", summary="POST lectura de temperatura (ESP8266)", response_model=LecturaResponse)
+def ingest_temperatura(lectura: LecturaTemperaturaIn, db=Depends(get_db), _=Depends(verify_api_key)):
+    """
+    Endpoint para recibir solo temperatura desde ESP8266.
+    Requiere header X-API-KEY válido.
+
+    Se persiste la temperatura con pool_id y timestamp.
+    Como no hay otros sensores en esta lectura, is_critical se define en False.
+    """
+    doc = {
+        "pool_id": lectura.pool_id,
+        "temperatura": lectura.temperatura,
+        "timestamp": datetime.now(timezone.utc),
+        "is_critical": False,
+    }
+
+    result = db.lecturas.insert_one(doc)
+
+    return LecturaResponse(
+        ok=True,
+        id=str(result.inserted_id),
+        is_critical=False
+    )
 
 
 @router.post("/sensor/data", summary="POST lectura de sensores (compatibilidad)")
