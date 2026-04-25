@@ -56,3 +56,4 @@ venv/
 # Skills and Agents
 .agents/
 skills-lock.json
+.cursor/rules/

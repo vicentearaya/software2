@@ -92,6 +92,12 @@ class LecturaIn(BaseModel):
     conductividad: float = Field(..., ge=0, description="Conductividad en µS/cm")
 
 
+class LecturaTemperaturaIn(BaseModel):
+    """Modelo para ingestar solo temperatura desde ESP8266"""
+    pool_id: str
+    temperatura: float = Field(..., ge=-40, le=60, description="Temperatura en °C")
+
+
 class LecturaInCompat(BaseModel):
     """Modelo legacy para compatibilidad (sensor/data) - MANTIENE NOMBRES ORIGINALES"""
     id_piscina: str
