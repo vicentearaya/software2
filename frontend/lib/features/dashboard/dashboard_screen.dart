@@ -72,7 +72,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
   bool _loadingStatus = false;
   Map<String, dynamic>? _poolStatus;
   Map<String, dynamic>? _deviceBinding;
-  bool _bindingLoading = false;
+  bool _bindingActionLoading = false;
+  bool _showAptitudCard = false;
   Timer? _refreshTimer;
 
   final _authService = AuthService();
@@ -85,7 +86,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     _refreshTimer = Timer.periodic(const Duration(seconds: 15), (_) {
       if (!mounted || _selectedPool == null) return;
       _loadPoolStatus(showLoader: false);
-      _loadDeviceBinding();
+      _loadDeviceBinding(silent: true);
     });
   }
 
@@ -120,7 +121,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     }
   }
 
-  Future<void> _loadDeviceBinding() async {
+  Future<void> _loadDeviceBinding({bool silent = false}) async {
     final token = await _authService.getToken();
     if (token == null) {
       if (mounted) {
@@ -129,7 +130,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
       return;
     }
 
-    if (mounted) setState(() => _bindingLoading = true);
     final result = await _poolService.getDeviceStatus(
       deviceId: _deviceId,
       token: token,
@@ -137,7 +137,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
     if (!mounted) return;
 
     setState(() {
-      _bindingLoading = false;
       _deviceBinding = result['success'] == true
           ? result['data'] as Map<String, dynamic>
           : null;
@@ -154,6 +153,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           _loading = false;
           _pools = [];
           _selectedPool = null;
+          _showAptitudCard = false;
         });
       return;
     }
@@ -173,15 +173,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
         );
 
         await prefs.setString('last_pool_id', _selectedPool!['id']);
+        _showAptitudCard = false;
       } else {
         _selectedPool = null;
+        _showAptitudCard = false;
       }
     }
 
     if (mounted) {
       setState(() => _loading = false);
       _loadPoolStatus();
-      _loadDeviceBinding();
+      _loadDeviceBinding(silent: true);
     }
   }
 
@@ -229,7 +231,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final res = await _poolService.deletePool(_selectedPool!['id'], token);
     if (res['success'] == true) {
       await _loadPools();
-      await _loadDeviceBinding();
+      await _loadDeviceBinding(silent: true);
     } else {
       if (mounted)
         AppUtils.showSnackBar(context, res['message'], isError: true);
@@ -251,6 +253,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
       return;
     }
 
+    if (_deviceBinding?['pool_id'] != null &&
+        _deviceBinding!['pool_id'] != _selectedPool!['id']) {
+      AppUtils.showSnackBar(
+        context,
+        'Primero debes desvincular el dispositivo de la piscina actual.',
+        isError: true,
+      );
+      return;
+    }
+
+    setState(() => _bindingActionLoading = true);
     final result = await _poolService.bindDeviceToPool(
       deviceId: _deviceId,
       poolId: _selectedPool!['id'] as String,
@@ -258,16 +271,46 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
 
     if (!mounted) return;
+    setState(() => _bindingActionLoading = false);
     if (result['success'] == true) {
       AppUtils.showSnackBar(
         context,
         'Dispositivo vinculado a ${_selectedPool!['nombre']}.',
       );
-      await _loadDeviceBinding();
+      await _loadDeviceBinding(silent: true);
     } else {
       AppUtils.showSnackBar(
         context,
         result['message'] ?? 'No se pudo vincular el dispositivo.',
+        isError: true,
+      );
+    }
+  }
+
+  Future<void> _unbindDeviceFromSelectedPool() async {
+    if (_selectedPool == null || _selectedPool!['id'] == null) return;
+    final token = await _authService.getToken();
+    if (token == null) return;
+
+    setState(() => _bindingActionLoading = true);
+    final result = await _poolService.unbindDeviceFromPool(
+      deviceId: _deviceId,
+      poolId: _selectedPool!['id'] as String,
+      token: token,
+    );
+    if (!mounted) return;
+    setState(() => _bindingActionLoading = false);
+
+    if (result['success'] == true) {
+      AppUtils.showSnackBar(
+        context,
+        'Dispositivo desvinculado de esta piscina.',
+      );
+      await _loadDeviceBinding(silent: true);
+    } else {
+      AppUtils.showSnackBar(
+        context,
+        result['message'] ?? 'No se pudo desvincular el dispositivo.',
         isError: true,
       );
     }
@@ -420,6 +463,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final bool isDeviceOnline = _deviceBinding?['is_online'] == true;
     final bool isDeviceBoundToSelectedPool =
         boundPoolId != null && boundPoolId == selectedPoolId;
+    final bool isDeviceBoundToAnotherPool =
+        boundPoolId != null && boundPoolId != selectedPoolId;
     final Map<String, dynamic>? temperaturaData =
         _poolStatus?['parametros']?['temperatura'] as Map<String, dynamic>?;
     final num? temperaturaValor = temperaturaData?['valor'] as num?;
@@ -624,14 +669,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ),
             ),
 
-            // ── Indicador de Aptitud ────────────────
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
-                child: _buildStatusWidget(),
-              ),
-            ),
-
             // ── Tarjeta principal de la piscina ──
             SliverToBoxAdapter(
               child: Padding(
@@ -672,8 +709,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
                 child: ElevatedButton.icon(
-                  onPressed: _bindingLoading ? null : _bindDeviceToSelectedPool,
-                  icon: _bindingLoading
+                  onPressed: _bindingActionLoading
+                      ? null
+                      : isDeviceBoundToSelectedPool
+                      ? _unbindDeviceFromSelectedPool
+                      : isDeviceBoundToAnotherPool
+                      ? null
+                      : _bindDeviceToSelectedPool,
+                  icon: _bindingActionLoading
                       ? const SizedBox(
                           width: 16,
                           height: 16,
@@ -685,16 +728,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       : const Icon(Icons.link_rounded),
                   label: Text(
                     isDeviceBoundToSelectedPool
-                        ? (isDeviceOnline
-                              ? 'Dispositivo vinculado y conectado'
-                              : 'Dispositivo vinculado (sin señal)')
+                        ? 'Desvincular dispositivo de esta piscina'
+                        : isDeviceBoundToAnotherPool
+                        ? 'Dispositivo vinculado a otra piscina'
                         : 'Vincular dispositivo a esta piscina',
                   ),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: isDeviceBoundToSelectedPool
-                        ? (isDeviceOnline
-                              ? AppColors.statusGood
-                              : AppColors.statusWarning)
+                        ? AppColors.statusDanger
+                        : isDeviceBoundToAnotherPool
+                        ? AppColors.textMuted
                         : AppColors.primary,
                     foregroundColor: Colors.white,
                     minimumSize: const Size(double.infinity, 50),
@@ -796,9 +839,22 @@ class _DashboardScreenState extends State<DashboardScreen> {
               SliverToBoxAdapter(
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
-                  child: _ManualTreatmentCard(
-                    poolId: _selectedPool!['id'],
-                    onCalculated: _loadPoolStatus,
+                  child: Column(
+                    children: [
+                      if (_showAptitudCard) ...[
+                        _buildStatusWidget(),
+                        const SizedBox(height: 14),
+                      ],
+                      _ManualTreatmentCard(
+                        poolId: _selectedPool!['id'],
+                        onCalculated: () {
+                          if (mounted) {
+                            setState(() => _showAptitudCard = true);
+                          }
+                          _loadPoolStatus(showLoader: false);
+                        },
+                      ),
+                    ],
                   ),
                 ),
               ),

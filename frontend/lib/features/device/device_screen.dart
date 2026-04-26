@@ -27,7 +27,7 @@ class _DeviceScreenState extends State<DeviceScreen> {
     super.initState();
     _loadDeviceStatus();
     _pollingTimer = Timer.periodic(const Duration(seconds: 15), (_) {
-      _loadDeviceStatus();
+      _loadDeviceStatus(showLoader: false);
     });
   }
 
@@ -37,17 +37,19 @@ class _DeviceScreenState extends State<DeviceScreen> {
     super.dispose();
   }
 
-  Future<void> _loadDeviceStatus() async {
-    setState(() {
-      _loading = true;
-      _error = null;
-    });
+  Future<void> _loadDeviceStatus({bool showLoader = true}) async {
+    if (showLoader) {
+      setState(() {
+        _loading = true;
+        _error = null;
+      });
+    }
 
     final token = await _authService.getToken();
     if (token == null) {
       if (!mounted) return;
       setState(() {
-        _loading = false;
+        if (showLoader) _loading = false;
         _deviceStatus = null;
         _error = 'Inicia sesión para consultar el estado del dispositivo.';
       });
@@ -61,13 +63,15 @@ class _DeviceScreenState extends State<DeviceScreen> {
 
     if (!mounted) return;
     setState(() {
-      _loading = false;
+      if (showLoader) _loading = false;
       if (result['success'] == true) {
         _deviceStatus = result['data'] as Map<String, dynamic>;
         _error = null;
       } else {
-        _deviceStatus = null;
-        _error = result['message'] as String?;
+        if (showLoader) {
+          _deviceStatus = null;
+          _error = result['message'] as String?;
+        }
       }
     });
   }

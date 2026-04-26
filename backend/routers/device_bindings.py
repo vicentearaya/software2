@@ -81,6 +81,46 @@ def bind_device_to_pool(
     )
 
 
+@router.post(
+    "/device/unbind",
+    response_model=DeviceBindingResponse,
+    summary="Desvincular dispositivo de piscina",
+)
+def unbind_device_from_pool(
+    payload: DeviceBindingIn,
+    current_user: dict = Depends(get_current_user),
+    db=Depends(get_db),
+):
+    binding = db.device_bindings.find_one(
+        {
+            "device_id": payload.device_id.strip(),
+            "username": current_user["username"],
+            "active": True,
+        }
+    )
+    if not binding:
+        raise HTTPException(status_code=404, detail="Dispositivo sin vínculo activo")
+    if binding.get("pool_id") != payload.pool_id:
+        raise HTTPException(
+            status_code=400,
+            detail="El dispositivo está vinculado a otra piscina",
+        )
+
+    now = datetime.now(timezone.utc)
+    db.device_bindings.update_one(
+        {"device_id": payload.device_id.strip(), "username": current_user["username"]},
+        {"$set": {"active": False, "updated_at": now}},
+    )
+
+    return DeviceBindingResponse(
+        ok=True,
+        device_id=payload.device_id.strip(),
+        pool_id=payload.pool_id,
+        active=False,
+        assigned_at=binding.get("assigned_at", now),
+    )
+
+
 @router.get(
     "/device/{device_id}/binding",
     response_model=DeviceBindingResponse,

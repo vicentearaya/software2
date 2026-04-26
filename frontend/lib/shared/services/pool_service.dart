@@ -206,6 +206,35 @@ class PoolService {
     }
   }
 
+  Future<Map<String, dynamic>> unbindDeviceFromPool({
+    required String deviceId,
+    required String poolId,
+    required String token,
+  }) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$_baseUrl/api/v1/device/unbind'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode({'device_id': deviceId, 'pool_id': poolId}),
+      );
+
+      final responseData = jsonDecode(response.body);
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return {'success': true, 'data': responseData};
+      }
+      return {
+        'success': false,
+        'message':
+            responseData['detail'] ?? 'No se pudo desvincular el dispositivo',
+      };
+    } catch (e) {
+      return {'success': false, 'message': 'No se pudo conectar al servidor'};
+    }
+  }
+
   Future<Map<String, dynamic>> getDeviceBinding({
     required String deviceId,
     required String token,
