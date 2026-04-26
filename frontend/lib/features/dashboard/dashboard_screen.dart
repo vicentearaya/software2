@@ -84,7 +84,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     _loadPools();
     _refreshTimer = Timer.periodic(const Duration(seconds: 15), (_) {
       if (!mounted || _selectedPool == null) return;
-      _loadPoolStatus();
+      _loadPoolStatus(showLoader: false);
       _loadDeviceBinding();
     });
   }
@@ -95,12 +95,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
     super.dispose();
   }
 
-  Future<void> _loadPoolStatus() async {
+  Future<void> _loadPoolStatus({bool showLoader = true}) async {
     if (_selectedPool == null || _selectedPool!['id'] == null) {
       if (mounted) setState(() => _loadingStatus = false);
       return;
     }
-    if (mounted) setState(() => _loadingStatus = true);
+    if (showLoader && mounted) setState(() => _loadingStatus = true);
     final token = await _authService.getToken();
     final result = await _poolService.getPoolStatus(
       _selectedPool!['id'],
@@ -110,11 +110,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
       if (mounted) {
         setState(() {
           _poolStatus = result['data'];
-          _loadingStatus = false;
+          if (showLoader) {
+            _loadingStatus = false;
+          }
         });
       }
     } else {
-      if (mounted) setState(() => _loadingStatus = false);
+      if (showLoader && mounted) setState(() => _loadingStatus = false);
     }
   }
 
@@ -421,6 +423,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final Map<String, dynamic>? temperaturaData =
         _poolStatus?['parametros']?['temperatura'] as Map<String, dynamic>?;
     final num? temperaturaValor = temperaturaData?['valor'] as num?;
+    final double? temperatureC = temperaturaValor?.toDouble();
 
     return Scaffold(
       body: SafeArea(
@@ -633,7 +636,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
-                child: _PoolCard(pool: pool, litrosStr: litrosStr),
+                child: _PoolCard(
+                  pool: pool,
+                  litrosStr: litrosStr,
+                  temperatureC: temperatureC,
+                ),
               ),
             ),
 
@@ -644,28 +651,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 child: Column(
                   children: [
                     _PoolVisualCard(pool: pool),
-                    if (isDeviceBoundToSelectedPool &&
-                        isDeviceOnline &&
-                        temperaturaValor != null) ...[
-                      const SizedBox(height: 10),
-                      Text(
-                        '${temperaturaValor.toStringAsFixed(1)}°C',
-                        textAlign: TextAlign.center,
-                        style: GoogleFonts.syne(
-                          color: AppColors.accent,
-                          fontWeight: FontWeight.w700,
-                          fontSize: 24,
+                    if (isDeviceBoundToSelectedPool && !isDeviceOnline)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 10),
+                        child: Text(
+                          'Dispositivo vinculado, sin señal reciente.',
+                          textAlign: TextAlign.center,
+                          style: GoogleFonts.interTight(
+                            color: AppColors.statusWarning,
+                            fontSize: 12,
+                          ),
                         ),
                       ),
-                      Text(
-                        'Temperatura actual del dispositivo',
-                        textAlign: TextAlign.center,
-                        style: GoogleFonts.interTight(
-                          color: AppColors.textSecondary,
-                          fontSize: 12,
-                        ),
-                      ),
-                    ],
                   ],
                 ),
               ),
@@ -1057,8 +1054,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
 class _PoolCard extends StatelessWidget {
   final PoolData pool;
   final String litrosStr;
+  final double? temperatureC;
 
-  const _PoolCard({required this.pool, required this.litrosStr});
+  const _PoolCard({
+    required this.pool,
+    required this.litrosStr,
+    this.temperatureC,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -1171,6 +1173,28 @@ class _PoolCard extends StatelessWidget {
               ],
             ),
           ),
+          if (temperatureC != null) ...[
+            const SizedBox(height: 14),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(
+                  Icons.thermostat_rounded,
+                  color: AppColors.accent,
+                  size: 22,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  '${temperatureC!.toStringAsFixed(1)}°C',
+                  style: GoogleFonts.syne(
+                    color: AppColors.accent,
+                    fontSize: 20,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ],
+            ),
+          ],
         ],
       ),
     );

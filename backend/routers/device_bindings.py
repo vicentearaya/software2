@@ -15,7 +15,7 @@ from models import (
 from routers.auth import get_current_user
 
 router = APIRouter(tags=["Device Bindings"])
-ONLINE_WINDOW = timedelta(minutes=2)
+ONLINE_WINDOW = timedelta(minutes=5)
 
 
 def verify_api_key(x_api_key: str = Header(...), settings=Depends(get_settings)):
@@ -48,28 +48,36 @@ def bind_device_to_pool(
         raise HTTPException(status_code=404, detail="Piscina no encontrada para el usuario")
 
     now = datetime.now(timezone.utc)
-    binding_doc = {
-        "device_id": payload.device_id.strip(),
-        "pool_id": payload.pool_id,
-        "username": current_user["username"],
-        "active": True,
-        "assigned_at": now,
-        "updated_at": now,
-        "last_seen_at": None,
-    }
-
+    device_id = payload.device_id.strip()
     db.device_bindings.update_one(
-        {"device_id": payload.device_id.strip()},
-        {"$set": binding_doc},
+        {"device_id": device_id},
+        {
+            "$set": {
+                "device_id": device_id,
+                "pool_id": payload.pool_id,
+                "username": current_user["username"],
+                "active": True,
+                "updated_at": now,
+            },
+            "$setOnInsert": {
+                "assigned_at": now,
+                "last_seen_at": None,
+            },
+        },
         upsert=True,
+    )
+
+    binding_doc = db.device_bindings.find_one(
+        {"device_id": device_id},
+        {"_id": 0, "device_id": 1, "pool_id": 1, "active": 1, "assigned_at": 1},
     )
 
     return DeviceBindingResponse(
         ok=True,
         device_id=binding_doc["device_id"],
         pool_id=binding_doc["pool_id"],
-        active=True,
-        assigned_at=now,
+        active=bool(binding_doc.get("active", True)),
+        assigned_at=binding_doc.get("assigned_at", now),
     )
 
 
