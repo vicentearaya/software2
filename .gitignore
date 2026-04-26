@@ -57,3 +57,4 @@ venv/
 .agents/
 skills-lock.json
 .cursor/rules/
+.vscode/

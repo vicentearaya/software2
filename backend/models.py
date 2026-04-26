@@ -98,6 +98,12 @@ class LecturaTemperaturaIn(BaseModel):
     temperatura: float = Field(..., ge=-40, le=60, description="Temperatura en °C")
 
 
+class LecturaTemperaturaDeviceIn(BaseModel):
+    """Modelo para ingestar temperatura usando device_id en vez de pool_id"""
+    device_id: str
+    temperatura: float = Field(..., ge=-40, le=60, description="Temperatura en °C")
+
+
 class LecturaInCompat(BaseModel):
     """Modelo legacy para compatibilidad (sensor/data) - MANTIENE NOMBRES ORIGINALES"""
     id_piscina: str
@@ -112,6 +118,21 @@ class LecturaResponse(BaseModel):
     ok: bool
     id: str
     is_critical: bool = Field(description="True si algún sensor está en estado CRÍTICO")
+
+
+class DeviceBindingIn(BaseModel):
+    """Vincula un dispositivo físico a una piscina específica."""
+    device_id: str = Field(..., min_length=1, description="Identificador único del dispositivo físico")
+    pool_id: str = Field(..., min_length=1, description="ID de piscina (ObjectId string de colección piscinas)")
+
+
+class DeviceBindingResponse(BaseModel):
+    """Respuesta de estado de vínculo de dispositivo."""
+    ok: bool
+    device_id: str
+    pool_id: str
+    active: bool
+    assigned_at: datetime
 
 
 class SensorEvaluacion(BaseModel):
