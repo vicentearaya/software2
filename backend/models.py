@@ -135,6 +135,18 @@ class DeviceBindingResponse(BaseModel):
     assigned_at: datetime
 
 
+class DeviceStatusResponse(BaseModel):
+    """Estado operacional del dispositivo basado en última lectura."""
+    ok: bool
+    device_id: str
+    pool_id: str
+    active: bool
+    assigned_at: datetime
+    last_seen_at: Optional[datetime] = None
+    is_online: bool
+    connection_state: str = Field(description="ONLINE | OFFLINE")
+
+
 class SensorEvaluacion(BaseModel):
     """Modelo para la evaluación de un sensor individual"""
     valor: float = Field(description="Valor numérico medido del sensor")

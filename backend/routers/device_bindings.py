@@ -1,14 +1,21 @@
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 from bson import ObjectId
 from fastapi import APIRouter, Depends, Header, HTTPException, status
 
 from config import get_settings
 from db import get_db
-from models import DeviceBindingIn, DeviceBindingResponse, LecturaResponse, LecturaTemperaturaDeviceIn
+from models import (
+    DeviceBindingIn,
+    DeviceBindingResponse,
+    DeviceStatusResponse,
+    LecturaResponse,
+    LecturaTemperaturaDeviceIn,
+)
 from routers.auth import get_current_user
 
 router = APIRouter(tags=["Device Bindings"])
+ONLINE_WINDOW = timedelta(minutes=2)
 
 
 def verify_api_key(x_api_key: str = Header(...), settings=Depends(get_settings)):
@@ -48,6 +55,7 @@ def bind_device_to_pool(
         "active": True,
         "assigned_at": now,
         "updated_at": now,
+        "last_seen_at": None,
     }
 
     db.device_bindings.update_one(
@@ -91,6 +99,47 @@ def get_device_binding(
     )
 
 
+@router.get(
+    "/device/{device_id}/status",
+    response_model=DeviceStatusResponse,
+    summary="Consultar estado de conexión del dispositivo",
+)
+def get_device_status(
+    device_id: str,
+    current_user: dict = Depends(get_current_user),
+    db=Depends(get_db),
+):
+    binding = db.device_bindings.find_one(
+        {"device_id": device_id, "username": current_user["username"], "active": True},
+        {
+            "_id": 0,
+            "device_id": 1,
+            "pool_id": 1,
+            "active": 1,
+            "assigned_at": 1,
+            "last_seen_at": 1,
+        },
+    )
+    if not binding:
+        raise HTTPException(status_code=404, detail="Dispositivo sin vínculo activo")
+
+    last_seen = binding.get("last_seen_at")
+    now = datetime.now(timezone.utc)
+    is_online = bool(last_seen and (now - last_seen) <= ONLINE_WINDOW)
+    state = "ONLINE" if is_online else "OFFLINE"
+
+    return DeviceStatusResponse(
+        ok=True,
+        device_id=binding["device_id"],
+        pool_id=binding["pool_id"],
+        active=bool(binding.get("active", True)),
+        assigned_at=binding.get("assigned_at", now),
+        last_seen_at=last_seen,
+        is_online=is_online,
+        connection_state=state,
+    )
+
+
 @router.post(
     "/lectura/temperatura/device",
     response_model=LecturaResponse,
@@ -120,5 +169,9 @@ def ingest_temperature_from_device(
         "is_critical": False,
     }
     result = db.lecturas.insert_one(doc)
+    db.device_bindings.update_one(
+        {"device_id": payload.device_id.strip(), "active": True},
+        {"$set": {"last_seen_at": doc["timestamp"], "updated_at": doc["timestamp"]}},
+    )
 
     return LecturaResponse(ok=True, id=str(result.inserted_id), is_critical=False)

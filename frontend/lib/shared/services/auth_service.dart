@@ -3,7 +3,11 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
 class AuthService {
-  static const String _baseUrl = String.fromEnvironment('API_URL', defaultValue: 'https://software2-backend-hxe7f4b9dug6dqat.eastus2-01.azurewebsites.net');
+  static const String _baseUrl = String.fromEnvironment(
+    'API_URL',
+    defaultValue:
+        'https://software2-backend-hxe7f4b9dug6dqat.eastus2-01.azurewebsites.net',
+  );
   static const String _tokenKey = 'auth_token';
   static const String _userKey = 'user_data';
 
@@ -24,7 +28,10 @@ class AuthService {
         await _saveSession(data['access_token'], {});
         return {'success': true, 'data': data};
       } else {
-        return {'success': false, 'message': data['detail'] ?? 'Error al iniciar sesión'};
+        return {
+          'success': false,
+          'message': data['detail'] ?? 'Error al iniciar sesión',
+        };
       }
     } catch (e) {
       return {'success': false, 'message': 'No se pudo conectar al servidor'};
@@ -42,7 +49,12 @@ class AuthService {
       final response = await _client.post(
         Uri.parse('$_baseUrl/auth/register'),
         headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'name': name, 'username': username, 'email': email, 'password': password}),
+        body: jsonEncode({
+          'name': name,
+          'username': username,
+          'email': email,
+          'password': password,
+        }),
       );
 
       final data = jsonDecode(response.body);

@@ -1,4 +1,4 @@
-import 'dart:convert';
+import 'dart:async';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -36,22 +36,22 @@ class PoolData {
   double get volumenM3 => largo * ancho * profundidad;
 
   Map<String, dynamic> toJson() => {
-        'nombre': nombre,
-        'largo': largo,
-        'ancho': ancho,
-        'profundidad': profundidad,
-        'esInterior': esInterior,
-        'tieneFiltro': tieneFiltro,
-      };
+    'nombre': nombre,
+    'largo': largo,
+    'ancho': ancho,
+    'profundidad': profundidad,
+    'esInterior': esInterior,
+    'tieneFiltro': tieneFiltro,
+  };
 
   factory PoolData.fromJson(Map<String, dynamic> json) => PoolData(
-        nombre: json['nombre'] as String,
-        largo: (json['largo'] as num).toDouble(),
-        ancho: (json['ancho'] as num).toDouble(),
-        profundidad: (json['profundidad'] as num).toDouble(),
-        esInterior: json['esInterior'] as bool,
-        tieneFiltro: json['tieneFiltro'] as bool,
-      );
+    nombre: json['nombre'] as String,
+    largo: (json['largo'] as num).toDouble(),
+    ancho: (json['ancho'] as num).toDouble(),
+    profundidad: (json['profundidad'] as num).toDouble(),
+    esInterior: json['esInterior'] as bool,
+    tieneFiltro: json['tieneFiltro'] as bool,
+  );
 }
 
 // ─────────────────────────────────────────────
@@ -65,11 +65,15 @@ class DashboardScreen extends StatefulWidget {
 }
 
 class _DashboardScreenState extends State<DashboardScreen> {
+  static const String _deviceId = 'cleanpool-001';
   List<Map<String, dynamic>> _pools = [];
   Map<String, dynamic>? _selectedPool;
   bool _loading = true;
   bool _loadingStatus = false;
   Map<String, dynamic>? _poolStatus;
+  Map<String, dynamic>? _deviceBinding;
+  bool _bindingLoading = false;
+  Timer? _refreshTimer;
 
   final _authService = AuthService();
   final _poolService = PoolService();
@@ -78,6 +82,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
   void initState() {
     super.initState();
     _loadPools();
+    _refreshTimer = Timer.periodic(const Duration(seconds: 15), (_) {
+      if (!mounted || _selectedPool == null) return;
+      _loadPoolStatus();
+      _loadDeviceBinding();
+    });
+  }
+
+  @override
+  void dispose() {
+    _refreshTimer?.cancel();
+    super.dispose();
   }
 
   Future<void> _loadPoolStatus() async {
@@ -87,7 +102,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
     }
     if (mounted) setState(() => _loadingStatus = true);
     final token = await _authService.getToken();
-    final result = await _poolService.getPoolStatus(_selectedPool!['id'], token: token);
+    final result = await _poolService.getPoolStatus(
+      _selectedPool!['id'],
+      token: token,
+    );
     if (result['success'] == true) {
       if (mounted) {
         setState(() {
@@ -100,16 +118,41 @@ class _DashboardScreenState extends State<DashboardScreen> {
     }
   }
 
+  Future<void> _loadDeviceBinding() async {
+    final token = await _authService.getToken();
+    if (token == null) {
+      if (mounted) {
+        setState(() => _deviceBinding = null);
+      }
+      return;
+    }
+
+    if (mounted) setState(() => _bindingLoading = true);
+    final result = await _poolService.getDeviceStatus(
+      deviceId: _deviceId,
+      token: token,
+    );
+    if (!mounted) return;
+
+    setState(() {
+      _bindingLoading = false;
+      _deviceBinding = result['success'] == true
+          ? result['data'] as Map<String, dynamic>
+          : null;
+    });
+  }
+
   Future<void> _loadPools({String? selectId}) async {
     if (mounted) setState(() => _loading = true);
 
     final token = await _authService.getToken();
     if (token == null) {
-      if (mounted) setState(() {
-        _loading = false;
-        _pools = [];
-        _selectedPool = null;
-      });
+      if (mounted)
+        setState(() {
+          _loading = false;
+          _pools = [];
+          _selectedPool = null;
+        });
       return;
     }
 
@@ -121,12 +164,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
       if (_pools.isNotEmpty) {
         final prefs = await SharedPreferences.getInstance();
         final lastId = selectId ?? prefs.getString('last_pool_id');
-        
+
         _selectedPool = _pools.firstWhere(
-          (p) => p['id'] == lastId, 
-          orElse: () => _pools.first
+          (p) => p['id'] == lastId,
+          orElse: () => _pools.first,
         );
-        
+
         await prefs.setString('last_pool_id', _selectedPool!['id']);
       } else {
         _selectedPool = null;
@@ -136,6 +179,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     if (mounted) {
       setState(() => _loading = false);
       _loadPoolStatus();
+      _loadDeviceBinding();
     }
   }
 
@@ -158,7 +202,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
     Map<String, dynamic> result;
     if (_selectedPool != null && _selectedPool!['nombre'] == pool.nombre) {
       // Actualizar si es la misma seleccionada (o podrías pasar el ID explícito)
-      result = await _poolService.updatePool(_selectedPool!['id'], payload, token);
+      result = await _poolService.updatePool(
+        _selectedPool!['id'],
+        payload,
+        token,
+      );
     } else {
       result = await _poolService.createPool(payload, token);
     }
@@ -172,15 +220,54 @@ class _DashboardScreenState extends State<DashboardScreen> {
   /// Elimina la piscina del backend.
   Future<void> _deletePool() async {
     if (_selectedPool == null) return;
-    
+
     final token = await _authService.getToken();
     if (token == null) return;
 
     final res = await _poolService.deletePool(_selectedPool!['id'], token);
     if (res['success'] == true) {
       await _loadPools();
+      await _loadDeviceBinding();
     } else {
-      if (mounted) AppUtils.showSnackBar(context, res['message'], isError: true);
+      if (mounted)
+        AppUtils.showSnackBar(context, res['message'], isError: true);
+    }
+  }
+
+  Future<void> _bindDeviceToSelectedPool() async {
+    if (_selectedPool == null || _selectedPool!['id'] == null) return;
+
+    final token = await _authService.getToken();
+    if (token == null) {
+      if (mounted) {
+        AppUtils.showSnackBar(
+          context,
+          'Debes iniciar sesión para vincular dispositivo.',
+          isError: true,
+        );
+      }
+      return;
+    }
+
+    final result = await _poolService.bindDeviceToPool(
+      deviceId: _deviceId,
+      poolId: _selectedPool!['id'] as String,
+      token: token,
+    );
+
+    if (!mounted) return;
+    if (result['success'] == true) {
+      AppUtils.showSnackBar(
+        context,
+        'Dispositivo vinculado a ${_selectedPool!['nombre']}.',
+      );
+      await _loadDeviceBinding();
+    } else {
+      AppUtils.showSnackBar(
+        context,
+        result['message'] ?? 'No se pudo vincular el dispositivo.',
+        isError: true,
+      );
     }
   }
 
@@ -189,21 +276,27 @@ class _DashboardScreenState extends State<DashboardScreen> {
       PageRouteBuilder(
         pageBuilder: (_, animation, __) => AddPoolScreen(
           onSave: _savePool,
-          initialData: _selectedPool != null ? PoolData(
-            nombre: _selectedPool!['nombre'] ?? '',
-            largo: (_selectedPool!['largo'] as num?)?.toDouble() ?? 0,
-            ancho: (_selectedPool!['ancho'] as num?)?.toDouble() ?? 0,
-            profundidad: (_selectedPool!['profundidad'] as num?)?.toDouble() ?? 0,
-            esInterior: (_selectedPool!['tipo'] as String?) == 'interior',
-            tieneFiltro: (_selectedPool!['filtro'] as bool?) ?? true,
-          ) : null,
+          initialData: _selectedPool != null
+              ? PoolData(
+                  nombre: _selectedPool!['nombre'] ?? '',
+                  largo: (_selectedPool!['largo'] as num?)?.toDouble() ?? 0,
+                  ancho: (_selectedPool!['ancho'] as num?)?.toDouble() ?? 0,
+                  profundidad:
+                      (_selectedPool!['profundidad'] as num?)?.toDouble() ?? 0,
+                  esInterior: (_selectedPool!['tipo'] as String?) == 'interior',
+                  tieneFiltro: (_selectedPool!['filtro'] as bool?) ?? true,
+                )
+              : null,
         ),
         transitionsBuilder: (_, animation, __, child) {
           return SlideTransition(
-            position: Tween<Offset>(
-              begin: const Offset(0, 1),
-              end: Offset.zero,
-            ).animate(CurvedAnimation(parent: animation, curve: Curves.easeOutCubic)),
+            position: Tween<Offset>(begin: const Offset(0, 1), end: Offset.zero)
+                .animate(
+                  CurvedAnimation(
+                    parent: animation,
+                    curve: Curves.easeOutCubic,
+                  ),
+                ),
             child: child,
           );
         },
@@ -303,9 +396,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final largo = (selectedPoolMap['largo'] as num?)?.toDouble() ?? 0.0;
     final ancho = (selectedPoolMap['ancho'] as num?)?.toDouble() ?? 0.0;
     final prof = (selectedPoolMap['profundidad'] as num?)?.toDouble() ?? 0.0;
-    final volumenM3 = (selectedPoolMap['volumen'] as num?)?.toDouble() ?? (largo * ancho * prof);
+    final volumenM3 =
+        (selectedPoolMap['volumen'] as num?)?.toDouble() ??
+        (largo * ancho * prof);
     final litros = volumenM3 * 1000;
-    
+
     final litrosStr = litros >= 1000
         ? '${(litros / 1000).toStringAsFixed(2)} m³ (${_formatNumber(litros)} L)'
         : '${_formatNumber(litros)} L';
@@ -318,6 +413,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
       esInterior: selectedPoolMap['tipo'] == 'interior',
       tieneFiltro: (selectedPoolMap['filtro'] as bool?) ?? true,
     );
+    final String selectedPoolId = selectedPoolMap['id'] as String;
+    final String? boundPoolId = _deviceBinding?['pool_id'] as String?;
+    final bool isDeviceOnline = _deviceBinding?['is_online'] == true;
+    final bool isDeviceBoundToSelectedPool =
+        boundPoolId != null && boundPoolId == selectedPoolId;
+    final Map<String, dynamic>? temperaturaData =
+        _poolStatus?['parametros']?['temperatura'] as Map<String, dynamic>?;
+    final num? temperaturaValor = temperaturaData?['valor'] as num?;
 
     return Scaffold(
       body: SafeArea(
@@ -348,7 +451,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               if (_pools.length < 3)
                                 IconButton(
                                   onPressed: _openAddPoolForm,
-                                  icon: const Icon(Icons.add_circle_outline_rounded, color: AppColors.primary, size: 24),
+                                  icon: const Icon(
+                                    Icons.add_circle_outline_rounded,
+                                    color: AppColors.primary,
+                                    size: 24,
+                                  ),
                                   tooltip: 'Agregar piscina',
                                   constraints: const BoxConstraints(),
                                   padding: EdgeInsets.zero,
@@ -362,7 +469,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                 context: context,
                                 backgroundColor: AppColors.surface,
                                 shape: const RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+                                  borderRadius: BorderRadius.vertical(
+                                    top: Radius.circular(20),
+                                  ),
                                 ),
                                 builder: (context) => Column(
                                   mainAxisSize: MainAxisSize.min,
@@ -394,20 +503,32 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                         itemCount: _pools.length,
                                         itemBuilder: (context, index) {
                                           final p = _pools[index];
-                                          final isSelected = p['id'] == _selectedPool!['id'];
+                                          final isSelected =
+                                              p['id'] == _selectedPool!['id'];
                                           return ListTile(
                                             leading: Icon(
                                               Icons.pool_rounded,
-                                              color: isSelected ? AppColors.primary : AppColors.textMuted,
+                                              color: isSelected
+                                                  ? AppColors.primary
+                                                  : AppColors.textMuted,
                                             ),
                                             title: Text(
                                               p['nombre'] ?? 'Sin nombre',
                                               style: GoogleFonts.interTight(
-                                                color: isSelected ? AppColors.primary : AppColors.textPrimary,
-                                                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                                                color: isSelected
+                                                    ? AppColors.primary
+                                                    : AppColors.textPrimary,
+                                                fontWeight: isSelected
+                                                    ? FontWeight.bold
+                                                    : FontWeight.normal,
                                               ),
                                             ),
-                                            trailing: isSelected ? const Icon(Icons.check, color: AppColors.primary) : null,
+                                            trailing: isSelected
+                                                ? const Icon(
+                                                    Icons.check,
+                                                    color: AppColors.primary,
+                                                  )
+                                                : null,
                                             onTap: () {
                                               Navigator.pop(context);
                                               _loadPools(selectId: p['id']);
@@ -432,7 +553,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                     fontWeight: FontWeight.w600,
                                   ),
                                 ),
-                                const Icon(Icons.keyboard_arrow_down_rounded, color: AppColors.primary, size: 18),
+                                const Icon(
+                                  Icons.keyboard_arrow_down_rounded,
+                                  color: AppColors.primary,
+                                  size: 18,
+                                ),
                               ],
                             ),
                           ),
@@ -446,15 +571,27 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         if (value == 'edit') _openAddPoolForm();
                       },
                       color: AppColors.surfaceElevated,
-                      icon: const Icon(Icons.more_vert, color: AppColors.textSecondary),
+                      icon: const Icon(
+                        Icons.more_vert,
+                        color: AppColors.textSecondary,
+                      ),
                       itemBuilder: (_) => [
                         PopupMenuItem(
                           value: 'edit',
                           child: Row(
                             children: [
-                              const Icon(Icons.edit_outlined, color: AppColors.primary, size: 18),
+                              const Icon(
+                                Icons.edit_outlined,
+                                color: AppColors.primary,
+                                size: 18,
+                              ),
                               const SizedBox(width: 10),
-                              Text('Editar piscina', style: GoogleFonts.interTight(color: AppColors.textPrimary)),
+                              Text(
+                                'Editar piscina',
+                                style: GoogleFonts.interTight(
+                                  color: AppColors.textPrimary,
+                                ),
+                              ),
                             ],
                           ),
                         ),
@@ -462,9 +599,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           value: 'delete',
                           child: Row(
                             children: [
-                              const Icon(Icons.delete_outline, color: AppColors.statusDanger, size: 18),
+                              const Icon(
+                                Icons.delete_outline,
+                                color: AppColors.statusDanger,
+                                size: 18,
+                              ),
                               const SizedBox(width: 10),
-                              Text('Eliminar piscina', style: GoogleFonts.interTight(color: AppColors.statusDanger)),
+                              Text(
+                                'Eliminar piscina',
+                                style: GoogleFonts.interTight(
+                                  color: AppColors.statusDanger,
+                                ),
+                              ),
                             ],
                           ),
                         ),
@@ -495,7 +641,71 @@ class _DashboardScreenState extends State<DashboardScreen> {
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
-                child: _PoolVisualCard(pool: pool),
+                child: Column(
+                  children: [
+                    _PoolVisualCard(pool: pool),
+                    if (isDeviceBoundToSelectedPool &&
+                        isDeviceOnline &&
+                        temperaturaValor != null) ...[
+                      const SizedBox(height: 10),
+                      Text(
+                        '${temperaturaValor.toStringAsFixed(1)}°C',
+                        textAlign: TextAlign.center,
+                        style: GoogleFonts.syne(
+                          color: AppColors.accent,
+                          fontWeight: FontWeight.w700,
+                          fontSize: 24,
+                        ),
+                      ),
+                      Text(
+                        'Temperatura actual del dispositivo',
+                        textAlign: TextAlign.center,
+                        style: GoogleFonts.interTight(
+                          color: AppColors.textSecondary,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ),
+
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+                child: ElevatedButton.icon(
+                  onPressed: _bindingLoading ? null : _bindDeviceToSelectedPool,
+                  icon: _bindingLoading
+                      ? const SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
+                      : const Icon(Icons.link_rounded),
+                  label: Text(
+                    isDeviceBoundToSelectedPool
+                        ? (isDeviceOnline
+                              ? 'Dispositivo vinculado y conectado'
+                              : 'Dispositivo vinculado (sin señal)')
+                        : 'Vincular dispositivo a esta piscina',
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: isDeviceBoundToSelectedPool
+                        ? (isDeviceOnline
+                              ? AppColors.statusGood
+                              : AppColors.statusWarning)
+                        : AppColors.primary,
+                    foregroundColor: Colors.white,
+                    minimumSize: const Size(double.infinity, 50),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
               ),
             ),
 
@@ -504,7 +714,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 10,
+                  ),
                   decoration: BoxDecoration(
                     color: AppColors.surfaceElevated,
                     borderRadius: BorderRadius.circular(12),
@@ -513,13 +726,25 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceAround,
                     children: [
-                      _CompactDimension(label: 'Largo', value: '${pool.largo} m'),
+                      _CompactDimension(
+                        label: 'Largo',
+                        value: '${pool.largo} m',
+                      ),
                       _VerticalDivider(),
-                      _CompactDimension(label: 'Ancho', value: '${pool.ancho} m'),
+                      _CompactDimension(
+                        label: 'Ancho',
+                        value: '${pool.ancho} m',
+                      ),
                       _VerticalDivider(),
-                      _CompactDimension(label: 'Prof.', value: '${pool.profundidad} m'),
+                      _CompactDimension(
+                        label: 'Prof.',
+                        value: '${pool.profundidad} m',
+                      ),
                       _VerticalDivider(),
-                      _CompactDimension(label: 'Vol.', value: '${pool.volumenM3.toStringAsFixed(1)} m³'),
+                      _CompactDimension(
+                        label: 'Vol.',
+                        value: '${pool.volumenM3.toStringAsFixed(1)} m³',
+                      ),
                     ],
                   ),
                 ),
@@ -545,17 +770,25 @@ class _DashboardScreenState extends State<DashboardScreen> {
               sliver: SliverList(
                 delegate: SliverChildListDelegate([
                   _InfoRow(
-                    icon: pool.esInterior ? Icons.home_rounded : Icons.wb_sunny_rounded,
+                    icon: pool.esInterior
+                        ? Icons.home_rounded
+                        : Icons.wb_sunny_rounded,
                     label: 'Tipo de instalación',
                     value: pool.esInterior ? 'Interior' : 'Exterior',
-                    color: pool.esInterior ? AppColors.accent : AppColors.statusWarning,
+                    color: pool.esInterior
+                        ? AppColors.accent
+                        : AppColors.statusWarning,
                   ),
                   const SizedBox(height: 10),
                   _InfoRow(
-                    icon: pool.tieneFiltro ? Icons.check_circle_rounded : Icons.cancel_rounded,
+                    icon: pool.tieneFiltro
+                        ? Icons.check_circle_rounded
+                        : Icons.cancel_rounded,
                     label: 'Sistema de filtración',
                     value: pool.tieneFiltro ? 'Con filtro' : 'Sin filtro',
-                    color: pool.tieneFiltro ? AppColors.statusGood : AppColors.statusDanger,
+                    color: pool.tieneFiltro
+                        ? AppColors.statusGood
+                        : AppColors.statusDanger,
                   ),
                 ]),
               ),
@@ -572,7 +805,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   ),
                 ),
               ),
-
           ],
         ),
       ),
@@ -589,7 +821,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
           borderRadius: BorderRadius.circular(16),
           border: Border.all(color: AppColors.border),
         ),
-        child: const Center(child: CircularProgressIndicator(color: AppColors.primary)),
+        child: const Center(
+          child: CircularProgressIndicator(color: AppColors.primary),
+        ),
       );
     }
 
@@ -606,15 +840,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
       return const SizedBox.shrink();
     }
 
-    Color bgColor = const Color(0xFF4B5563); 
+    Color bgColor = const Color(0xFF4B5563);
     Color iconColor = Colors.white.withOpacity(0.9);
     IconData icon = Icons.info_outline_rounded;
     String text = "";
     String subText = "";
 
-    Map<String, dynamic>? parametros = _poolStatus!['parametros'] as Map<String, dynamic>?;
+    Map<String, dynamic>? parametros =
+        _poolStatus!['parametros'] as Map<String, dynamic>?;
     final estado = _poolStatus!['estado'];
-    
+
     if (estado == 'APTA') {
       bgColor = const Color(0xFF10B981); // Esmeralda / Verde Brillante
       iconColor = Colors.white;
@@ -694,7 +929,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
               children: [
                 _buildDetailedParam('pH', 'ph', parametros?['ph']),
                 _buildDetailedParam('Cloro', 'cloro', parametros?['cloro']),
-                _buildDetailedParam('Temp.', 'temperatura', parametros?['temperatura']),
+                _buildDetailedParam(
+                  'Temp.',
+                  'temperatura',
+                  parametros?['temperatura'],
+                ),
               ],
             ),
           ),
@@ -703,7 +942,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Widget _buildDetailedParam(String label, String key, Map<String, dynamic>? data) {
+  Widget _buildDetailedParam(
+    String label,
+    String key,
+    Map<String, dynamic>? data,
+  ) {
     final bool hasData = data != null && data['valor'] != null;
     final valor = hasData ? data['valor'] : null;
     final estado = hasData ? data['estado'] : 'SIN DATOS';
@@ -711,9 +954,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
     String displayValue = "-";
     if (hasData) {
-      if (key == 'ph') displayValue = valor.toStringAsFixed(1);
-      else if (key == 'cloro') displayValue = "${valor.toStringAsFixed(1)} ppm";
-      else if (key == 'temperatura') displayValue = "${valor.toStringAsFixed(1)}°C";
+      if (key == 'ph')
+        displayValue = valor.toStringAsFixed(1);
+      else if (key == 'cloro')
+        displayValue = "${valor.toStringAsFixed(1)} ppm";
+      else if (key == 'temperatura')
+        displayValue = "${valor.toStringAsFixed(1)}°C";
     }
 
     return Column(
@@ -742,7 +988,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
               const SizedBox(width: 4),
               Icon(
                 isNormal ? Icons.check_rounded : Icons.close_rounded,
-                color: isNormal ? const Color(0xFF34D399) : const Color(0xFFFCA5A5),
+                color: isNormal
+                    ? const Color(0xFF34D399)
+                    : const Color(0xFFFCA5A5),
                 size: 18,
               ),
             ],
@@ -760,7 +1008,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: Text(
           'Eliminar piscina',
-          style: GoogleFonts.syne(color: AppColors.textPrimary, fontWeight: FontWeight.w700),
+          style: GoogleFonts.syne(
+            color: AppColors.textPrimary,
+            fontWeight: FontWeight.w700,
+          ),
         ),
         content: Text(
           '¿Seguro que quieres eliminar esta piscina? Se perderán los datos locales.',
@@ -769,14 +1020,23 @@ class _DashboardScreenState extends State<DashboardScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: Text('Cancelar', style: GoogleFonts.interTight(color: AppColors.textSecondary)),
+            child: Text(
+              'Cancelar',
+              style: GoogleFonts.interTight(color: AppColors.textSecondary),
+            ),
           ),
           TextButton(
             onPressed: () {
               Navigator.pop(ctx);
               _deletePool();
             },
-            child: Text('Eliminar', style: GoogleFonts.interTight(color: AppColors.statusDanger, fontWeight: FontWeight.w600)),
+            child: Text(
+              'Eliminar',
+              style: GoogleFonts.interTight(
+                color: AppColors.statusDanger,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
           ),
         ],
       ),
@@ -785,10 +1045,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   String _formatNumber(double n) {
     if (n == n.truncateToDouble()) return n.toInt().toString();
-    return n.toStringAsFixed(0).replaceAllMapped(
-      RegExp(r'(\d)(?=(\d{3})+(?!\d))'),
-      (m) => '${m[1]}.',
-    );
+    return n
+        .toStringAsFixed(0)
+        .replaceAllMapped(RegExp(r'(\d)(?=(\d{3})+(?!\d))'), (m) => '${m[1]}.');
   }
 }
 
@@ -834,7 +1093,11 @@ class _PoolCard extends StatelessWidget {
                   color: AppColors.primary.withOpacity(0.2),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: const Icon(Icons.pool_rounded, color: AppColors.primary, size: 22),
+                child: const Icon(
+                  Icons.pool_rounded,
+                  color: AppColors.primary,
+                  size: 22,
+                ),
               ),
               const SizedBox(width: 14),
               Expanded(
@@ -877,7 +1140,11 @@ class _PoolCard extends StatelessWidget {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                const Icon(Icons.water_drop_rounded, color: AppColors.accent, size: 28),
+                const Icon(
+                  Icons.water_drop_rounded,
+                  color: AppColors.accent,
+                  size: 28,
+                ),
                 const SizedBox(width: 12),
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -955,8 +1222,11 @@ class _PoolVisualCardState extends State<_PoolVisualCard>
         children: [
           Row(
             children: [
-              const Icon(Icons.view_in_ar_rounded,
-                  color: AppColors.primary, size: 16),
+              const Icon(
+                Icons.view_in_ar_rounded,
+                color: AppColors.primary,
+                size: 16,
+              ),
               const SizedBox(width: 8),
               Text(
                 'Vista de la piscina',
@@ -976,9 +1246,8 @@ class _PoolVisualCardState extends State<_PoolVisualCard>
               height: 160,
               child: AnimatedBuilder(
                 animation: _ctrl,
-                builder: (_, __) => CustomPaint(
-                  painter: _PoolPainter(animValue: _ctrl.value),
-                ),
+                builder: (_, __) =>
+                    CustomPaint(painter: _PoolPainter(animValue: _ctrl.value)),
               ),
             ),
           ),
@@ -996,13 +1265,15 @@ class _PoolPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final w = size.width;
     final h = size.height;
-    const border = 12.0;   // grosor del borde de azulejo
-    const r = 14.0;        // radio esquinas externas
-    const ri = 8.0;        // radio esquinas internas (agua)
+    const border = 12.0; // grosor del borde de azulejo
+    const r = 14.0; // radio esquinas externas
+    const ri = 8.0; // radio esquinas internas (agua)
 
     // ── 1. Fondo exterior (borde tipo azulejo) ─
     final outerRect = RRect.fromRectAndRadius(
-      Rect.fromLTWH(0, 0, w, h), const Radius.circular(r));
+      Rect.fromLTWH(0, 0, w, h),
+      const Radius.circular(r),
+    );
     canvas.drawRRect(
       outerRect,
       Paint()
@@ -1028,17 +1299,29 @@ class _PoolPainter extends CustomPainter {
     }
 
     // ── 2. Área de agua ────────────────────────
-    final waterRect = Rect.fromLTWH(border, border,
-        w - border * 2, h - border * 2);
+    final waterRect = Rect.fromLTWH(
+      border,
+      border,
+      w - border * 2,
+      h - border * 2,
+    );
     final waterRRect = RRect.fromRectAndRadius(
-        waterRect, const Radius.circular(ri));
+      waterRect,
+      const Radius.circular(ri),
+    );
 
     // Gradiente de agua animado
     final shimmer = (math.sin(animValue * 2 * math.pi) + 1) / 2;
     final c1 = Color.lerp(
-        const Color(0xFF1565C0), const Color(0xFF0288D1), shimmer)!;
+      const Color(0xFF1565C0),
+      const Color(0xFF0288D1),
+      shimmer,
+    )!;
     final c2 = Color.lerp(
-        const Color(0xFF29B6F6), const Color(0xFF00ACC1), shimmer)!;
+      const Color(0xFF29B6F6),
+      const Color(0xFF00ACC1),
+      shimmer,
+    )!;
 
     canvas.drawRRect(
       waterRRect,
@@ -1114,16 +1397,23 @@ class _PoolPainter extends CustomPainter {
       ..strokeCap = StrokeCap.round;
     // Dos rieles verticales
     canvas.drawLine(
-        Offset(ladderX - 5, border - 4),
-        Offset(ladderX - 5, waterRect.top + 22), ladderPaint);
+      Offset(ladderX - 5, border - 4),
+      Offset(ladderX - 5, waterRect.top + 22),
+      ladderPaint,
+    );
     canvas.drawLine(
-        Offset(ladderX + 5, border - 4),
-        Offset(ladderX + 5, waterRect.top + 22), ladderPaint);
+      Offset(ladderX + 5, border - 4),
+      Offset(ladderX + 5, waterRect.top + 22),
+      ladderPaint,
+    );
     // Peldaños horizontales
     for (int s = 0; s < 3; s++) {
       final sy = waterRect.top + 4 + s * 9.0;
       canvas.drawLine(
-          Offset(ladderX - 5, sy), Offset(ladderX + 5, sy), ladderPaint);
+        Offset(ladderX - 5, sy),
+        Offset(ladderX + 5, sy),
+        ladderPaint,
+      );
     }
 
     // ── 6. Borde azulejo contorno ──────────────
@@ -1156,7 +1446,12 @@ class _InfoRow extends StatelessWidget {
   final String value;
   final Color color;
 
-  const _InfoRow({required this.icon, required this.label, required this.value, required this.color});
+  const _InfoRow({
+    required this.icon,
+    required this.label,
+    required this.value,
+    required this.color,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -1174,7 +1469,10 @@ class _InfoRow extends StatelessWidget {
           Expanded(
             child: Text(
               label,
-              style: GoogleFonts.interTight(color: AppColors.textSecondary, fontSize: 13),
+              style: GoogleFonts.interTight(
+                color: AppColors.textSecondary,
+                fontSize: 13,
+              ),
             ),
           ),
           Container(
@@ -1289,7 +1587,11 @@ class _AddPoolScreenState extends State<AddPoolScreen> {
                 children: [
                   IconButton(
                     onPressed: () => Navigator.pop(context),
-                    icon: const Icon(Icons.arrow_back_ios_rounded, color: AppColors.textPrimary, size: 20),
+                    icon: const Icon(
+                      Icons.arrow_back_ios_rounded,
+                      color: AppColors.textPrimary,
+                      size: 20,
+                    ),
                   ),
                   const SizedBox(width: 4),
                   Text(
@@ -1331,7 +1633,9 @@ class _AddPoolScreenState extends State<AddPoolScreen> {
                         controller: _nombreCtrl,
                         hint: 'Ej: Piscina principal, Casa de playa…',
                         icon: Icons.pool_rounded,
-                        validator: (v) => (v == null || v.trim().isEmpty) ? 'Campo requerido' : null,
+                        validator: (v) => (v == null || v.trim().isEmpty)
+                            ? 'Campo requerido'
+                            : null,
                       ),
 
                       const SizedBox(height: 24),
@@ -1408,18 +1712,26 @@ class _AddPoolScreenState extends State<AddPoolScreen> {
                           backgroundColor: AppColors.primary,
                           foregroundColor: Colors.white,
                           minimumSize: const Size(double.infinity, 54),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14),
+                          ),
                           elevation: 0,
                         ),
                         child: _isSaving
                             ? const SizedBox(
                                 height: 20,
                                 width: 20,
-                                child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: Colors.white,
+                                ),
                               )
                             : Text(
                                 'Agregar piscina',
-                                style: GoogleFonts.syne(fontWeight: FontWeight.w700, fontSize: 15),
+                                style: GoogleFonts.syne(
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 15,
+                                ),
                               ),
                       ),
 
@@ -1452,14 +1764,19 @@ class _AddPoolScreenState extends State<AddPoolScreen> {
   }) {
     return TextFormField(
       controller: controller,
-      keyboardType: isNumber ? const TextInputType.numberWithOptions(decimal: true) : TextInputType.text,
+      keyboardType: isNumber
+          ? const TextInputType.numberWithOptions(decimal: true)
+          : TextInputType.text,
       inputFormatters: isNumber
           ? [FilteringTextInputFormatter.allow(RegExp(r'[\d\.]'))]
           : null,
       style: GoogleFonts.interTight(color: AppColors.textPrimary, fontSize: 14),
       decoration: InputDecoration(
         hintText: hint,
-        hintStyle: GoogleFonts.interTight(color: AppColors.textMuted, fontSize: 14),
+        hintStyle: GoogleFonts.interTight(
+          color: AppColors.textMuted,
+          fontSize: 14,
+        ),
         prefixIcon: Icon(icon, color: AppColors.textMuted, size: 18),
         filled: true,
         fillColor: AppColors.surfaceElevated,
@@ -1479,7 +1796,10 @@ class _AddPoolScreenState extends State<AddPoolScreen> {
           borderRadius: BorderRadius.circular(12),
           borderSide: const BorderSide(color: AppColors.statusDanger),
         ),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 14,
+        ),
       ),
       validator: validator,
     );
@@ -1527,11 +1847,18 @@ class _LitrosPreview extends StatelessWidget {
       ),
       child: Row(
         children: [
-          const Icon(Icons.water_drop_rounded, color: AppColors.accent, size: 18),
+          const Icon(
+            Icons.water_drop_rounded,
+            color: AppColors.accent,
+            size: 18,
+          ),
           const SizedBox(width: 10),
           Text(
             'Capacidad estimada: ',
-            style: GoogleFonts.interTight(color: AppColors.textSecondary, fontSize: 13),
+            style: GoogleFonts.interTight(
+              color: AppColors.textSecondary,
+              fontSize: 13,
+            ),
           ),
           Text(
             texto,
@@ -1552,7 +1879,10 @@ class _TypeSelector extends StatelessWidget {
   final bool selectedInterior;
   final ValueChanged<bool> onChanged;
 
-  const _TypeSelector({required this.selectedInterior, required this.onChanged});
+  const _TypeSelector({
+    required this.selectedInterior,
+    required this.onChanged,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -1633,7 +1963,9 @@ class _Chip extends StatelessWidget {
           duration: const Duration(milliseconds: 200),
           padding: const EdgeInsets.symmetric(vertical: 14),
           decoration: BoxDecoration(
-            color: selected ? color.withOpacity(0.15) : AppColors.surfaceElevated,
+            color: selected
+                ? color.withOpacity(0.15)
+                : AppColors.surfaceElevated,
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
               color: selected ? color.withOpacity(0.6) : AppColors.border,
@@ -1642,7 +1974,11 @@ class _Chip extends StatelessWidget {
           ),
           child: Column(
             children: [
-              Icon(icon, color: selected ? color : AppColors.textMuted, size: 22),
+              Icon(
+                icon,
+                color: selected ? color : AppColors.textMuted,
+                size: 22,
+              ),
               const SizedBox(height: 6),
               Text(
                 label,
@@ -1700,11 +2036,7 @@ class _VerticalDivider extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: 1,
-      height: 28,
-      color: AppColors.border,
-    );
+    return Container(width: 1, height: 28, color: AppColors.border);
   }
 }
 
@@ -1778,7 +2110,11 @@ class _ManualTreatmentCardState extends State<_ManualTreatmentCard> {
       return;
     }
     final res = await _poolService.calcularYRegistrarTratamiento(
-        widget.poolId!, ph, cloro, token);
+      widget.poolId!,
+      ph,
+      cloro,
+      token,
+    );
 
     setState(() {
       _isLoading = false;
@@ -1802,14 +2138,14 @@ class _ManualTreatmentCardState extends State<_ManualTreatmentCard> {
       decoration: BoxDecoration(
         color: AppColors.surfaceElevated.withOpacity(0.6),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.primary.withOpacity(0.3), width: 1.5),
+        border: Border.all(
+          color: AppColors.primary.withOpacity(0.3),
+          width: 1.5,
+        ),
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [
-            AppColors.primary.withOpacity(0.15),
-            Colors.transparent,
-          ],
+          colors: [AppColors.primary.withOpacity(0.15), Colors.transparent],
         ),
       ),
       child: Column(
@@ -1823,8 +2159,11 @@ class _ManualTreatmentCardState extends State<_ManualTreatmentCard> {
                   color: AppColors.primary.withOpacity(0.2),
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(Icons.science_rounded,
-                    color: AppColors.primary, size: 20),
+                child: const Icon(
+                  Icons.science_rounded,
+                  color: AppColors.primary,
+                  size: 20,
+                ),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -1855,9 +2194,7 @@ class _ManualTreatmentCardState extends State<_ManualTreatmentCard> {
           // Formulario horizontal
           Row(
             children: [
-              Expanded(
-                child: _buildInput('pH', 'ej. 7.4', _phCtrl),
-              ),
+              Expanded(child: _buildInput('pH', 'ej. 7.4', _phCtrl)),
               const SizedBox(width: 16),
               Expanded(
                 child: _buildInput('Cloro (ppm)', 'ej. 1.5', _cloroCtrl),
@@ -1884,7 +2221,9 @@ class _ManualTreatmentCardState extends State<_ManualTreatmentCard> {
                       width: 20,
                       height: 20,
                       child: CircularProgressIndicator(
-                          strokeWidth: 2.5, color: Colors.white),
+                        strokeWidth: 2.5,
+                        color: Colors.white,
+                      ),
                     )
                   : Text(
                       'Descubrir qué echarle',
@@ -1902,7 +2241,9 @@ class _ManualTreatmentCardState extends State<_ManualTreatmentCard> {
               child: Text(
                 _errorMessage!,
                 style: GoogleFonts.interTight(
-                    color: AppColors.statusDanger, fontSize: 13),
+                  color: AppColors.statusDanger,
+                  fontSize: 13,
+                ),
               ),
             ),
 
@@ -1942,9 +2283,13 @@ class _ManualTreatmentCardState extends State<_ManualTreatmentCard> {
           decoration: InputDecoration(
             hintText: hint,
             hintStyle: GoogleFonts.interTight(
-                color: AppColors.textMuted, fontSize: 14),
-            contentPadding:
-                const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              color: AppColors.textMuted,
+              fontSize: 14,
+            ),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 14,
+              vertical: 12,
+            ),
             filled: true,
             fillColor: AppColors.surface,
             border: OutlineInputBorder(
@@ -1957,8 +2302,10 @@ class _ManualTreatmentCardState extends State<_ManualTreatmentCard> {
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10),
-              borderSide:
-                  const BorderSide(color: AppColors.primary, width: 1.5),
+              borderSide: const BorderSide(
+                color: AppColors.primary,
+                width: 1.5,
+              ),
             ),
           ),
         ),
@@ -1971,8 +2318,9 @@ class _ManualTreatmentCardState extends State<_ManualTreatmentCard> {
       return Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-            color: AppColors.statusGood.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(8)),
+          color: AppColors.statusGood.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(8),
+        ),
         child: Row(
           children: [
             const Icon(Icons.check_circle_outline, color: AppColors.statusGood),
@@ -1981,9 +2329,11 @@ class _ManualTreatmentCardState extends State<_ManualTreatmentCard> {
               child: Text(
                 '¡El agua está en óptimas condiciones!',
                 style: GoogleFonts.interTight(
-                    color: AppColors.statusGood, fontWeight: FontWeight.w600),
+                  color: AppColors.statusGood,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
-            )
+            ),
           ],
         ),
       );
@@ -2005,16 +2355,23 @@ class _ManualTreatmentCardState extends State<_ManualTreatmentCard> {
         ...tratamiento.map((item) {
           final producto = item['producto'] ?? '';
           if (producto == 'Ninguno') {
-             return Padding(
+            return Padding(
               padding: const EdgeInsets.only(bottom: 8),
               child: Row(
                 children: [
-                  const Icon(Icons.info_outline, color: AppColors.textSecondary, size: 18),
+                  const Icon(
+                    Icons.info_outline,
+                    color: AppColors.textSecondary,
+                    size: 18,
+                  ),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
                       item['instrucciones'] ?? '',
-                      style: GoogleFonts.interTight(color: AppColors.textSecondary, fontSize: 13),
+                      style: GoogleFonts.interTight(
+                        color: AppColors.textSecondary,
+                        fontSize: 13,
+                      ),
                     ),
                   ),
                 ],
@@ -2034,8 +2391,8 @@ class _ManualTreatmentCardState extends State<_ManualTreatmentCard> {
                   color: Colors.black.withOpacity(0.1),
                   blurRadius: 4,
                   offset: const Offset(0, 2),
-                )
-              ]
+                ),
+              ],
             ),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -2046,7 +2403,11 @@ class _ManualTreatmentCardState extends State<_ManualTreatmentCard> {
                     color: AppColors.accent.withOpacity(0.15),
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(Icons.water_drop, color: AppColors.accent, size: 16),
+                  child: const Icon(
+                    Icons.water_drop,
+                    color: AppColors.accent,
+                    size: 16,
+                  ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
