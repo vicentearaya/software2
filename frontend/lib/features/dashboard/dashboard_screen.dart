@@ -137,9 +137,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
     if (!mounted) return;
 
     setState(() {
-      _deviceBinding = result['success'] == true
-          ? result['data'] as Map<String, dynamic>
-          : null;
+      if (result['success'] == true) {
+        _deviceBinding = result['data'] as Map<String, dynamic>;
+      } else if (!silent) {
+        _deviceBinding = null;
+      }
     });
   }
 
@@ -253,6 +255,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
       return;
     }
 
+    if (_deviceBinding?['is_online'] != true) {
+      AppUtils.showSnackBar(
+        context,
+        'No se puede vincular: el dispositivo está apagado o sin señal.',
+        isError: true,
+      );
+      return;
+    }
+
     if (_deviceBinding?['pool_id'] != null &&
         _deviceBinding!['pool_id'] != _selectedPool!['id']) {
       AppUtils.showSnackBar(
@@ -273,6 +284,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
     if (!mounted) return;
     setState(() => _bindingActionLoading = false);
     if (result['success'] == true) {
+      // Actualizar UI inmediatamente para reflejar el cambio de estado del botón.
+      setState(() {
+        _deviceBinding = {
+          ...?_deviceBinding,
+          'device_id': _deviceId,
+          'pool_id': _selectedPool!['id'],
+          'is_online': false,
+        };
+      });
       AppUtils.showSnackBar(
         context,
         'Dispositivo vinculado a ${_selectedPool!['nombre']}.',
@@ -302,6 +322,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
     setState(() => _bindingActionLoading = false);
 
     if (result['success'] == true) {
+      // Reflejar desvinculación en UI sin esperar al siguiente polling.
+      setState(() {
+        _deviceBinding = null;
+      });
       AppUtils.showSnackBar(
         context,
         'Dispositivo desvinculado de esta piscina.',
@@ -676,7 +700,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 child: _PoolCard(
                   pool: pool,
                   litrosStr: litrosStr,
-                  temperatureC: temperatureC,
+                  temperatureC: (isDeviceBoundToSelectedPool && isDeviceOnline)
+                      ? temperatureC
+                      : null,
                 ),
               ),
             ),
@@ -982,11 +1008,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
               children: [
                 _buildDetailedParam('pH', 'ph', parametros?['ph']),
                 _buildDetailedParam('Cloro', 'cloro', parametros?['cloro']),
-                _buildDetailedParam(
-                  'Temp.',
-                  'temperatura',
-                  parametros?['temperatura'],
-                ),
               ],
             ),
           ),
