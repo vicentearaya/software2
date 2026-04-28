@@ -3,10 +3,19 @@ import '../../core/constants/app_colors.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class FrequentProblemsScreen extends StatelessWidget {
-  const FrequentProblemsScreen({super.key});
+  const FrequentProblemsScreen({
+    super.key,
+    this.embedded = false,
+  });
+
+  final bool embedded;
 
   @override
   Widget build(BuildContext context) {
+    if (embedded) {
+      return _buildContent();
+    }
+
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
@@ -22,7 +31,12 @@ class FrequentProblemsScreen extends StatelessWidget {
         elevation: 0,
         centerTitle: true,
       ),
-      body: ListView(
+      body: _buildContent(),
+    );
+  }
+
+  Widget _buildContent() {
+    return ListView(
         physics: const BouncingScrollPhysics(),
         padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 20.0),
         children: [
@@ -130,8 +144,7 @@ class FrequentProblemsScreen extends StatelessWidget {
           ),
           const SizedBox(height: 40),
         ],
-      ),
-    );
+      );
   }
 
   Widget _buildProblemAccordion({
