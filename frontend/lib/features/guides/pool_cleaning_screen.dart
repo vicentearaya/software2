@@ -3,10 +3,19 @@ import '../../core/constants/app_colors.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class PoolCleaningScreen extends StatelessWidget {
-  const PoolCleaningScreen({super.key});
+  const PoolCleaningScreen({
+    super.key,
+    this.embedded = false,
+  });
+
+  final bool embedded;
 
   @override
   Widget build(BuildContext context) {
+    if (embedded) {
+      return _buildContent();
+    }
+
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
@@ -22,7 +31,12 @@ class PoolCleaningScreen extends StatelessWidget {
         elevation: 0,
         centerTitle: true,
       ),
-      body: ListView(
+      body: _buildContent(),
+    );
+  }
+
+  Widget _buildContent() {
+    return ListView(
         physics: const BouncingScrollPhysics(),
         padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 20.0),
         children: [
@@ -35,8 +49,7 @@ class PoolCleaningScreen extends StatelessWidget {
           _buildProTipsSection(),
           const SizedBox(height: 40),
         ],
-      ),
-    );
+      );
   }
 
   Widget _buildHerramientasSection() {
