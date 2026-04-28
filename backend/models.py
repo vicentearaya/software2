@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field, ConfigDict
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional, Any
 
 
@@ -201,11 +201,34 @@ class MantencionIn(BaseModel):
     """
     Modelo para registrar un mantenimiento de piscina.
     Tarea #2: Definir y validar schema con Pydantic.
+    Incluye los parámetros de calidad del agua medidos manualmente
+    (ph, cloro, temperatura) que actualmente se ingresan en calculadora.py
+    y que posteriormente serán enviados por el ESP32.
     """
     id_piscina: str = Field(..., description="Identificador de la piscina")
     productos: list[str] = Field(..., description="Lista de productos utilizados (ej: Cloro granulado, Reductor pH)")
     cantidades: list[str] = Field(..., description="Cantidades correspondientes a cada producto (ej: 500g, 1L)")
-    fecha: datetime = Field(default_factory=datetime.utcnow, description="Fecha y hora del mantenimiento")
+    fecha: datetime = Field(default_factory=lambda: datetime.now(timezone.utc), description="Fecha y hora del mantenimiento")
+    # Parámetros de calidad del agua — opcionales para retrocompatibilidad
+    # y porque el ESP32 puede enviar solo algunos sensores
+    ph: Optional[float] = Field(
+        default=None,
+        ge=0.0,
+        le=14.0,
+        description="pH medido al momento del mantenimiento (0–14). None si no se registró."
+    )
+    cloro: Optional[float] = Field(
+        default=None,
+        ge=0.0,
+        le=20.0,
+        description="Cloro libre medido en ppm. None si no se registró."
+    )
+    temperatura: Optional[float] = Field(
+        default=None,
+        ge=-10.0,
+        le=60.0,
+        description="Temperatura del agua en °C. None si no se registró."
+    )
 
 
 class Mantencion(MantencionIn):
@@ -214,4 +237,4 @@ class Mantencion(MantencionIn):
     Incluye el username del técnico que realizó la acción.
     """
     username: str = Field(..., description="Nombre de usuario del técnico")
-    creado_en: datetime = Field(default_factory=datetime.utcnow)
+    creado_en: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))

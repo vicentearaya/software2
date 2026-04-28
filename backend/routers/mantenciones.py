@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, status
-from datetime import datetime
+from datetime import datetime, timezone
 from db import get_db
 from models import MantencionIn, Mantencion
 from routers.auth import get_current_user
@@ -18,12 +18,13 @@ _db = get_db()
 def crear_mantencion(mantencion_in: MantencionIn, current_user: dict = Depends(get_current_user)):
     """
     Registra una nueva mantención vinculada al usuario autenticado.
+    Persiste ph, cloro y temperatura (opcionales) junto a productos y cantidades.
     Implementa Tareas #1, #2 y #3.
     """
     # Almacenar el username del token en el registro de mantención
     mantencion_data = mantencion_in.model_dump()
     mantencion_data["username"] = current_user["username"]
-    mantencion_data["creado_en"] = datetime.utcnow()
+    mantencion_data["creado_en"] = datetime.now(timezone.utc)
     
     try:
         _db["mantenciones"].insert_one(mantencion_data)

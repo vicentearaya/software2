@@ -251,7 +251,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   item.productosResumen,
                   style: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
                 ),
-                const SizedBox(height: 10),
+                if (item.ph != null || item.cloro != null || item.temperatura != null) ...[
+                  const SizedBox(height: 4),
+                  Text(
+                    item.parametrosResumen,
+                    style: const TextStyle(
+                      color: AppColors.primary,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+                const SizedBox(height: 6),
                 Row(
                   children: [
                     const Icon(Icons.access_time, size: 12, color: AppColors.textMuted),

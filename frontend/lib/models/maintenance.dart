@@ -9,6 +9,9 @@ class Maintenance {
   final List<String> cantidades;
   final DateTime fecha;
   final String username;
+  final double? ph;
+  final double? cloro;
+  final double? temperatura;
 
   Maintenance({
     required this.idPiscina,
@@ -16,6 +19,9 @@ class Maintenance {
     required this.cantidades,
     required this.fecha,
     required this.username,
+    this.ph,
+    this.cloro,
+    this.temperatura,
   });
 
   /// Factory para parsear desde JSON del backend.
@@ -24,11 +30,23 @@ class Maintenance {
       idPiscina: json['id_piscina'] as String? ?? 'Desconocido',
       productos: List<String>.from(json['productos'] ?? []),
       cantidades: List<String>.from(json['cantidades'] ?? []),
-      fecha: json['fecha'] != null 
-          ? DateTime.parse(json['fecha'] as String) 
+      fecha: json['fecha'] != null
+          ? DateTime.parse(json['fecha'] as String)
           : DateTime.now(),
       username: json['username'] as String? ?? '',
+      ph: (json['ph'] as num?)?.toDouble(),
+      cloro: (json['cloro'] as num?)?.toDouble(),
+      temperatura: (json['temperatura'] as num?)?.toDouble(),
     );
+  }
+
+  /// Muestra los sensores registrados (ph, cloro, temp) en formato legible.
+  String get parametrosResumen {
+    final List<String> partes = [];
+    if (ph != null) partes.add('pH: ${ph!.toStringAsFixed(1)}');
+    if (cloro != null) partes.add('Cl: ${cloro!.toStringAsFixed(1)} ppm');
+    if (temperatura != null) partes.add('T: ${temperatura!.toStringAsFixed(1)}°C');
+    return partes.isEmpty ? 'Sin lecturas' : partes.join('  •  ');
   }
 
   /// Método útil para mostrar productos y cantidades juntos.

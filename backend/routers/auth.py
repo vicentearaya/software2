@@ -122,3 +122,16 @@ def register(user_in: UserRegister) -> dict:
             "email": user_in.email
         }
     }
+
+
+@router.get(
+    "/me",
+    summary="Datos del usuario autenticado",
+    description="Retorna nombre, username y email del usuario con sesión activa.",
+)
+def get_me(current_user: dict = Depends(get_current_user)):
+    return {
+        "username": current_user.get("username"),
+        "name": current_user.get("name"),
+        "email": current_user.get("email"),
+    }

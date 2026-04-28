@@ -133,8 +133,8 @@ def calcular_y_guardar_tratamiento(
     db = Depends(get_db)
 ):
     """
-    Guarda un mantenimiento nuevo con los datos ingresados de pH y Cloro,
-    luego de retornar las acciones dictadas por `calcular_tratamiento`.
+    Calcula el tratamiento con pH y Cloro, persiste en 'mantenimientos' (detalle interno)
+    Y en 'mantenciones' (esquema del perfil) para que aparezca en el historial del usuario.
     """
     try:
         try:
@@ -147,37 +147,67 @@ def calcular_y_guardar_tratamiento(
         if not pool:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Piscina no encontrada"
+                detail="Piscina no encontrada"
             )
-        
+
         volumen_m3 = pool.get("volumen", 0.0)
         if volumen_m3 <= 0:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="La piscina tiene un volumen de 0 m³, no se puede calcular dosis."
             )
-            
+
         # Calcular dosis con las reglas configuradas
         tratamiento_pasos = calcular_tratamiento(request.ph, request.cloro, volumen_m3)
-        
-        # Registrar el mantenimiento en la colección "mantenimientos"
+
+        now = datetime.now(timezone.utc)
+
+        # 1) Registrar en colección "mantenimientos" (esquema interno detallado)
         mantenimiento_doc = {
             "pool_id": pool_id,
             "username": current_user["username"],
-            "fecha": datetime.now(timezone.utc),
+            "fecha": now,
             "ph_medido": request.ph,
             "cloro_medido": request.cloro,
-            "acciones": tratamiento_pasos
+            "acciones": tratamiento_pasos,
         }
-        
         db.mantenimientos.insert_one(mantenimiento_doc)
-        
+
+        # 2) Registrar en colección "mantenciones" (esquema del perfil Flutter)
+        productos = [
+            paso["producto"] for paso in tratamiento_pasos
+            if paso.get("producto") and paso["producto"] != "Ninguno"
+        ]
+        cantidades = [
+            f"{paso.get('cantidad', 0)} {paso.get('unidad', '')}".strip()
+            for paso in tratamiento_pasos
+            if paso.get("producto") and paso["producto"] != "Ninguno"
+        ]
+        # Si el agua está en buen estado, igual registrar la lectura
+        if not productos:
+            productos = ["Sin productos necesarios"]
+            cantidades = ["—"]
+
+        nombre_piscina = pool.get("nombre", pool_id)
+        mantencion_doc = {
+            "id_piscina": nombre_piscina,
+            "username": current_user["username"],
+            "fecha": now,
+            "creado_en": now,
+            "ph": request.ph,
+            "cloro": request.cloro,
+            "temperatura": None,
+            "productos": productos,
+            "cantidades": cantidades,
+        }
+        db.mantenciones.insert_one(mantencion_doc)
+
         return {
             "ok": True,
             "mensaje": "Mantenimiento calculado y guardado exitosamente.",
-            "tratamiento": tratamiento_pasos
+            "tratamiento": tratamiento_pasos,
         }
-        
+
     except HTTPException:
         raise
     except Exception as e:

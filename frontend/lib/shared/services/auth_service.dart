@@ -25,7 +25,23 @@ class AuthService {
       );
       final data = jsonDecode(response.body);
       if (response.statusCode == 200) {
-        await _saveSession(data['access_token'], {});
+        final token = data['access_token'] as String;
+
+        // Obtener datos reales del usuario con el token recién generado
+        Map<String, dynamic> userData = {};
+        try {
+          final meResponse = await _client.get(
+            Uri.parse('$_baseUrl/auth/me'),
+            headers: {'Authorization': 'Bearer $token'},
+          );
+          if (meResponse.statusCode == 200) {
+            userData = jsonDecode(meResponse.body) as Map<String, dynamic>;
+          }
+        } catch (_) {
+          // Si falla /me, continúa sin datos extra del usuario
+        }
+
+        await _saveSession(token, userData);
         return {'success': true, 'data': data};
       } else {
         return {
