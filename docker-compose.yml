@@ -1,15 +1,26 @@
 services:
+  mongo:
+    image: mongo:4.4
+    container_name: cleanpool_mongo
+    ports:
+      - "8885:27017"
+    restart: always
+    volumes:
+      - mongo_data:/data/db
+
   backend:
     build:
       context: ./backend
       dockerfile: Dockerfile
     container_name: cleanpool_backend
     ports:
-      - "8000:8000"
+      - "8883:8000"
     restart: always
+    depends_on:
+      - mongo
     environment:
       - DOMAIN=${DOMAIN}
-      - MONGODB_URI=${MONGODB_URI}
+      - MONGODB_URI=mongodb://mongo:27017/cleanpool
       - SECRET_KEY=${SECRET_KEY}
       - API_KEY=${API_KEY}
 
@@ -18,10 +29,13 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
       args:
-        - API_URL=${API_URL}
+        - API_URL=http://localhost:8883
     container_name: cleanpool_frontend
     ports:
-      - "80:80"
+      - "8884:80"
     depends_on:
       - backend
     restart: always
+
+volumes:
+  mongo_data:
