@@ -347,15 +347,16 @@ INPUT ./entregable_hito2.toc
 INPUT entregable_hito2.toc
 OUTPUT entregable_hito2.toc
 INPUT /usr/local/texlive/2026/texmf-dist/fonts/tfm/public/lm/ec-lmri10.tfm
-INPUT /usr/local/texlive/2026/texmf-dist/fonts/tfm/public/lm/ec-lmbx10.tfm
-INPUT /usr/local/texlive/2026/texmf-dist/fonts/enc/dvips/lm/lm-mathsy.enc
-INPUT /usr/local/texlive/2026/texmf-dist/fonts/enc/dvips/lm/lm-rm.enc
 INPUT /usr/local/texlive/2026/texmf-dist/fonts/enc/dvips/lm/lm-mathit.enc
+INPUT /usr/local/texlive/2026/texmf-dist/fonts/enc/dvips/lm/lm-rm.enc
+INPUT /usr/local/texlive/2026/texmf-dist/fonts/enc/dvips/lm/lm-mathsy.enc
 INPUT /usr/local/texlive/2026/texmf-dist/fonts/tfm/public/lm/ec-lmri10.tfm
+INPUT /usr/local/texlive/2026/texmf-dist/fonts/tfm/public/lm/ec-lmbx10.tfm
 INPUT /usr/local/texlive/2026/texmf-dist/tex/latex/lm/t1lmtt.fd
 INPUT /usr/local/texlive/2026/texmf-dist/tex/latex/lm/t1lmtt.fd
 INPUT /usr/local/texlive/2026/texmf-dist/tex/latex/lm/t1lmtt.fd
 INPUT /usr/local/texlive/2026/texmf-dist/fonts/tfm/public/lm/ec-lmtt10.tfm
+INPUT /usr/local/texlive/2026/texmf-dist/fonts/tfm/public/lm/ec-lmri8.tfm
 INPUT /usr/local/texlive/2026/texmf-dist/fonts/tfm/public/lm/ec-lmbxi10.tfm
 INPUT entregable_hito2.aux
 INPUT ./entregable_hito2.out
@@ -367,6 +368,7 @@ INPUT /usr/local/texlive/2026/texmf-dist/fonts/type1/public/lm/lmmi10.pfb
 INPUT /usr/local/texlive/2026/texmf-dist/fonts/type1/public/lm/lmr10.pfb
 INPUT /usr/local/texlive/2026/texmf-dist/fonts/type1/public/lm/lmr17.pfb
 INPUT /usr/local/texlive/2026/texmf-dist/fonts/type1/public/lm/lmri10.pfb
+INPUT /usr/local/texlive/2026/texmf-dist/fonts/type1/public/lm/lmri8.pfb
 INPUT /usr/local/texlive/2026/texmf-dist/fonts/type1/public/lm/lmsy10.pfb
 INPUT /usr/local/texlive/2026/texmf-dist/fonts/type1/public/lm/lmsy8.pfb
 INPUT /usr/local/texlive/2026/texmf-dist/fonts/type1/public/lm/lmtt10.pfb

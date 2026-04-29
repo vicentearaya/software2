@@ -1,13 +1,9 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../core/constants/api_config.dart';
 
 class AuthService {
-  static const String _baseUrl = String.fromEnvironment(
-    'API_URL',
-    defaultValue:
-        'https://software2-backend-hxe7f4b9dug6dqat.eastus2-01.azurewebsites.net',
-  );
   static const String _tokenKey = 'auth_token';
   static const String _userKey = 'user_data';
 
@@ -19,7 +15,7 @@ class AuthService {
   Future<Map<String, dynamic>> login(String email, String password) async {
     try {
       final response = await _client.post(
-        Uri.parse('$_baseUrl/auth/login'),
+        Uri.parse('${ApiConfig.baseUrl}/auth/login'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({'username': email, 'password': password}),
       );
@@ -31,7 +27,7 @@ class AuthService {
         Map<String, dynamic> userData = {};
         try {
           final meResponse = await _client.get(
-            Uri.parse('$_baseUrl/auth/me'),
+            Uri.parse('${ApiConfig.baseUrl}/auth/me'),
             headers: {'Authorization': 'Bearer $token'},
           );
           if (meResponse.statusCode == 200) {
@@ -63,7 +59,7 @@ class AuthService {
   ) async {
     try {
       final response = await _client.post(
-        Uri.parse('$_baseUrl/auth/register'),
+        Uri.parse('${ApiConfig.baseUrl}/auth/register'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           'name': name,

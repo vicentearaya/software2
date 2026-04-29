@@ -29,7 +29,9 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
       args:
-        - API_URL=http://localhost:8883
+        # En despliegue, debe apuntar al backend público.
+        # Permite override con API_URL y cae al backend de Azure por defecto.
+        - API_URL=${API_URL:-https://software2-backend-hxe7f4b9dug6dqat.eastus2-01.azurewebsites.net}
     container_name: cleanpool_frontend
     ports:
       - "8884:80"

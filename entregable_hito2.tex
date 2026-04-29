@@ -165,10 +165,6 @@
 
 \subsection{Definición del Problema}
 
-\begin{infobox}[title=Instrucción]
-Describir el problema central que el sistema busca resolver. Explicar por qué existe, a quién afecta y cuál es su magnitud o frecuencia. Ser concreto y evitar definiciones genéricas.
-\end{infobox}
-
 \vspace{0.3em}
 La gestión de la calidad del agua en piscinas residenciales y de pequeña escala suele depender de mediciones manuales esporádicas, lo que dificulta detectar desviaciones de pH, cloro o temperatura a tiempo. Esto afecta a los dueños porque incrementa el riesgo sanitario, el sobreuso de químicos y los costos de mantención. El sistema aborda este problema mediante monitoreo continuo con sensores IoT y recomendaciones accionables desde una aplicación cliente.
 
@@ -176,7 +172,7 @@ La gestión de la calidad del agua en piscinas residenciales y de pequeña escal
 
 \begin{itemize}
   \item \textbf{Usuarios principales:} Propietarios particulares de piscinas que desean mantener el agua de sus piscinas en perfectas condiciones, pero que no poseen conocimientos técnicos acerca del mantenimiento en piscinas.
-  \item \textbf{Entorno de uso:} Aplicación Flutter multiplataforma conectada a una API FastAPI y MongoDB Atlas, con ingesta de sensores desde dispositivos ESP mediante endpoints protegidos por API key.
+  \item \textbf{Entorno de uso:} Aplicación Flutter multiplataforma conectada a una API FastAPI y MongoDB Atlas, con ingesta de sensores desde dispositivo ESP8266 mediante endpoints protegidos por API key.
   \item \textbf{Necesidad identificada:} Contar con visibilidad continua del estado del agua y soporte de decisiones para tratamiento manual, reduciendo dependencia de chequeos reactivos.
 \end{itemize}
 
@@ -200,7 +196,7 @@ La gestión de la calidad del agua en piscinas residenciales y de pequeña escal
 
 \subsection{Requerimientos Funcionales}
 
-\begin{longtable}{@{} p{1.4cm} p{3.5cm} X p{2cm} @{}}
+\begin{longtable}{@{} p{1.4cm} p{3.5cm} p{7.2cm} p{2cm} @{}}
   \toprule
   \textbf{ID} & \textbf{Nombre} & \textbf{Descripción} & \textbf{Prioridad} \\
   \midrule
@@ -236,7 +232,7 @@ La gestión de la calidad del agua en piscinas residenciales y de pequeña escal
 
 \subsection{Requerimientos No Funcionales}
 
-\begin{longtable}{@{} p{1.4cm} p{2.8cm} X p{2.2cm} @{}}
+\begin{longtable}{@{} p{1.5cm} p{3cm} p{8cm} p{2cm} @{}}
   \toprule
   \textbf{ID} & \textbf{Categoría} & \textbf{Descripción} & \textbf{Métrica} \\
   \midrule
@@ -245,32 +241,21 @@ La gestión de la calidad del agua en piscinas residenciales y de pequeña escal
   \textbf{ID} & \textbf{Categoría} & \textbf{Descripción} & \textbf{Métrica} \\
   \midrule
   \endhead
-  \multicolumn{4}{@{}l}{\textbf{Seguridad}} \\
-  RNF-03 & Seguridad & Las credenciales deben almacenarse hasheadas y el acceso a endpoints protegidos debe validarse con token Bearer JWT; la ingesta IoT exige API key. & JWT + bcrypt + X-API-KEY \\
-  RNF-10 & Seguridad & El acceso a los datos debe requerir autenticación con token JWT. & JWT obligatorio \\
-  \midrule
-  \multicolumn{4}{@{}l}{\textbf{Disponibilidad e infraestructura}} \\
-  RNF-02 & Disponibilidad & El backend debe ser desplegable en entorno productivo y ejecutable localmente por Docker o Uvicorn.\\
-  RNF-07 & Disponibilidad & El sistema debe estar continuamente disponible un 90\% del tiempo a nivel semanal garantizando su estabilidad. & 90\% semanal \\
-  RNF-15 & Disponibilidad en nube & El sistema debe estar desplegado en infraestructura cloud que garantice una disponibilidad mínima del 97\% mensual, excluyendo ventanas de mantenimiento programadas. & 97\% mensual \\
-  \midrule
-  \multicolumn{4}{@{}l}{\textbf{Rendimiento y latencia}} \\
-  RNF-01 & Rendimiento & La API debe responder de forma interactiva para operaciones de consulta y registro sobre lecturas, piscinas y auth.\\
-  RNF-09 & Latencia de actualización & La visualización de datos en el dashboard debe actualizarse en al menos 5 segundos desde la captura del sensor. & $\leq 5$ segundos \\
-  RNF-13 & Rendimiento funcional & El sistema debe mostrar recomendaciones de productos químicos en menos de 5 segundos una vez que se hace clic en solicitar la recomendación. & $\leq 5$ segundos \\
-  \midrule
-  \multicolumn{4}{@{}l}{\textbf{Calidad de datos y precisión}} \\
-  RNF-08 & Precisión & Las mediciones de sensores tienen un margen de error menor a $\pm$1 en temperatura. & Error $< \pm1\,^{\circ}\mathrm{C}$ \\
-  RNF-12 & Validación de datos & El sistema debe validar cada lectura antes del almacenamiento, aceptando solo pH entre 0.0 y 14.0, temperatura entre 0$^\circ$C y 60$^\circ$C y cloro entre 0.0 y 10.0 ppm; las lecturas fuera de rango se descartan.\\
-  \midrule
-  \multicolumn{4}{@{}l}{\textbf{Usabilidad y compatibilidad}} \\
-  RNF-04 & Usabilidad & La interfaz Flutter debe presentar navegación por pantallas de autenticación, dashboard, perfil y gestión de piscina con flujo comprensible para usuario final. \\
-  RNF-06 & Usabilidad & La interfaz debe mostrar los niveles de pH, cloro y temperatura al hacer clic en dashboard. & Visualización en dashboard \\
-  RNF-14 & Compatibilidad móvil & La app debe ser completamente funcional en dispositivos iOS versión 14.0 o superior y Android 10.0 o superior. & iOS 14+ y Android 10+ \\
-  \midrule
-  \multicolumn{4}{@{}l}{\textbf{Mantenibilidad y evolución}} \\
-  RNF-11 & Mantenibilidad & El sistema debe diseñarse de forma modular con capas separadas en IoT, lógica de negocio, datos y presentación para facilitar correcciones y mejoras sin afectar otros módulos. & Arquitectura en capas \\
-  RNF-05 & Escalabilidad & La arquitectura desacoplada frontend/backend y uso de MongoDB Atlas permite crecer en clientes y lecturas sin acoplar UI con almacenamiento. \\
+  RNF-03 & Seguridad & Credenciales hasheadas y protección de endpoints con JWT; ingesta IoT protegida por API key. & JWT + bcrypt + API key \\
+  RNF-10 & Seguridad & El acceso a los datos del usuario requiere autenticación con token válido. & JWT obligatorio \\
+  RNF-02 & Disponibilidad & Backend desplegable en nube y ejecutable localmente con Docker o Uvicorn. & Entorno local y cloud operativo \\
+  RNF-07 & Disponibilidad & El sistema debe estar disponible al menos 90\% semanal. & 90\% semanal \\
+  RNF-15 & Disponibilidad cloud & Disponibilidad mínima de 97\% mensual, excluyendo mantenciones programadas. & 97\% mensual \\
+  RNF-01 & Rendimiento & La API debe responder de manera interactiva en operaciones de consulta y registro. & $< 2$ segundos promedio \\
+  RNF-09 & Latencia de actualización & El dashboard debe reflejar nuevos datos con baja latencia desde la captura. & $\leq 5$ segundos \\
+  RNF-13 & Rendimiento funcional & La recomendación de productos químicos debe aparecer rápidamente tras la solicitud. & $\leq 5$ segundos \\
+  RNF-08 & Precisión & Las mediciones de temperatura deben mantenerse dentro de un margen de error acotado. & Error $< \pm1\,^{\circ}\mathrm{C}$ \\
+  RNF-12 & Validación de datos & Las lecturas fuera de rango físico deben ser rechazadas antes del almacenamiento. & 100\% de rechazo fuera de rango \\
+  RNF-04 & Usabilidad & Flujo móvil claro entre autenticación, dashboard, perfil y gestión de piscina. & Flujo completo en pocas acciones \\
+  RNF-06 & Usabilidad & Visualización de pH, cloro y temperatura desde el dashboard. & Indicadores visibles en UI \\
+  RNF-14 & Compatibilidad móvil & Funcionamiento en iOS 14+ y Android 10+ (o superior). & iOS 14+ / Android 10+ \\
+  RNF-11 & Mantenibilidad & Arquitectura modular por capas para facilitar evolución y corrección. & Separación por capas \\
+  RNF-05 & Escalabilidad & Diseño desacoplado frontend/backend y persistencia en MongoDB Atlas. & Escalado horizontal por servicio \\
   \bottomrule
 \end{longtable}
 
@@ -297,17 +282,18 @@ La arquitectura se compone de: (1) cliente Flutter (móvil) como capa de present
   Backend API & Endpoints base de autenticación/lecturas y estructura inicial. & Se consolidan routers para ingesta IoT, vinculación de dispositivos, piscinas de usuario y mantenciones. \\
   Cliente Flutter & Flujo inicial de interfaz y consumo básico de API. & Se estructura por features con servicios compartidos para auth, pool y mantenciones, incluyendo persistencia local de sesión. \\
   Placa arduino & Uso de arduino ESP32 & Uso de arduino ESP8266 \\
-  Access point desde esp82666 para conexión con la app & esp8266 se conecta a red Wi-fi y asi manda datos con protocolo HTTP al backend de la app \\
+  Conexion esp8266 con App & Access point desde esp82666 para conexión con la app & esp8266 se conecta a red Wi-fi y asi manda datos con protocolo HTTP al backend de la app \\
   \bottomrule
 \end{tabularx}
 
 \subsection{Decisiones de Diseño y Trade-offs}
 
-\begin{longtable}{@{} p{3.5cm} X X @{}}
+\begin{longtable}{@{} p{3.8cm} p{5.8cm} p{5.8cm} @{}}
   \toprule
   \textbf{Decisión} & \textbf{Justificación} & \textbf{Trade-off asumido} \\
   \midrule
   \endfirsthead
+  \toprule
   \textbf{Decisión} & \textbf{Justificación} & \textbf{Trade-off asumido} \\
   \midrule
   \endhead
@@ -339,25 +325,25 @@ Se adopta un enfoque mixto con pruebas unitarias y de integración en backend us
 
 \subsection{Plan de Pruebas}
 
-\begin{longtable}{@{} p{1.3cm} p{2.5cm} p{2.5cm} X p{2cm} @{}}
+\begin{longtable}{@{} p{1.3cm} p{4.6cm} p{7.2cm} p{2cm} @{}}
   \toprule
-  \textbf{ID} & \textbf{Tipo} & \textbf{Módulo/Función} & \textbf{Descripción} & \textbf{Resultado} \\
+  \textbf{ID} & \textbf{Tipo / Módulo} & \textbf{Descripción} & \textbf{Resultado} \\
   \midrule
   \endfirsthead
   \toprule
-  \textbf{ID} & \textbf{Tipo} & \textbf{Módulo/Función} & \textbf{Descripción} & \textbf{Resultado} \\
+  \textbf{ID} & \textbf{Tipo / Módulo} & \textbf{Descripción} & \textbf{Resultado} \\
   \midrule
   \endhead
-  TP-01 & Unitaria       & status\_service & Valida cálculo de estado global de aptitud desde estados de parámetros. & \textit{[Implementada en repositorio]} \\
-  TP-02 & Unitaria       & pools/settings & Verifica comportamiento de defaults y validaciones de configuración de piscina en modelos y endpoints de pools. & \textit{[Implementada en repositorio]} \\
-  TP-03 & Integración    & auth + mantenciones & Comprueba flujo autenticado para crear/listar mantenciones y restricciones sin token. & \textit{[Implementada en repositorio]} \\
-  TP-04 & Integración    & test\_api legado & Incluye casos sobre /readings que no coinciden completamente con routers activos en main. & \textit{[Requiere alineación]} \\
-  TP-05 & Sistema  & frontend widget test  & Valida construcción básica de la app Flutter en entorno de pruebas. & \textit{[Implementada en repositorio]} \\
-  TP-06 & Unitaria       & config\_pool/evaluar\_sensor & Evalúa rangos y clasificación de estado (OPTIMO, ADVERTENCIA, CRITICO), incluyendo error por sensor no reconocido. & \textit{[Implementada en repositorio]} \\
-  TP-07 & Unitaria       & services/calculator & Valida aptitud global simple, estado individual, validación de volumen y reglas combinadas de dosificación (orden pH $\rightarrow$ cloro). & \textit{[Implementada en repositorio]} \\
-  TP-08 & Unitaria       & config/Settings & Verifica validación de SECRET\_KEY y aplicación de valores por defecto de configuración. & \textit{[Implementada en repositorio]} \\
-  TP-09 & Unitaria       & routers/ingesta & Cubre verify\_api\_key, persistencia de is\_critical y rechazo de payload legacy con pH fuera de rango físico. & \textit{[Implementada en repositorio]} \\
-  TP-10 & Unitaria       & routers/device\_bindings & Cubre vínculo/desvínculo y estado de dispositivo (online/offline), además de ingesta por device\_id con y sin binding activo. & \textit{[Implementada en repositorio]} \\
+  TP-01 & Unitaria -- status\_service & Valida cálculo de estado global de aptitud desde estados de parámetros. & \textit{[Implementada en repositorio]} \\
+  TP-02 & Unitaria -- pools/settings & Verifica defaults y validaciones de configuración de piscina en modelos y endpoints de pools. & \textit{[Implementada en repositorio]} \\
+  TP-03 & Integración -- auth + mantenciones & Comprueba flujo autenticado para crear/listar mantenciones y restricciones sin token. & \textit{[Implementada en repositorio]} \\
+  TP-04 & Integración -- test\_api legado & Incluye casos sobre /readings que no coinciden completamente con routers activos en main. & \textit{[Requiere alineación]} \\
+  TP-05 & Sistema -- frontend widget test & Valida construcción básica de la app Flutter en entorno de pruebas. & \textit{[Implementada en repositorio]} \\
+  TP-06 & Unitaria -- config\_pool/evaluar\_sensor & Evalúa rangos y clasificación de estado (OPTIMO, ADVERTENCIA, CRITICO), incluyendo error por sensor no reconocido. & \textit{[Implementada en repositorio]} \\
+  TP-07 & Unitaria -- services/calculator & Valida aptitud global, estado individual, validación de volumen y reglas combinadas de dosificación (orden pH $\rightarrow$ cloro). & \textit{[Implementada en repositorio]} \\
+  TP-08 & Unitaria -- config/Settings & Verifica validación de SECRET\_KEY y aplicación de valores por defecto de configuración. & \textit{[Implementada en repositorio]} \\
+  TP-09 & Unitaria -- routers/ingesta & Cubre verify\_api\_key, persistencia de is\_critical y rechazo de payload legacy con pH fuera de rango físico. & \textit{[Implementada en repositorio]} \\
+  TP-10 & Unitaria -- routers/device\_bindings & Cubre vínculo/desvínculo, estado de dispositivo (online/offline) e ingesta por device\_id con y sin binding activo. & \textit{[Implementada en repositorio]} \\
   \bottomrule
 \end{longtable}
 
@@ -375,7 +361,7 @@ Se adopta un enfoque mixto con pruebas unitarias y de integración en backend us
 
 \subsection{Matriz de Riesgos}
 
-\begin{longtable}{@{} p{1.2cm} X p{1.8cm} p{1.6cm} p{2.8cm} p{2cm} @{}}
+\begin{longtable}{@{} p{1.2cm} p{5.8cm} p{1.8cm} p{1.6cm} p{2.8cm} p{2cm} @{}}
   \toprule
   \textbf{ID} & \textbf{Descripción del riesgo} & \textbf{Probabilidad} & \textbf{Impacto} & \textbf{Plan de mitigación} & \textbf{Estado} \\
   \midrule
@@ -387,7 +373,7 @@ Se adopta un enfoque mixto con pruebas unitarias y de integración en backend us
   R-01 & Dependencia de servicios externos (MongoDB Atlas / nube) para operación continua. & Media   & Alto   & Mantener variables de entorno claras, validación de conexión y plan de contingencia para entorno alternativo/local. & \textcolor{accent}{Activo} \\
   R-02 & Desfase entre rutas legacy y rutas vigentes en pruebas/documentación.  & Media  & Medio   & Homologar contratos API, depurar endpoints en desuso y actualizar suite de pruebas.       & \textcolor{accent}{Activo} \\
   R-03 & CORS completamente abierto en backend en un eventual despliegue público.     & Media   & Medio  & Restringir orígenes permitidos y endurecer configuración por entorno.      & \textcolor{accent}{Activo} \\
-  R-04 & Deuda técnica por duplicidad de modelos/colecciones (piscinas/pools, mantenciones/mantenimientos).          & Media  & Medio  & Planificar refactor de unificación de dominio y normalización de repositorios. & Activo \\
+  R-04 & Deuda técnica por duplicidad de modelos/colecciones (piscinas/pools, mantenciones/mantenimientos).          & Media  & Medio  & Planificar refactor de unificación de dominio y normalización de repositorios. & \textcolor{accent}{Activo} \\
   \bottomrule
 \end{longtable}
 
@@ -401,7 +387,7 @@ Se observa materialización parcial del riesgo de inconsistencia técnica entre 
 
 \subsection{Funcionalidades Implementadas en este Hito}
 
-\begin{longtable}{@{} p{1.4cm} p{4cm} X p{2cm} @{}}
+\begin{longtable}{@{} p{1.4cm} p{4cm} p{6.8cm} p{2cm} @{}}
   \toprule
   \textbf{ID} & \textbf{Historia de usuario} & \textbf{Descripción} & \textbf{Estado} \\
   \midrule
@@ -454,11 +440,11 @@ Se puede evidenciar el flujo completo: registro/login, visualización de estado 
   \toprule
   \textbf{Parámetro}            & \textbf{Detalle} \\
   \midrule
-  Número de sprint              & \textit{[Sprint \#X]} \\
-  Objetivo del sprint           & \textit{[Descripción del objetivo comprometido.]} \\
-  Grado de cumplimiento         & \textit{[ej. 80\% — 4 de 5 historias completadas.]} \\
-  Ajustes realizados            & \textit{[Cambios en el alcance o prioridad y su justificación.]} \\
-  Objetivo del siguiente sprint & \textit{[Descripción del sprint planificado.]} \\
+  Número de sprint              & 3 \\
+  Objetivo del sprint           & Implementar el sistema IoT a la solución y vincularla con la app móvil. \\
+  Grado de cumplimiento         & 80\% \\
+  Ajustes realizados            & Se priorizó el desarrollo del flotador con impresión 3D y el funcionamiento del sensor de temperatura para visualizar los datos en la app. \\
+  Objetivo del siguiente sprint & Implementar al menos el sensor de pH, realizar pruebas funcionales del flotador y lograr un MVP del producto final. \\
   \bottomrule
 \end{tabularx}
 
@@ -466,7 +452,7 @@ Se puede evidenciar el flujo completo: registro/login, visualización de estado 
 
 \subsubsection{Estado del Product Backlog}
 
-\begin{longtable}{@{} p{1.3cm} X p{2.5cm} p{2cm} @{}}
+\begin{longtable}{@{} p{1.3cm} p{7cm} p{2.5cm} p{2cm} @{}}
   \toprule
   \textbf{ID} & \textbf{Historia de usuario} & \textbf{Sprint asignado} & \textbf{Estado} \\
   \midrule
@@ -475,7 +461,7 @@ Se puede evidenciar el flujo completo: registro/login, visualización de estado 
   \textbf{ID} & \textbf{Historia de usuario} & \textbf{Sprint asignado} & \textbf{Estado} \\
   \midrule
   \endhead
-  HU-01 & \textit{[descripción]} & Sprint 1 & \textcolor{success}{\textbf{Completa}} \\
+  HU-01 & \textit{[Como propietario quiero registrar multiples piscinas desde una sola cuenta]} & Sprint 3 & \textcolor{success}{\textbf{Completa}} \\
   HU-02 & \textit{[descripción]} & Sprint 2 & \textcolor{success}{\textbf{Completa}} \\
   HU-03 & \textit{[descripción]} & Sprint 2 & \textcolor{accent}{\textbf{Parcial}} \\
   HU-04 & \textit{[descripción]} & Sprint 3 & Pendiente \\
@@ -487,7 +473,7 @@ Se puede evidenciar el flujo completo: registro/login, visualización de estado 
 
 \subsubsection{Daily Meetings}
 
-\textit{[Describir la dinámica de los Daily Meetings: frecuencia, modalidad (presencial/remota), duración promedio y disciplina del equipo.]}
+\textit{Las reuniones diarias se realizaron con una frecuencia de lunes a miercoles a las 13:00 horas, manteniendo una duración promedio de 15 minutos. La modalidad fue presencial durante los bloques de clases en la universidad. La disciplina del equipo se vio comprometida por temas personales de algunos integrantes del grupo, pero se cumplió diariamente con todas las daily meeting.}
 
 \subsubsection{Sprint Retrospective — Principales Mejoras}
 
@@ -495,14 +481,19 @@ Se puede evidenciar el flujo completo: registro/login, visualización de estado 
   \toprule
   \textbf{Aspecto} & \textbf{Acción tomada} \\
   \midrule
-  \textit{[Problema identificado]} & \textit{[Mejora implementada]} \\
-  \textit{[Problema identificado]} & \textit{[Mejora implementada]} \\
+  \textit{Baja asistencia y puntualidad: Falta de compromiso detectada en los bloques presenciales, lo que retrasaba la toma de decisiones. } & \textit{Se instauró un sistema de reporte obligatorio asíncrono; en caso de inasistencia, el integrante debe enviar su estado de avance antes de la Daily. } \\
+  \textit{Falta de visibilidad del avance real: Incertidumbre sobre el estado de las tareas de los compañeros, provocando duplicidad de esfuerzos.} & \textit{Implementación estricta del Tablero Taiga; ninguna tarea se considera en curso sin su respectivo movimiento en el tablero digital.} \\
+  \textit{Cuellos de botella en la integración: Descoordinación entre los desarrolladores de Backend y Frontend que generaba errores al final del sprint.} & \textit{Se crearon "Checkpoints de Confianza" obligatorios a mitad de semana para validar la comunicación de los componentes antes de la entrega final.} \\
   \bottomrule
 \end{tabularx}
 
 \subsubsection{Impedimentos y Adaptaciones del Equipo}
 
-\textit{[Describir los principales impedimentos encontrados durante el sprint y cómo el equipo los resolvió o mitigó.]}
+\textit{Sincronización de horarios: El principal impedimento fue el choque de horarios con otras asignaturas/trabajo, limitando las ventanas de trabajo conjunto. El equipo se adaptó desplazando las discusiones técnicas extensas a sesiones remotas nocturnas, optimizando el tiempo presencial.}
+
+\textit{Conflictos en el Control de Versiones: Se detectaron problemas de sobreescritura en el repositorio Git por falta de dominio del flujo de ramas. Se realizó una capacitación técnica interna sobre GitFlow, estableciendo reglas de protección para la rama main y protocolos de pull request que garantizaron la integridad del código.}
+
+\textit{Dependencia Externa de Equipamiento: La incertidumbre en los tiempos de respuesta del equipo de impresión 3D generó retrasos en el ensamblaje físico. Como adaptación, el equipo de software procedió a trabajar con datos simulados y prototipos digitales en Tinkercad, permitiendo avanzar en la lógica de la aplicación mientras el hardware se encontraba en fase de validación externa.}
 
 \subsection{Registro de Asistencia a Daily Meetings}
 
@@ -510,9 +501,9 @@ Se puede evidenciar el flujo completo: registro/login, visualización de estado 
   \textbf{Nota:} Este componente tiene alto peso evaluativo. El registro debe ser completo, individual y reflejar la participación real del equipo.
 \end{warnbox}
 
-\vspace{0.4em}
+\vspace{0.2em}
 
-\begin{tabularx}{\textwidth}{|l|*{6}{>{\centering\arraybackslash}p{1.1cm}|}|c|c|}
+\begin{tabularx}{\textwidth}{|l|*{7}{>{\centering\arraybackslash}p{0.9cm}|}|c|c|}
 \hline
 \rowcolor{rowdark}
 \textcolor{white}{\textbf{Integrante}} &
@@ -522,16 +513,17 @@ Se puede evidenciar el flujo completo: registro/login, visualización de estado 
 \textcolor{white}{\textbf{D4}} &
 \textcolor{white}{\textbf{D5}} &
 \textcolor{white}{\textbf{D6}} &
+\textcolor{white}{\textbf{D7}} &
 \textcolor{white}{\textbf{Asistidas}} &
 \textcolor{white}{\textbf{\%}} \\
 \hline
-\textit{Integrante 1 (PM)} & \textcolor{success}{\checkmark} & \textcolor{success}{\checkmark} & \textcolor{success}{\checkmark} & \textcolor{accent}{$\times$} & \textcolor{success}{\checkmark} & \textcolor{success}{\checkmark} & 5/6 & 83\% \\
+\textit{Vicente Araya(PM)} & \textcolor{success}{\checkmark} & \textcolor{success}{\checkmark} & \textcolor{success}{\checkmark} & \textcolor{success}{\checkmark} & \textcolor{success}{\checkmark} & \textcolor{success}{\checkmark} & \textcolor{success}{\checkmark} & 7/7 & 100\% \\
 \hline
-\textit{Integrante 2 (SM)} & \textcolor{success}{\checkmark} & \textcolor{success}{\checkmark} & \textcolor{success}{\checkmark} & \textcolor{success}{\checkmark} & \textcolor{success}{\checkmark} & \textcolor{success}{\checkmark} & 6/6 & 100\% \\
+\textit{Diego Carmona(SM)} & \textcolor{success}{\checkmark} & \textcolor{success}{\checkmark} & \textcolor{success}{\checkmark} & \textcolor{success}{\checkmark} & \textcolor{accent}{$\times$} & \textcolor{accent}{$\times$} & \textcolor{success}{\checkmark} & 5/7 & 71\% \\
 \hline
-\textit{Integrante 3}      & \textcolor{success}{\checkmark} & \textcolor{accent}{$\times$} & \textcolor{success}{\checkmark} & \textcolor{success}{\checkmark} & \textcolor{accent}{$\times$} & \textcolor{success}{\checkmark} & 4/6 & 67\% \\
+\textit{Daniel Cortez} & \textcolor{accent}{$\times$} & \textcolor{success}{\checkmark} & \textcolor{success}{\checkmark} & \textcolor{accent}{$\times$} & \textcolor{success}{\checkmark} & \textcolor{accent}{$\times$} & \textcolor{accent}{$\times$} & 3/7 & 43\% \\
 \hline
-\textit{Integrante 4}      & \textcolor{success}{\checkmark} & \textcolor{success}{\checkmark} & \textcolor{success}{\checkmark} & \textcolor{success}{\checkmark} & \textcolor{success}{\checkmark} & \textcolor{accent}{$\times$} & 5/6 & 83\% \\
+\textit{Constanza Malebran} & \textcolor{accent}{$\times$} & \textcolor{accent}{$\times$} & \textcolor{accent}{$\times$} & \textcolor{success}{\checkmark} & \textcolor{accent}{$\times$} & \textcolor{accent}{$\times$} & \textcolor{accent}{$\times$} & 1/7 & 14\% \\
 \hline
 \end{tabularx}
 
@@ -539,8 +531,10 @@ Se puede evidenciar el flujo completo: registro/login, visualización de estado 
 
 \textit{Justificación de inasistencias:}
 \begin{itemize}
-  \item \textbf{Integrante 1, D4:} \textit{[Motivo justificado.]}
-  \item \textbf{Integrante 3, D2 y D5:} \textit{[Motivo justificado.]}
+  \item \textbf{Diego Carmona, D5:} \textit{Examen epilepsia}
+  \item \textbf{Diego Carmona, D6:} \textit{Compromiso personal}
+  \item \textbf{Daniel Cortez, D1,D4,D6,D7:} \textit{Motivos personales}
+  \item \textbf{Constanza Malebran, D1,D2,D3,D5,D6,D7:} \textit{Trabajo}
 \end{itemize}
 
 % ============================================================

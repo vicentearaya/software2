@@ -1,20 +1,15 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import '../../core/constants/api_config.dart';
 
 class PoolService {
-  static const String _baseUrl = String.fromEnvironment(
-    'API_URL',
-    defaultValue:
-        'https://software2-backend-hxe7f4b9dug6dqat.eastus2-01.azurewebsites.net',
-  );
-
   Future<Map<String, dynamic>> createPool(
     Map<String, dynamic> data,
     String token,
   ) async {
     try {
       final response = await http.post(
-        Uri.parse('$_baseUrl/piscinas'),
+        Uri.parse('${ApiConfig.baseUrl}/piscinas'),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $token',
@@ -44,7 +39,7 @@ class PoolService {
   ) async {
     try {
       final response = await http.put(
-        Uri.parse('$_baseUrl/piscinas/$poolId'),
+        Uri.parse('${ApiConfig.baseUrl}/piscinas/$poolId'),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $token',
@@ -70,7 +65,7 @@ class PoolService {
   Future<Map<String, dynamic>> getPools(String token) async {
     try {
       final response = await http.get(
-        Uri.parse('$_baseUrl/piscinas'),
+        Uri.parse('${ApiConfig.baseUrl}/piscinas'),
         headers: {'Authorization': 'Bearer $token'},
       );
 
@@ -97,7 +92,7 @@ class PoolService {
   ) async {
     try {
       final response = await http.post(
-        Uri.parse('$_baseUrl/piscinas/$poolId/tratamiento'),
+        Uri.parse('${ApiConfig.baseUrl}/piscinas/$poolId/tratamiento'),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $token',
@@ -126,7 +121,7 @@ class PoolService {
   Future<Map<String, dynamic>> deletePool(String poolId, String token) async {
     try {
       final response = await http.delete(
-        Uri.parse('$_baseUrl/piscinas/$poolId'),
+        Uri.parse('${ApiConfig.baseUrl}/piscinas/$poolId'),
         headers: {'Authorization': 'Bearer $token'},
       );
 
@@ -156,7 +151,7 @@ class PoolService {
       }
 
       final response = await http.get(
-        Uri.parse('$_baseUrl/api/v1/pools/$poolId/status'),
+        Uri.parse('${ApiConfig.baseUrl}/api/v1/pools/$poolId/status'),
         headers: headers,
       );
 
@@ -184,7 +179,7 @@ class PoolService {
   }) async {
     try {
       final response = await http.post(
-        Uri.parse('$_baseUrl/api/v1/device/bind'),
+        Uri.parse('${ApiConfig.baseUrl}/api/v1/device/bind'),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $token',
@@ -213,7 +208,7 @@ class PoolService {
   }) async {
     try {
       final response = await http.post(
-        Uri.parse('$_baseUrl/api/v1/device/unbind'),
+        Uri.parse('${ApiConfig.baseUrl}/api/v1/device/unbind'),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $token',
@@ -241,7 +236,7 @@ class PoolService {
   }) async {
     try {
       final response = await http.get(
-        Uri.parse('$_baseUrl/api/v1/device/$deviceId/binding'),
+        Uri.parse('${ApiConfig.baseUrl}/api/v1/device/$deviceId/binding'),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $token',
@@ -269,7 +264,7 @@ class PoolService {
   }) async {
     try {
       final response = await http.get(
-        Uri.parse('$_baseUrl/api/v1/device/$deviceId/status'),
+        Uri.parse('${ApiConfig.baseUrl}/api/v1/device/$deviceId/status'),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $token',
