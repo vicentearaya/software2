@@ -21,20 +21,18 @@
 \contentsline {section}{\numberline {6}Incremento Funcional y Despliegue}{9}{section.6}%
 \contentsline {subsection}{\numberline {6.1}Funcionalidades Implementadas en este Hito}{9}{subsection.6.1}%
 \contentsline {subsection}{\numberline {6.2}Entorno de Despliegue}{10}{subsection.6.2}%
-\contentsline {subsection}{\numberline {6.3}Evidencia de Funcionamiento}{10}{subsection.6.3}%
-\contentsline {section}{\numberline {7}Aplicación de la Metodología Scrum}{11}{section.7}%
-\contentsline {subsection}{\numberline {7.1}Gestión del Sprint (Product Manager)}{11}{subsection.7.1}%
-\contentsline {subsubsection}{\numberline {7.1.1}Estado del Product Backlog}{11}{subsubsection.7.1.1}%
-\contentsline {subsection}{\numberline {7.2}Ejecución Scrum (Scrum Master)}{11}{subsection.7.2}%
-\contentsline {subsubsection}{\numberline {7.2.1}Daily Meetings}{11}{subsubsection.7.2.1}%
-\contentsline {subsubsection}{\numberline {7.2.2}Sprint Retrospective — Principales Mejoras}{11}{subsubsection.7.2.2}%
-\contentsline {subsubsection}{\numberline {7.2.3}Impedimentos y Adaptaciones del Equipo}{12}{subsubsection.7.2.3}%
-\contentsline {subsection}{\numberline {7.3}Registro de Asistencia a Daily Meetings}{12}{subsection.7.3}%
-\contentsline {section}{\numberline {8}Presentación Final Orientada a Stakeholders}{13}{section.8}%
-\contentsline {subsection}{\numberline {8.1}Narrativa del Proyecto}{13}{subsection.8.1}%
-\contentsline {subsection}{\numberline {8.2}Avances Clave del Hito}{13}{subsection.8.2}%
-\contentsline {subsection}{\numberline {8.3}Demostración en Producción}{13}{subsection.8.3}%
-\contentsline {subsection}{\numberline {8.4}Próximos Pasos}{14}{subsection.8.4}%
-\contentsline {section}{\numberline {Anexo A}Capturas de Pantalla del Sistema}{14}{appendix.Alph1}%
-\contentsline {section}{\numberline {Anexo B}Actas de Daily Meetings}{14}{appendix.Alph2}%
-\contentsline {section}{\numberline {Anexo C}Evidencia de Repositorio}{14}{appendix.Alph3}%
+\contentsline {subsection}{\numberline {6.3}Evidencia de Funcionamiento}{11}{subsection.6.3}%
+\contentsline {section}{\numberline {7}Aplicación de la Metodología Scrum}{13}{section.7}%
+\contentsline {subsection}{\numberline {7.1}Gestión del Sprint (Product Manager)}{13}{subsection.7.1}%
+\contentsline {subsubsection}{\numberline {7.1.1}Estado del Product Backlog}{14}{subsubsection.7.1.1}%
+\contentsline {subsection}{\numberline {7.2}Ejecución Scrum (Scrum Master)}{15}{subsection.7.2}%
+\contentsline {subsubsection}{\numberline {7.2.1}Daily Meetings}{15}{subsubsection.7.2.1}%
+\contentsline {subsubsection}{\numberline {7.2.2}Sprint Retrospective — Principales Mejoras}{15}{subsubsection.7.2.2}%
+\contentsline {subsubsection}{\numberline {7.2.3}Impedimentos y Adaptaciones del Equipo}{16}{subsubsection.7.2.3}%
+\contentsline {subsection}{\numberline {7.3}Registro de Asistencia a Daily Meetings}{16}{subsection.7.3}%
+\contentsline {section}{\numberline {8}Presentación Final Orientada a Stakeholders}{17}{section.8}%
+\contentsline {subsection}{\numberline {8.1}Narrativa del Proyecto}{17}{subsection.8.1}%
+\contentsline {subsection}{\numberline {8.2}Avances Clave del Hito}{17}{subsection.8.2}%
+\contentsline {subsection}{\numberline {8.3}Demostración en Producción}{17}{subsection.8.3}%
+\contentsline {subsection}{\numberline {8.4}Próximos Pasos}{17}{subsection.8.4}%
+\contentsline {section}{\numberline {Anexo A}Evidencia de Repositorio}{18}{appendix.Alph1}%
