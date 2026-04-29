@@ -396,9 +396,13 @@ Se observa materialización parcial del riesgo de inconsistencia técnica entre 
   \textbf{ID} & \textbf{Historia de usuario} & \textbf{Descripción} & \textbf{Estado} \\
   \midrule
   \endhead
-  HU-01 & Como usuario, quiero registrarme e iniciar sesión para acceder de forma segura a mis datos de piscina. & Implementación en endpoints /auth/register, /auth/login, /auth/me y persistencia local de sesión en Flutter. & \textcolor{success}{\textbf{Completa}} \\
-  HU-02 & Como usuario, quiero visualizar el estado de mi piscina para decidir acciones de mantención. & Evaluación de lecturas y estado global, además de endpoints de consulta y pantallas de dashboard/perfil. & \textcolor{success}{\textbf{Completa}} \\
-  HU-03 & Como usuario, quiero que el dispositivo quede vinculado de forma trazable a mi piscina para automatizar lecturas. & Existen endpoints de bind/unbind/status, pero persisten elementos legacy y normalización pendiente entre modelos de dominio. & \textcolor{accent}{\textbf{Parcial}} \\
+  HU-01 & Como propietario quiero gestionar multiples piscinas desde una sola cuenta & \textcolor{success}{\textbf{Completa}} \\
+  HU-02 & Como propietario quieri ver el indicador APTA / NO APTA para baño en el dashboard de forma prominente & \textcolor{success}{\textbf{Completa}} \\
+  HU-03 & Como dueño de la piscina quiero que se guarde un registro de mantenimientos de mi piscina para poder revisar y analizarlas posteriormente & \textcolor{accent}{\textbf{Completa}} \\
+  HU-05 & Como sistema quiero exponer las lecturas del dispositivo IoT via HTTP para que la app pueda consumirlas & \textcolor{accent}{\textbf{Completa}} \\
+  HU-06 & Como usuario quiero ver los datos del esp8266 en la app y que se queden registrados en el sistema para monitorear mi piscina& \textcolor{accent}{\textbf{Completa}} \\
+  HU-07 & Como usuario quiero que el sistema funcione correctamente en cualquier funcionalidad para confiar en las mediciones y recetas de mantenimiento & \textcolor{accent}{\textbf{Completa}} \\
+  HU-09 & Como usuario quiero poder abrir y cerrar el dispositivo facilmente para conectarme a el a traves de la app & \textcolor{accent}{\textbf{Completa}} \\
   \bottomrule
 \end{longtable}
 
@@ -409,9 +413,9 @@ Se observa materialización parcial del riesgo de inconsistencia técnica entre 
   \textbf{Parámetro}          & \textbf{Detalle} \\
   \midrule
   Plataforma                  & Azure Web App (backend) y despliegue frontend web por configuración Docker/Nginx y Vercel SPA config en repositorio. \\
-  URL de acceso               & \textit{[No visible explícitamente en el repositorio]} \\
-  Credenciales de prueba      & \textit{[No deben publicarse; no hay credenciales de demo explícitas en repositorio]} \\
-  Estado al momento de entrega & Backend con pipeline de despliegue configurado y ejecución local documentada para backend/frontend. \\
+  URL de acceso               & \textit{[https://frontendappsoft2.vercel.app]} \\
+  Credenciales de prueba      & \textit{[Usuario: admin y contraseña: cleanpool2026]} \\
+  Estado al momento de entrega & Backend y frontend corriendo de manera estable en sus respectivos hostings \\
   Notas adicionales           & Endpoints de usuario requieren Bearer JWT; ingesta de sensores requiere header X-API-KEY. \\
   \bottomrule
 \end{tabularx}
@@ -461,11 +465,18 @@ Se puede evidenciar el flujo completo: registro/login, visualización de estado 
   \textbf{ID} & \textbf{Historia de usuario} & \textbf{Sprint asignado} & \textbf{Estado} \\
   \midrule
   \endhead
-  HU-01 & \textit{[Como propietario quiero registrar multiples piscinas desde una sola cuenta]} & Sprint 3 & \textcolor{success}{\textbf{Completa}} \\
-  HU-02 & \textit{[descripción]} & Sprint 2 & \textcolor{success}{\textbf{Completa}} \\
-  HU-03 & \textit{[descripción]} & Sprint 2 & \textcolor{accent}{\textbf{Parcial}} \\
-  HU-04 & \textit{[descripción]} & Sprint 3 & Pendiente \\
-  HU-05 & \textit{[descripción]} & Sprint 3 & Pendiente \\
+  HU-01 & Como propietario quiero gestionar multiples piscinas desde una sola cuenta & \textcolor{success}{\textbf{Completa}} \\
+  HU-02 & Como propietario quieri ver el indicador APTA / NO APTA para baño en el dashboard de forma prominente & \textcolor{success}{\textbf{Completa}} \\
+  HU-03 & Como dueño de la piscina quiero que se guarde un registro de mantenimientos de mi piscina para poder revisar y analizarlas posteriormente & \textcolor{accent}{\textbf{Completa}} \\
+  HU-04 & Como propietario de la piscina quiero los parametros de ph, cloro y temperatura, se obtengan automaticamente desde los sensores para asegurar mayor prescision y agilidad & \textcolor{accent}{\textbf{Parcial}} \\
+  HU-05 & Como sistema quiero exponer las lecturas del dispositivo IoT via HTTP para que la app pueda consumirlas & \textcolor{accent}{\textbf{Completa}} \\
+  HU-06 & Como usuario quiero ver los datos del esp8266 en la app y que se queden registrados en el sistema para monitorear mi piscina& \textcolor{accent}{\textbf{Completa}} \\
+  HU-07 & Como usuario quiero que el sistema funcione correctamente en cualquier funcionalidad para confiar en las mediciones y recetas de mantenimiento & \textcolor{accent}{\textbf{Completa}} \\
+  HU-08 & Como dueño de la piscina quiero un dispositivo flotando que permita que el dispositivo con sensores flote en el agua para usar el servicio sin riesgo a daños& \textcolor{accent}{\textbf{Parcial}} \\
+  HU-09 & Como usuario quiero poder abrir y cerrar el dispositivo facilmente para conectarme a el a traves de la app & \textcolor{accent}{\textbf{Completa}} \\
+  HU-10 & Como usuario quiero que el dispositivo sea resistente al agua para evitar daños y asegurar su funcionamiento continuo en la piscina & \textcolor{accent}{\textbf{Parcial}} \\
+  HU-11 & Como usuario quiero que el dispositivo funcione correctamente al integrarlo con los sensores y el esp8266 para obtener mediciones confiables & \textcolor{accent}{\textbf{Parcial}} \\
+  HU-12 & Como usuario quiero que el dispositivo funcione correctamente en condiciones reales para congiar en su uso & \textcolor{accent}{\textbf{Parcial}} \\
   \bottomrule
 \end{longtable}
 
@@ -548,9 +559,9 @@ CleanPool App aborda el problema de control reactivo de calidad de agua en pisci
 \subsection{Avances Clave del Hito}
 
 \begin{itemize}
-  \item Se implementó flujo de autenticación completo con sesión persistente en cliente Flutter.
-  \item Se habilitó monitoreo del estado del agua con evaluación por parámetros y estado global.
-  \item Se incorporó gestión de mantenciones y tratamiento manual con historial consultable.
+  \item Se logro hacer funcionar el sensor de temperatura y mostrarlo en la app.
+  \item Se diseñó e imprimió un modelo de flotador en 3D para el dispositivo IoT.
+  \item La esp8266 funciona correctamente y se comunica con el backend via HTTP y funciona sin estar conectada a un PC.
 \end{itemize}
 
 \subsection{Demostración en Producción}
@@ -566,9 +577,9 @@ Flujo sugerido de demostración: (1) registro/inicio de sesión, (2) creación/s
 \subsection{Próximos Pasos}
 
 \begin{enumerate}
-  \item Normalizar y unificar modelos de dominio duplicados entre rutas legacy y rutas vigentes.
-  \item Alinear pruebas, documentación y contratos de API para eliminar rutas obsoletas y asegurar trazabilidad funcional.
-  \item Endurecer configuración de seguridad y observabilidad (CORS por entorno, logging estructurado, reporte de cobertura).
+  \item Implementar el sensor de ph y cloro para mostrar esas mediciones en la app.
+  \item Iterar el flotador en base a pruebas reales en agua para encontrar el modelo definitivo.
+  \item Mejorar la UX dentro la app para el usuario final.
 \end{enumerate}
 
 % ============================================================
@@ -590,9 +601,9 @@ Flujo sugerido de demostración: (1) registro/inicio de sesión, (2) creación/s
   \toprule
   \textbf{Recurso} & \textbf{URL} \\
   \midrule
-  Repositorio (GitHub / GitLab) & \textit{[URL exacta del repositorio no especificada en este archivo]} \\
-  Tablero Scrum (Jira / Trello)  & \textit{[No evidenciado en repositorio]} \\
-  Sistema desplegado             & \textit{[URL pública no evidenciada en repositorio]} \\
+  Repositorio (GitHub) & \textit{[https://github.com/vicentearaya/software2.git]} \\
+  Tablero Scrum (Taiga)  & \textit{[https://tree.taiga.io/project/danielgcf21-clean-pool/taskboard/sprint-3-10490]} \\
+  Sistema desplegado             & \textit{[https://frontendappsoft2.vercel.app]} \\
   \bottomrule
 \end{tabularx}
 

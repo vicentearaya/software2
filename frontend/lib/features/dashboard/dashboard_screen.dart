@@ -639,55 +639,26 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         ],
                       ),
                     ),
-                    // Botón opciones
-                    PopupMenuButton<String>(
-                      onSelected: (value) {
-                        if (value == 'delete') _confirmDeletePool();
-                        if (value == 'edit') _openAddPoolForm();
-                      },
-                      color: AppColors.surfaceElevated,
-                      icon: const Icon(
-                        Icons.more_vert,
-                        color: AppColors.textSecondary,
-                      ),
-                      itemBuilder: (_) => [
-                        PopupMenuItem(
-                          value: 'edit',
-                          child: Row(
-                            children: [
-                              const Icon(
-                                Icons.edit_outlined,
-                                color: AppColors.primary,
-                                size: 18,
-                              ),
-                              const SizedBox(width: 10),
-                              Text(
-                                'Editar piscina',
-                                style: GoogleFonts.interTight(
-                                  color: AppColors.textPrimary,
-                                ),
-                              ),
-                            ],
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        TextButton.icon(
+                          onPressed: _openAddPoolForm,
+                          style: TextButton.styleFrom(
+                            foregroundColor: AppColors.primary,
+                            visualDensity: VisualDensity.compact,
                           ),
+                          icon: const Icon(Icons.edit_outlined, size: 18),
+                          label: const Text('Editar'),
                         ),
-                        PopupMenuItem(
-                          value: 'delete',
-                          child: Row(
-                            children: [
-                              const Icon(
-                                Icons.delete_outline,
-                                color: AppColors.statusDanger,
-                                size: 18,
-                              ),
-                              const SizedBox(width: 10),
-                              Text(
-                                'Eliminar piscina',
-                                style: GoogleFonts.interTight(
-                                  color: AppColors.statusDanger,
-                                ),
-                              ),
-                            ],
+                        TextButton.icon(
+                          onPressed: _confirmDeletePool,
+                          style: TextButton.styleFrom(
+                            foregroundColor: AppColors.statusDanger,
+                            visualDensity: VisualDensity.compact,
                           ),
+                          icon: const Icon(Icons.delete_outline, size: 18),
+                          label: const Text('Eliminar'),
                         ),
                       ],
                     ),
