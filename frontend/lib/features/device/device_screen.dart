@@ -17,8 +17,13 @@ class _DeviceScreenState extends State<DeviceScreen> {
   final _authService = AuthService();
   final _poolService = PoolService();
 
+  // Estos campos se mantienen por compatibilidad del flujo actual
+  // (carga/polling) aunque esta pantalla ya no renderiza el estado.
+  // ignore: unused_field
   bool _loading = true;
+  // ignore: unused_field
   Map<String, dynamic>? _deviceStatus;
+  // ignore: unused_field
   String? _error;
   Timer? _pollingTimer;
 
@@ -78,8 +83,6 @@ class _DeviceScreenState extends State<DeviceScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final bool isConnected = _deviceStatus?['is_online'] == true;
-
     return Scaffold(
       appBar: AppBar(title: const Text('Dispositivo'), centerTitle: true),
       body: RefreshIndicator(
@@ -98,90 +101,21 @@ class _DeviceScreenState extends State<DeviceScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Instrucciones de uso',
+                    'En construcción',
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.bold,
                       color: AppColors.textPrimary,
                     ),
                   ),
                   const SizedBox(height: 10),
-                  const Text(
-                    '1) Coloca el dispositivo en la piscina que quieras medir.\n'
-                    '2) En el Dashboard, selecciona esa piscina.\n'
-                    '3) Pulsa "Vincular dispositivo a esta piscina".\n'
-                    '4) Si el dispositivo envía lecturas, aquí aparecerá como conectado.',
-                    style: TextStyle(
-                      color: AppColors.textSecondary,
-                      height: 1.5,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 16),
-            Container(
-              padding: const EdgeInsets.all(18),
-              decoration: BoxDecoration(
-                color: isConnected
-                    ? AppColors.statusGood.withOpacity(0.12)
-                    : AppColors.statusDanger.withOpacity(0.12),
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(
-                  color: isConnected
-                      ? AppColors.statusGood.withOpacity(0.45)
-                      : AppColors.statusDanger.withOpacity(0.45),
-                ),
-              ),
-              child: _loading
-                  ? const Center(
-                      child: CircularProgressIndicator(
-                        color: AppColors.primary,
-                      ),
-                    )
-                  : Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Icon(
-                              isConnected
-                                  ? Icons.wifi_tethering_rounded
-                                  : Icons.wifi_off_rounded,
-                              color: isConnected
-                                  ? AppColors.statusGood
-                                  : AppColors.statusDanger,
-                            ),
-                            const SizedBox(width: 8),
-                            Text(
-                              isConnected ? 'Conectado' : 'Desconectado',
-                              style: TextStyle(
-                                color: isConnected
-                                    ? AppColors.statusGood
-                                    : AppColors.statusDanger,
-                                fontWeight: FontWeight.w700,
-                                fontSize: 16,
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 10),
                         Text(
-                          isConnected
-                              ? 'Vinculado a la piscina: ${_deviceStatus!['pool_id']}\nÚltima señal: ${_deviceStatus!['last_seen_at'] ?? '-'}'
-                              : (_error ??
-                                    'No existe vínculo activo para este dispositivo.'),
-                          style: const TextStyle(
-                            color: AppColors.textPrimary,
-                            height: 1.4,
+                          'Esta sección mostrará información del dispositivo en una versión futura.',
+                          style: TextStyle(
+                            color: AppColors.textSecondary,
+                            height: 1.5,
                           ),
                         ),
-                        const SizedBox(height: 12),
-                        OutlinedButton.icon(
-                          onPressed: _loadDeviceStatus,
-                          icon: const Icon(Icons.refresh_rounded),
-                          label: const Text('Actualizar estado'),
-                        ),
-                      ],
+                  ],
                     ),
             ),
           ],
