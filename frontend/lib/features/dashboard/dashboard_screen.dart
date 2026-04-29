@@ -258,15 +258,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
       return;
     }
 
-    if (_deviceBinding?['is_online'] != true) {
-      AppUtils.showSnackBar(
-        context,
-        'No se puede vincular: el dispositivo está apagado o sin señal.',
-        isError: true,
-      );
-      return;
-    }
-
     if (_deviceBinding?['pool_id'] != null &&
         _deviceBinding!['pool_id'] != _selectedPool!['id']) {
       AppUtils.showSnackBar(
@@ -293,7 +284,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ...?_deviceBinding,
           'device_id': _deviceId,
           'pool_id': _selectedPool!['id'],
-          'is_online': false,
+          'is_online': _deviceBinding?['is_online'] == true,
         };
       });
       AppUtils.showSnackBar(
@@ -674,7 +665,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 child: _PoolCard(
                   pool: pool,
                   litrosStr: litrosStr,
-                  temperatureC: (isDeviceBoundToSelectedPool && isDeviceOnline)
+                  temperatureC:
+                      (isDeviceBoundToSelectedPool && isDeviceOnline)
                       ? temperatureC
                       : null,
                 ),
@@ -1252,28 +1244,26 @@ class _PoolCard extends StatelessWidget {
               ],
             ),
           ),
-          if (temperatureC != null) ...[
-            const SizedBox(height: 14),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(
-                  Icons.thermostat_rounded,
+          const SizedBox(height: 14),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(
+                Icons.thermostat_rounded,
+                color: AppColors.accent,
+                size: 22,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                temperatureC != null ? '${temperatureC!.toStringAsFixed(1)}°C' : '-',
+                style: GoogleFonts.syne(
                   color: AppColors.accent,
-                  size: 22,
+                  fontSize: 20,
+                  fontWeight: FontWeight.w700,
                 ),
-                const SizedBox(width: 8),
-                Text(
-                  '${temperatureC!.toStringAsFixed(1)}°C',
-                  style: GoogleFonts.syne(
-                    color: AppColors.accent,
-                    fontSize: 20,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ],
-            ),
-          ],
+              ),
+            ],
+          ),
         ],
       ),
     );
