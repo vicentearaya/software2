@@ -1,0 +1,607 @@
+% ============================================================
+%  ENTREGABLE HITO 2 — Consolidación, Validación y Despliegue
+%  Ingeniería de Software II
+% ============================================================
+\documentclass[11pt, a4paper]{article}
+
+% ── Codificación y lenguaje ──────────────────────────────────
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[spanish, es-tabla]{babel}
+
+% ── Tipografía ───────────────────────────────────────────────
+\usepackage{lmodern}
+\usepackage{microtype}
+
+% ── Geometría ────────────────────────────────────────────────
+\usepackage[top=2.5cm, bottom=2.5cm, left=3cm, right=3cm]{geometry}
+
+% ── Color ────────────────────────────────────────────────────
+\usepackage[table]{xcolor}
+\definecolor{primary}{RGB}{31, 73, 125}
+\definecolor{accent}{RGB}{192, 0, 0}
+\definecolor{success}{RGB}{0, 112, 60}
+\definecolor{rowgray}{RGB}{240, 243, 248}
+\definecolor{rowdark}{RGB}{31, 73, 125}
+
+% ── Tablas ───────────────────────────────────────────────────
+\usepackage{tabularx}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{ltablex}
+
+\usepackage{longtable}
+\usepackage{textcomp}
+\usepackage{amssymb}
+\renewcommand{\arraystretch}{1.35}
+
+% ── Listas ───────────────────────────────────────────────────
+\usepackage{enumitem}
+\setlist[itemize]{itemsep=3pt, topsep=4pt, leftmargin=1.6em}
+\setlist[enumerate]{itemsep=3pt, topsep=4pt, leftmargin=1.8em}
+
+% ── Secciones ────────────────────────────────────────────────
+\usepackage{titlesec}
+\titleformat{\section}
+  {\large\bfseries\color{primary}}
+  {\thesection.}{0.6em}{}
+  [\vspace{-0.4em}\textcolor{primary}{\rule{\linewidth}{0.7pt}}\vspace{0.2em}]
+
+\titleformat{\subsection}
+  {\normalsize\bfseries\color{primary}}
+  {\thesubsection.}{0.5em}{}
+
+\titleformat{\subsubsection}
+  {\normalsize\itshape\color{primary}}
+  {}{0pt}{}
+
+% ── Encabezado y pie ─────────────────────────────────────────
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\fancyhf{}
+\renewcommand{\headrulewidth}{0.4pt}
+\fancyhead[L]{\small\color{gray} Hito 2 — Ingeniería de Software II}
+\fancyhead[R]{\small\color{gray} \textit{Nombre del equipo}}
+\fancyfoot[C]{\small\thepage}
+
+% ── Hipervínculos ────────────────────────────────────────────
+\usepackage[hidelinks]{hyperref}
+
+% ── Espacio entre párrafos ───────────────────────────────────
+\usepackage{parskip}
+\setlength{\parskip}{6pt}
+
+% ── Cajas de información ─────────────────────────────────────
+\usepackage{tcolorbox}
+\tcbuselibrary{skins, breakable}
+
+\newtcolorbox{infobox}[1][]{
+  colback=rowgray, colframe=primary,
+  fonttitle=\bfseries\small\color{white},
+  coltitle=white, attach boxed title to top left={yshift=-2mm, xshift=6mm},
+  boxed title style={colback=primary, rounded corners},
+  rounded corners, left=6pt, right=6pt, top=10pt, bottom=6pt,
+  #1
+}
+
+\newtcolorbox{warnbox}[1][]{
+  colback=red!5, colframe=accent,
+  fonttitle=\bfseries\small,
+  rounded corners, left=6pt, right=6pt, top=6pt, bottom=6pt,
+  #1
+}
+
+\newtcolorbox{notebox}[1][]{
+  colback=success!5, colframe=success,
+  rounded corners, left=6pt, right=6pt, top=6pt, bottom=6pt,
+  #1
+}
+
+% ── Gráficos ─────────────────────────────────────────────────
+\usepackage{graphicx}
+\usepackage{float}
+
+% ────────────────────────────────────────────────────────────
+%  DATOS DEL EQUIPO (editar aquí)
+% ────────────────────────────────────────────────────────────
+\newcommand{\nombreequipo}{Cleanpool}
+\newcommand{\nombreproyecto}{CleanPool App}
+\newcommand{\integrantes}{%
+  Vicente Araya (PM) \quad|\quad
+  Diego Carmona (SM) \quad|\quad
+  Daniel Cortez \quad|\quad
+  Constanza Malebran
+}
+\newcommand{\seccion}{300}
+\newcommand{\fechaentrega}{29 de abril de 2026}
+
+% ============================================================
+\begin{document}
+% ============================================================
+
+% ────────────────── PORTADA ─────────────────────────────────
+\thispagestyle{empty}
+\begin{center}
+  \vspace*{1.5cm}
+
+  {\small\color{gray} Universidad Andrés Bello \quad·\quad Ingeniería de Software II}
+
+  \vspace{1cm}
+  \textcolor{primary}{\rule{\linewidth}{1.5pt}}
+  \vspace{0.4cm}
+
+  {\Huge\bfseries\color{primary} Hito 2}\\[0.5em]
+  {\LARGE Consolidación, Validación y\\Despliegue en Producción}
+
+  \vspace{0.4cm}
+  \textcolor{primary}{\rule{\linewidth}{1.5pt}}
+  \vspace{1.2cm}
+
+  {\Large\bfseries \nombreproyecto}
+
+  \vspace{1cm}
+
+  \begin{tabular}{rl}
+    \textbf{Equipo:}    & \nombreequipo \\[4pt]
+    \textbf{Sección:}   & \seccion \\[4pt]
+    \textbf{Entrega:}   & \fechaentrega \\[4pt]
+    \textbf{Integrantes:} & \parbox[t]{9cm}{\integrantes}
+  \end{tabular}
+
+  \vfill
+
+  {\small\color{gray} Documento de entrega oficial — semestre activo}
+\end{center}
+
+\newpage
+
+% ────────────────── ÍNDICE ──────────────────────────────────
+\tableofcontents
+\newpage
+
+% ============================================================
+\section{Exposición del Problema y Propuesta de Valor}
+% ============================================================
+
+\subsection{Definición del Problema}
+
+\begin{infobox}[title=Instrucción]
+Describir el problema central que el sistema busca resolver. Explicar por qué existe, a quién afecta y cuál es su magnitud o frecuencia. Ser concreto y evitar definiciones genéricas.
+\end{infobox}
+
+\vspace{0.3em}
+La gestión de la calidad del agua en piscinas residenciales y de pequeña escala suele depender de mediciones manuales esporádicas, lo que dificulta detectar desviaciones de pH, cloro o temperatura a tiempo. Esto afecta a los dueños porque incrementa el riesgo sanitario, el sobreuso de químicos y los costos de mantención. El sistema aborda este problema mediante monitoreo continuo con sensores IoT y recomendaciones accionables desde una aplicación cliente.
+
+\subsection{Contexto y Usuarios Objetivo}
+
+\begin{itemize}
+  \item \textbf{Usuarios principales:} Propietarios particulares de piscinas que desean mantener el agua de sus piscinas en perfectas condiciones, pero que no poseen conocimientos técnicos acerca del mantenimiento en piscinas.
+  \item \textbf{Entorno de uso:} Aplicación Flutter multiplataforma conectada a una API FastAPI y MongoDB Atlas, con ingesta de sensores desde dispositivos ESP mediante endpoints protegidos por API key.
+  \item \textbf{Necesidad identificada:} Contar con visibilidad continua del estado del agua y soporte de decisiones para tratamiento manual, reduciendo dependencia de chequeos reactivos.
+\end{itemize}
+
+\subsection{Propuesta de Valor y Evidencia}
+
+\begin{tabularx}{\textwidth}{@{} l X @{}}
+  \toprule
+  \textbf{Elemento}        & \textbf{Descripción} \\
+  \midrule
+  Caso de uso 1            & Usuario autenticado consulta estado de su piscina (pH, cloro, temperatura) a partir de lecturas recientes ingresadas manualmente. \\
+  Caso de uso 2            & Usuario registra tratamiento manual y revisa historial de mantenciones para trazabilidad operativa. \\
+  Caso de uso 3            & Usuario obtiene temperatura de su piscina en tiempo real a través de sensor de temperatura. \\
+  Impacto esperado         & El usuario puede mantener en óptimas condiciones el agua de su piscina, además de mejorar la consistencia en decisiones de mantención. \\
+  Validación preliminar    & El usuario obtiene temperatura de su piscina y además consigue conocimientos necesarios para la mantención de su piscina. \\
+  \bottomrule
+\end{tabularx}
+
+% ============================================================
+\section{Requerimientos Funcionales y No Funcionales}
+% ============================================================
+
+\subsection{Requerimientos Funcionales}
+
+\begin{longtable}{@{} p{1.4cm} p{3.5cm} X p{2cm} @{}}
+  \toprule
+  \textbf{ID} & \textbf{Nombre} & \textbf{Descripción} & \textbf{Prioridad} \\
+  \midrule
+  \endfirsthead
+  \toprule
+  \textbf{ID} & \textbf{Nombre} & \textbf{Descripción} & \textbf{Prioridad} \\
+  \midrule
+  \endhead
+  \multicolumn{4}{@{}l}{\textbf{Acceso y seguridad de usuarios}} \\
+  RF-01 & Autenticación de usuarios & El sistema debe permitir registro, inicio de sesión y consulta de perfil autenticado mediante JWT. & Alta \\
+  RF-15 & Ingreso seguro propietario & El sistema debe implementar autenticación segura para el ingreso del propietario de la piscina. & Alta \\
+  \midrule
+  \multicolumn{4}{@{}l}{\textbf{Gestión de piscinas y dispositivos IoT}} \\
+  RF-02 & Gestión de piscinas & El sistema debe permitir crear, listar, actualizar y eliminar piscinas asociadas al usuario autenticado. & Alta \\
+  RF-05 & Ingesta y vínculo de dispositivos & El sistema debe recibir telemetría IoT protegida por API key y permitir vincular/desvincular dispositivos a piscinas. & Media \\
+  RF-13 & Estado al vincular IoT & El sistema debe mostrar el estado del agua cada vez que se vincule el dispositivo (IoT) a la app. & Media \\
+  \midrule
+  \multicolumn{4}{@{}l}{\textbf{Medición, evaluación y visualización del estado del agua}} \\
+  RF-06 & Medición de temperatura & El sistema debe medir temperatura del agua. & Alta \\
+  RF-07 & Comparación con rangos óptimos & El sistema debe comparar automáticamente los valores medidos con rangos óptimos predefinidos para piscinas residenciales. & Alta \\
+  RF-08 & Indicadores fuera de rango & El sistema debe generar indicadores cuando uno o más parámetros estén fuera de rango seguro, indicando el parámetro afectado con su valor. & Alta \\
+  RF-03 & Monitoreo de estado & El sistema debe evaluar lecturas de sensores y entregar estado por parámetro y estado global de aptitud. & Alta \\
+  RF-12 & Aptitud para baño & El sistema debe mostrar en el dashboard si el agua está apta o no apta para el baño, basándose en la evaluación conjunta de los parámetros medidos. & Alta \\
+  RF-11 & Dashboard móvil & El sistema debe permitir al usuario consultar el estado actual de la piscina desde un dashboard dentro de una app móvil, accesible desde cualquier smartphone. & Alta \\
+  RF-10 & Historial de mediciones & El sistema debe almacenar el historial de mediciones con identificador de sensor y valor registrado. & Alta \\
+  \midrule
+  \multicolumn{4}{@{}l}{\textbf{Recomendación y acciones de mantención}} \\
+  RF-09 & Recomendación química & El sistema debe recomendar qué producto químico aplicar y en qué cantidad aproximada según volumen de piscina y valores actuales. & Alta \\
+  RF-14 & Acción recomendada & El sistema debe mostrar la acción recomendada en base a los parámetros del agua. & Alta \\
+  RF-04 & Mantenciones y tratamientos & El sistema debe calcular dosis de tratamiento manual y persistir historial de mantenciones. & Media \\
+  \bottomrule
+\end{longtable}
+
+\subsection{Requerimientos No Funcionales}
+
+\begin{longtable}{@{} p{1.4cm} p{2.8cm} X p{2.2cm} @{}}
+  \toprule
+  \textbf{ID} & \textbf{Categoría} & \textbf{Descripción} & \textbf{Métrica} \\
+  \midrule
+  \endfirsthead
+  \toprule
+  \textbf{ID} & \textbf{Categoría} & \textbf{Descripción} & \textbf{Métrica} \\
+  \midrule
+  \endhead
+  \multicolumn{4}{@{}l}{\textbf{Seguridad}} \\
+  RNF-03 & Seguridad & Las credenciales deben almacenarse hasheadas y el acceso a endpoints protegidos debe validarse con token Bearer JWT; la ingesta IoT exige API key. & JWT + bcrypt + X-API-KEY \\
+  RNF-10 & Seguridad & El acceso a los datos debe requerir autenticación con token JWT. & JWT obligatorio \\
+  \midrule
+  \multicolumn{4}{@{}l}{\textbf{Disponibilidad e infraestructura}} \\
+  RNF-02 & Disponibilidad & El backend debe ser desplegable en entorno productivo y ejecutable localmente por Docker o Uvicorn.\\
+  RNF-07 & Disponibilidad & El sistema debe estar continuamente disponible un 90\% del tiempo a nivel semanal garantizando su estabilidad. & 90\% semanal \\
+  RNF-15 & Disponibilidad en nube & El sistema debe estar desplegado en infraestructura cloud que garantice una disponibilidad mínima del 97\% mensual, excluyendo ventanas de mantenimiento programadas. & 97\% mensual \\
+  \midrule
+  \multicolumn{4}{@{}l}{\textbf{Rendimiento y latencia}} \\
+  RNF-01 & Rendimiento & La API debe responder de forma interactiva para operaciones de consulta y registro sobre lecturas, piscinas y auth.\\
+  RNF-09 & Latencia de actualización & La visualización de datos en el dashboard debe actualizarse en al menos 5 segundos desde la captura del sensor. & $\leq 5$ segundos \\
+  RNF-13 & Rendimiento funcional & El sistema debe mostrar recomendaciones de productos químicos en menos de 5 segundos una vez que se hace clic en solicitar la recomendación. & $\leq 5$ segundos \\
+  \midrule
+  \multicolumn{4}{@{}l}{\textbf{Calidad de datos y precisión}} \\
+  RNF-08 & Precisión & Las mediciones de sensores tienen un margen de error menor a $\pm$1 en temperatura. & Error $< \pm1\,^{\circ}\mathrm{C}$ \\
+  RNF-12 & Validación de datos & El sistema debe validar cada lectura antes del almacenamiento, aceptando solo pH entre 0.0 y 14.0, temperatura entre 0$^\circ$C y 60$^\circ$C y cloro entre 0.0 y 10.0 ppm; las lecturas fuera de rango se descartan.\\
+  \midrule
+  \multicolumn{4}{@{}l}{\textbf{Usabilidad y compatibilidad}} \\
+  RNF-04 & Usabilidad & La interfaz Flutter debe presentar navegación por pantallas de autenticación, dashboard, perfil y gestión de piscina con flujo comprensible para usuario final. \\
+  RNF-06 & Usabilidad & La interfaz debe mostrar los niveles de pH, cloro y temperatura al hacer clic en dashboard. & Visualización en dashboard \\
+  RNF-14 & Compatibilidad móvil & La app debe ser completamente funcional en dispositivos iOS versión 14.0 o superior y Android 10.0 o superior. & iOS 14+ y Android 10+ \\
+  \midrule
+  \multicolumn{4}{@{}l}{\textbf{Mantenibilidad y evolución}} \\
+  RNF-11 & Mantenibilidad & El sistema debe diseñarse de forma modular con capas separadas en IoT, lógica de negocio, datos y presentación para facilitar correcciones y mejoras sin afectar otros módulos. & Arquitectura en capas \\
+  RNF-05 & Escalabilidad & La arquitectura desacoplada frontend/backend y uso de MongoDB Atlas permite crecer en clientes y lecturas sin acoplar UI con almacenamiento. \\
+  \bottomrule
+\end{longtable}
+
+% ============================================================
+\section{Diseño y Justificación Arquitectónica}
+% ============================================================
+
+\subsection{Arquitectura del Sistema}
+
+% \begin{figure}[H]
+%   \centering
+%   \includegraphics[width=0.85\textwidth]{arquitectura.png}
+%   \caption{Diagrama de arquitectura del sistema — Hito 2}
+% \end{figure}
+
+La arquitectura se compone de: (1) cliente Flutter (móvil) como capa de presentación; (2) API REST FastAPI como capa de aplicación; (3) MongoDB Atlas como persistencia; y (4) integración de ingesta IoT mediante endpoints versionados con autenticación por API key para dispositivos. El backend expone además autenticación JWT para usuarios finales y servicios de negocio para evaluación de estado y mantenciones.
+
+\subsection{Cambios Respecto al Hito Anterior}
+
+\begin{tabularx}{\textwidth}{@{} l X X @{}}
+  \toprule
+  \textbf{Componente} & \textbf{Estado anterior} & \textbf{Estado actual} \\
+  \midrule
+  Backend API & Endpoints base de autenticación/lecturas y estructura inicial. & Se consolidan routers para ingesta IoT, vinculación de dispositivos, piscinas de usuario y mantenciones. \\
+  Cliente Flutter & Flujo inicial de interfaz y consumo básico de API. & Se estructura por features con servicios compartidos para auth, pool y mantenciones, incluyendo persistencia local de sesión. \\
+  Placa arduino & Uso de arduino ESP32 & Uso de arduino ESP8266 \\
+  Access point desde esp82666 para conexión con la app & esp8266 se conecta a red Wi-fi y asi manda datos con protocolo HTTP al backend de la app \\
+  \bottomrule
+\end{tabularx}
+
+\subsection{Decisiones de Diseño y Trade-offs}
+
+\begin{longtable}{@{} p{3.5cm} X X @{}}
+  \toprule
+  \textbf{Decisión} & \textbf{Justificación} & \textbf{Trade-off asumido} \\
+  \midrule
+  \endfirsthead
+  \textbf{Decisión} & \textbf{Justificación} & \textbf{Trade-off asumido} \\
+  \midrule
+  \endhead
+  REST (FastAPI) vs GraphQL & Menor complejidad operativa y rapidez de implementación para endpoints orientados a recursos del dominio. & Simplicidad y estandarización HTTP, a cambio de menor flexibilidad en agregación de consultas complejas. \\
+  Monolito modular vs microservicios & Tamaño del equipo y del dominio favorecen una base única con routers/servicios separados por responsabilidad. & Menor costo de despliegue y coordinación, a cambio de mayor riesgo de crecimiento acoplado si no se controla deuda técnica. \\
+  \bottomrule
+\end{longtable}
+
+\subsection{Problemas Detectados y Soluciones}
+
+\begin{tabularx}{\textwidth}{@{} p{4cm} X @{}}
+  \toprule
+  \textbf{Problema detectado} & \textbf{Solución implementada} \\
+  \midrule
+  No se pudo hacer funcionar el sensor de ph ya que era imposible de calibrar. & Se mantiene sensor de temperatura funcionando\\
+  Inconsistencia entre rutas históricas y rutas actuales en pruebas heredadas. & Se mantiene cobertura principal con tests específicos por módulo (pools, mantenciones, status) y se documenta el desfase para normalizar endpoints. \\
+  El arduino no lograba enviar los datos del sensor de temperatura a la aplicación & Se modificó el endpoint necesario apuntando al backend desplegado para mostrar temperatura en aplicación\\
+  El modelado 3D del diseño al principio generó problemas de impresión que hicieron que no se pudiera imprimir por ancho de paredes & Se ajustaron las medidas del modelo del flotador en tinkercad para ser impreso en 3D\\
+  \bottomrule
+\end{tabularx}
+
+% ============================================================
+\section{Estrategia de Pruebas}
+% ============================================================
+
+\subsection{Enfoque General}
+
+Se adopta un enfoque mixto con pruebas unitarias y de integración en backend usando Pytest, FastAPI TestClient y mocks de MongoDB para desacoplar dependencias externas. En frontend existe prueba base de widget para validar arranque. La priorización se centra en autenticación, estado de piscina, mantenciones y configuración de pools.
+
+\subsection{Plan de Pruebas}
+
+\begin{longtable}{@{} p{1.3cm} p{2.5cm} p{2.5cm} X p{2cm} @{}}
+  \toprule
+  \textbf{ID} & \textbf{Tipo} & \textbf{Módulo/Función} & \textbf{Descripción} & \textbf{Resultado} \\
+  \midrule
+  \endfirsthead
+  \toprule
+  \textbf{ID} & \textbf{Tipo} & \textbf{Módulo/Función} & \textbf{Descripción} & \textbf{Resultado} \\
+  \midrule
+  \endhead
+  TP-01 & Unitaria       & status\_service & Valida cálculo de estado global de aptitud desde estados de parámetros. & \textit{[Implementada en repositorio]} \\
+  TP-02 & Unitaria       & pools/settings & Verifica comportamiento de defaults y validaciones de configuración de piscina en modelos y endpoints de pools. & \textit{[Implementada en repositorio]} \\
+  TP-03 & Integración    & auth + mantenciones & Comprueba flujo autenticado para crear/listar mantenciones y restricciones sin token. & \textit{[Implementada en repositorio]} \\
+  TP-04 & Integración    & test\_api legado & Incluye casos sobre /readings que no coinciden completamente con routers activos en main. & \textit{[Requiere alineación]} \\
+  TP-05 & Sistema  & frontend widget test  & Valida construcción básica de la app Flutter en entorno de pruebas. & \textit{[Implementada en repositorio]} \\
+  TP-06 & Unitaria       & config\_pool/evaluar\_sensor & Evalúa rangos y clasificación de estado (OPTIMO, ADVERTENCIA, CRITICO), incluyendo error por sensor no reconocido. & \textit{[Implementada en repositorio]} \\
+  TP-07 & Unitaria       & services/calculator & Valida aptitud global simple, estado individual, validación de volumen y reglas combinadas de dosificación (orden pH $\rightarrow$ cloro). & \textit{[Implementada en repositorio]} \\
+  TP-08 & Unitaria       & config/Settings & Verifica validación de SECRET\_KEY y aplicación de valores por defecto de configuración. & \textit{[Implementada en repositorio]} \\
+  TP-09 & Unitaria       & routers/ingesta & Cubre verify\_api\_key, persistencia de is\_critical y rechazo de payload legacy con pH fuera de rango físico. & \textit{[Implementada en repositorio]} \\
+  TP-10 & Unitaria       & routers/device\_bindings & Cubre vínculo/desvínculo y estado de dispositivo (online/offline), además de ingesta por device\_id con y sin binding activo. & \textit{[Implementada en repositorio]} \\
+  \bottomrule
+\end{longtable}
+
+\subsection{Cobertura y Herramientas}
+
+\begin{itemize}
+  \item \textbf{Herramientas utilizadas:} Pytest, FastAPI TestClient, unittest.mock (backend) y flutter\_test (frontend).
+  \item \textbf{Cobertura de código alcanzada:} Se añadieron 26 pruebas unitarias nuevas para backend (config\_pool, services/calculator, config/settings, routers/ingesta y routers/device\_bindings), todas en estado \textit{pass} al ejecutarse de forma aislada.
+  \item \textbf{Criterio de aceptación:} Los módulos críticos (auth, estado de piscina, mantenciones, pools) y módulos base de lógica/ingesta deben contar con pruebas automatizadas; las pruebas legacy desalineadas deben normalizarse con los endpoints vigentes.
+\end{itemize}
+
+% ============================================================
+\section{Identificación y Gestión de Riesgos}
+% ============================================================
+
+\subsection{Matriz de Riesgos}
+
+\begin{longtable}{@{} p{1.2cm} X p{1.8cm} p{1.6cm} p{2.8cm} p{2cm} @{}}
+  \toprule
+  \textbf{ID} & \textbf{Descripción del riesgo} & \textbf{Probabilidad} & \textbf{Impacto} & \textbf{Plan de mitigación} & \textbf{Estado} \\
+  \midrule
+  \endfirsthead
+  \toprule
+  \textbf{ID} & \textbf{Descripción del riesgo} & \textbf{Probabilidad} & \textbf{Impacto} & \textbf{Plan de mitigación} & \textbf{Estado} \\
+  \midrule
+  \endhead
+  R-01 & Dependencia de servicios externos (MongoDB Atlas / nube) para operación continua. & Media   & Alto   & Mantener variables de entorno claras, validación de conexión y plan de contingencia para entorno alternativo/local. & \textcolor{accent}{Activo} \\
+  R-02 & Desfase entre rutas legacy y rutas vigentes en pruebas/documentación.  & Media  & Medio   & Homologar contratos API, depurar endpoints en desuso y actualizar suite de pruebas.       & \textcolor{accent}{Activo} \\
+  R-03 & CORS completamente abierto en backend en un eventual despliegue público.     & Media   & Medio  & Restringir orígenes permitidos y endurecer configuración por entorno.      & \textcolor{accent}{Activo} \\
+  R-04 & Deuda técnica por duplicidad de modelos/colecciones (piscinas/pools, mantenciones/mantenimientos).          & Media  & Medio  & Planificar refactor de unificación de dominio y normalización de repositorios. & Activo \\
+  \bottomrule
+\end{longtable}
+
+\subsection{Riesgos Materializados y Respuesta}
+
+Se observa materialización parcial del riesgo de inconsistencia técnica entre componentes legacy y actuales (por ejemplo, rutas probadas históricamente versus routers incluidos en la aplicación). El impacto principal es aumento de costo de mantenimiento y ambigüedad documental. Como respuesta, se prioriza normalización de contratos API, consolidación de nomenclatura de colecciones y actualización de pruebas de integración.
+
+% ============================================================
+\section{Incremento Funcional y Despliegue}
+% ============================================================
+
+\subsection{Funcionalidades Implementadas en este Hito}
+
+\begin{longtable}{@{} p{1.4cm} p{4cm} X p{2cm} @{}}
+  \toprule
+  \textbf{ID} & \textbf{Historia de usuario} & \textbf{Descripción} & \textbf{Estado} \\
+  \midrule
+  \endfirsthead
+  \toprule
+  \textbf{ID} & \textbf{Historia de usuario} & \textbf{Descripción} & \textbf{Estado} \\
+  \midrule
+  \endhead
+  HU-01 & Como usuario, quiero registrarme e iniciar sesión para acceder de forma segura a mis datos de piscina. & Implementación en endpoints /auth/register, /auth/login, /auth/me y persistencia local de sesión en Flutter. & \textcolor{success}{\textbf{Completa}} \\
+  HU-02 & Como usuario, quiero visualizar el estado de mi piscina para decidir acciones de mantención. & Evaluación de lecturas y estado global, además de endpoints de consulta y pantallas de dashboard/perfil. & \textcolor{success}{\textbf{Completa}} \\
+  HU-03 & Como usuario, quiero que el dispositivo quede vinculado de forma trazable a mi piscina para automatizar lecturas. & Existen endpoints de bind/unbind/status, pero persisten elementos legacy y normalización pendiente entre modelos de dominio. & \textcolor{accent}{\textbf{Parcial}} \\
+  \bottomrule
+\end{longtable}
+
+\subsection{Entorno de Despliegue}
+
+\begin{tabularx}{\textwidth}{@{} l X @{}}
+  \toprule
+  \textbf{Parámetro}          & \textbf{Detalle} \\
+  \midrule
+  Plataforma                  & Azure Web App (backend) y despliegue frontend web por configuración Docker/Nginx y Vercel SPA config en repositorio. \\
+  URL de acceso               & \textit{[No visible explícitamente en el repositorio]} \\
+  Credenciales de prueba      & \textit{[No deben publicarse; no hay credenciales de demo explícitas en repositorio]} \\
+  Estado al momento de entrega & Backend con pipeline de despliegue configurado y ejecución local documentada para backend/frontend. \\
+  Notas adicionales           & Endpoints de usuario requieren Bearer JWT; ingesta de sensores requiere header X-API-KEY. \\
+  \bottomrule
+\end{tabularx}
+
+\subsection{Evidencia de Funcionamiento}
+
+\begin{infobox}[title=Instrucción]
+Incluir capturas de pantalla o descripciones de las funcionalidades clave en el entorno de producción. Si se incluyen imágenes, descomentar el bloque \texttt{figure} y reemplazar el nombre del archivo.
+\end{infobox}
+
+% \begin{figure}[H]
+%   \centering
+%   \includegraphics[width=0.8\textwidth]{captura1.png}
+%   \caption{Descripción de la funcionalidad mostrada.}
+% \end{figure}
+
+Se puede evidenciar el flujo completo: registro/login, visualización de estado de piscina en dashboard, ejecución de tratamiento manual y revisión de historial de mantenciones, además del registro de datos de sensores en backend vía endpoints de ingesta.
+
+% ============================================================
+\section{Aplicación de la Metodología Scrum}
+% ============================================================
+
+\subsection{Gestión del Sprint (Product Manager)}
+
+\begin{tabularx}{\textwidth}{@{} l X @{}}
+  \toprule
+  \textbf{Parámetro}            & \textbf{Detalle} \\
+  \midrule
+  Número de sprint              & \textit{[Sprint \#X]} \\
+  Objetivo del sprint           & \textit{[Descripción del objetivo comprometido.]} \\
+  Grado de cumplimiento         & \textit{[ej. 80\% — 4 de 5 historias completadas.]} \\
+  Ajustes realizados            & \textit{[Cambios en el alcance o prioridad y su justificación.]} \\
+  Objetivo del siguiente sprint & \textit{[Descripción del sprint planificado.]} \\
+  \bottomrule
+\end{tabularx}
+
+\vspace{0.5em}
+
+\subsubsection{Estado del Product Backlog}
+
+\begin{longtable}{@{} p{1.3cm} X p{2.5cm} p{2cm} @{}}
+  \toprule
+  \textbf{ID} & \textbf{Historia de usuario} & \textbf{Sprint asignado} & \textbf{Estado} \\
+  \midrule
+  \endfirsthead
+  \toprule
+  \textbf{ID} & \textbf{Historia de usuario} & \textbf{Sprint asignado} & \textbf{Estado} \\
+  \midrule
+  \endhead
+  HU-01 & \textit{[descripción]} & Sprint 1 & \textcolor{success}{\textbf{Completa}} \\
+  HU-02 & \textit{[descripción]} & Sprint 2 & \textcolor{success}{\textbf{Completa}} \\
+  HU-03 & \textit{[descripción]} & Sprint 2 & \textcolor{accent}{\textbf{Parcial}} \\
+  HU-04 & \textit{[descripción]} & Sprint 3 & Pendiente \\
+  HU-05 & \textit{[descripción]} & Sprint 3 & Pendiente \\
+  \bottomrule
+\end{longtable}
+
+\subsection{Ejecución Scrum (Scrum Master)}
+
+\subsubsection{Daily Meetings}
+
+\textit{[Describir la dinámica de los Daily Meetings: frecuencia, modalidad (presencial/remota), duración promedio y disciplina del equipo.]}
+
+\subsubsection{Sprint Retrospective — Principales Mejoras}
+
+\begin{tabularx}{\textwidth}{@{} p{3.5cm} X @{}}
+  \toprule
+  \textbf{Aspecto} & \textbf{Acción tomada} \\
+  \midrule
+  \textit{[Problema identificado]} & \textit{[Mejora implementada]} \\
+  \textit{[Problema identificado]} & \textit{[Mejora implementada]} \\
+  \bottomrule
+\end{tabularx}
+
+\subsubsection{Impedimentos y Adaptaciones del Equipo}
+
+\textit{[Describir los principales impedimentos encontrados durante el sprint y cómo el equipo los resolvió o mitigó.]}
+
+\subsection{Registro de Asistencia a Daily Meetings}
+
+\begin{warnbox}
+  \textbf{Nota:} Este componente tiene alto peso evaluativo. El registro debe ser completo, individual y reflejar la participación real del equipo.
+\end{warnbox}
+
+\vspace{0.4em}
+
+\begin{tabularx}{\textwidth}{|l|*{6}{>{\centering\arraybackslash}p{1.1cm}|}|c|c|}
+\hline
+\rowcolor{rowdark}
+\textcolor{white}{\textbf{Integrante}} &
+\textcolor{white}{\textbf{D1}} &
+\textcolor{white}{\textbf{D2}} &
+\textcolor{white}{\textbf{D3}} &
+\textcolor{white}{\textbf{D4}} &
+\textcolor{white}{\textbf{D5}} &
+\textcolor{white}{\textbf{D6}} &
+\textcolor{white}{\textbf{Asistidas}} &
+\textcolor{white}{\textbf{\%}} \\
+\hline
+\textit{Integrante 1 (PM)} & \textcolor{success}{\checkmark} & \textcolor{success}{\checkmark} & \textcolor{success}{\checkmark} & \textcolor{accent}{$\times$} & \textcolor{success}{\checkmark} & \textcolor{success}{\checkmark} & 5/6 & 83\% \\
+\hline
+\textit{Integrante 2 (SM)} & \textcolor{success}{\checkmark} & \textcolor{success}{\checkmark} & \textcolor{success}{\checkmark} & \textcolor{success}{\checkmark} & \textcolor{success}{\checkmark} & \textcolor{success}{\checkmark} & 6/6 & 100\% \\
+\hline
+\textit{Integrante 3}      & \textcolor{success}{\checkmark} & \textcolor{accent}{$\times$} & \textcolor{success}{\checkmark} & \textcolor{success}{\checkmark} & \textcolor{accent}{$\times$} & \textcolor{success}{\checkmark} & 4/6 & 67\% \\
+\hline
+\textit{Integrante 4}      & \textcolor{success}{\checkmark} & \textcolor{success}{\checkmark} & \textcolor{success}{\checkmark} & \textcolor{success}{\checkmark} & \textcolor{success}{\checkmark} & \textcolor{accent}{$\times$} & 5/6 & 83\% \\
+\hline
+\end{tabularx}
+
+\vspace{0.3em}
+
+\textit{Justificación de inasistencias:}
+\begin{itemize}
+  \item \textbf{Integrante 1, D4:} \textit{[Motivo justificado.]}
+  \item \textbf{Integrante 3, D2 y D5:} \textit{[Motivo justificado.]}
+\end{itemize}
+
+% ============================================================
+\section{Presentación Final Orientada a Stakeholders}
+% ============================================================
+
+\subsection{Narrativa del Proyecto}
+
+CleanPool App aborda el problema de control reactivo de calidad de agua en piscinas, entregando monitoreo digital y apoyo a decisiones de mantención para usuarios responsables de operación. En este hito se consolidó una arquitectura operativa con frontend Flutter, backend FastAPI y persistencia en MongoDB Atlas, incorporando autenticación, gestión de piscinas, ingesta IoT, evaluación de estado y registro de mantenciones. El valor entregado es una base funcional desplegable que centraliza información crítica y mejora la trazabilidad de acciones técnicas.
+
+\subsection{Avances Clave del Hito}
+
+\begin{itemize}
+  \item Se implementó flujo de autenticación completo con sesión persistente en cliente Flutter.
+  \item Se habilitó monitoreo del estado del agua con evaluación por parámetros y estado global.
+  \item Se incorporó gestión de mantenciones y tratamiento manual con historial consultable.
+\end{itemize}
+
+\subsection{Demostración en Producción}
+
+\begin{notebox}
+  El sistema se encuentra desplegado y disponible para evaluación en: \textbf{\textit{[URL no especificada en repositorio]}}. \\
+  Credenciales de acceso para la demo: \textbf{Usuario:} \textit{[No disponible en repositorio]} \quad \textbf{Contraseña:} \textit{[No disponible en repositorio]}
+\end{notebox}
+
+\vspace{0.3em}
+Flujo sugerido de demostración: (1) registro/inicio de sesión, (2) creación/selección de piscina, (3) revisión de estado actual y métricas, (4) ejecución de tratamiento manual, (5) validación de historial de mantenciones y (6) evidencia de endpoints de ingesta/vinculación de dispositivo.
+
+\subsection{Próximos Pasos}
+
+\begin{enumerate}
+  \item Normalizar y unificar modelos de dominio duplicados entre rutas legacy y rutas vigentes.
+  \item Alinear pruebas, documentación y contratos de API para eliminar rutas obsoletas y asegurar trazabilidad funcional.
+  \item Endurecer configuración de seguridad y observabilidad (CORS por entorno, logging estructurado, reporte de cobertura).
+\end{enumerate}
+
+% ============================================================
+\appendix
+\renewcommand{\thesection}{Anexo \Alph{section}}
+% ============================================================
+
+\section{Capturas de Pantalla del Sistema}
+
+\textit{[Pendiente adjuntar capturas reales del entorno desplegado.]}
+
+\section{Actas de Daily Meetings}
+
+\textit{[Pendiente adjuntar actas reales del equipo.]}
+
+\section{Evidencia de Repositorio}
+
+\begin{tabularx}{\textwidth}{@{} l X @{}}
+  \toprule
+  \textbf{Recurso} & \textbf{URL} \\
+  \midrule
+  Repositorio (GitHub / GitLab) & \textit{[URL exacta del repositorio no especificada en este archivo]} \\
+  Tablero Scrum (Jira / Trello)  & \textit{[No evidenciado en repositorio]} \\
+  Sistema desplegado             & \textit{[URL pública no evidenciada en repositorio]} \\
+  \bottomrule
+\end{tabularx}
+
+% ============================================================
+\end{document}
+% ============================================================

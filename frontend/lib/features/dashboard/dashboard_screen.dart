@@ -71,6 +71,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   bool _loading = true;
   bool _loadingStatus = false;
   Map<String, dynamic>? _poolStatus;
+  Map<String, dynamic>? _manualStatusOverride;
   Map<String, dynamic>? _deviceBinding;
   bool _bindingActionLoading = false;
   bool _showAptitudCard = false;
@@ -176,9 +177,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
         await prefs.setString('last_pool_id', _selectedPool!['id']);
         _showAptitudCard = false;
+        _manualStatusOverride = null;
       } else {
         _selectedPool = null;
         _showAptitudCard = false;
+        _manualStatusOverride = null;
       }
     }
 
@@ -873,9 +876,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       ],
                       _ManualTreatmentCard(
                         poolId: _selectedPool!['id'],
-                        onCalculated: () {
+                        onCalculated: (ph, cloro) {
                           if (mounted) {
-                            setState(() => _showAptitudCard = true);
+                            setState(() {
+                              _showAptitudCard = true;
+                              _manualStatusOverride =
+                                  _buildManualStatusFromInputs(ph, cloro);
+                            });
                           }
                           _loadPoolStatus(showLoader: false);
                         },
@@ -915,7 +922,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
     String subText = "No hay registros recientes para evaluar";
     */
 
-    if (_poolStatus == null || _poolStatus!['estado'] == null) {
+    final Map<String, dynamic>? statusData = _manualStatusOverride ?? _poolStatus;
+    if (statusData == null || statusData['estado'] == null) {
       return const SizedBox.shrink();
     }
 
@@ -926,8 +934,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
     String subText = "";
 
     Map<String, dynamic>? parametros =
-        _poolStatus!['parametros'] as Map<String, dynamic>?;
-    final estado = _poolStatus!['estado'];
+        statusData['parametros'] as Map<String, dynamic>?;
+    final estado = statusData['estado'];
 
     if (estado == 'APTA') {
       bgColor = const Color(0xFF10B981); // Esmeralda / Verde Brillante
@@ -1122,6 +1130,29 @@ class _DashboardScreenState extends State<DashboardScreen> {
     return n
         .toStringAsFixed(0)
         .replaceAllMapped(RegExp(r'(\d)(?=(\d{3})+(?!\d))'), (m) => '${m[1]}.');
+  }
+
+  Map<String, dynamic> _buildManualStatusFromInputs(double ph, double cloro) {
+    final bool phOk = ph >= 7.2 && ph <= 7.8;
+    final bool cloroOk = cloro >= 1.0 && cloro <= 3.0;
+
+    String phState = 'NORMAL';
+    if (!phOk) {
+      phState = ph < 7.2 ? 'BAJO' : 'ALTO';
+    }
+
+    String cloroState = 'NORMAL';
+    if (!cloroOk) {
+      cloroState = cloro < 1.0 ? 'BAJO' : 'ALTO';
+    }
+
+    return {
+      'estado': (phOk && cloroOk) ? 'APTA' : 'NO APTA',
+      'parametros': {
+        'ph': {'valor': ph, 'estado': phState, 'fuente': 'manual'},
+        'cloro': {'valor': cloro, 'estado': cloroState, 'fuente': 'manual'},
+      },
+    };
   }
 }
 
@@ -2146,7 +2177,7 @@ class _VerticalDivider extends StatelessWidget {
 // ─────────────────────────────────────────────
 class _ManualTreatmentCard extends StatefulWidget {
   final String? poolId;
-  final VoidCallback? onCalculated;
+  final void Function(double ph, double cloro)? onCalculated;
 
   const _ManualTreatmentCard({required this.poolId, this.onCalculated});
 
@@ -2222,7 +2253,7 @@ class _ManualTreatmentCardState extends State<_ManualTreatmentCard> {
       if (res['success'] == true) {
         _tratamiento = res['data']['tratamiento'] as List<dynamic>?;
         if (widget.onCalculated != null) {
-          widget.onCalculated!();
+          widget.onCalculated!(ph, cloro);
         }
       } else {
         _errorMessage = res['message'];
