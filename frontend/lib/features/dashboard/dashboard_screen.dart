@@ -131,19 +131,42 @@ class _DashboardScreenState extends State<DashboardScreen> {
       return;
     }
 
-    final result = await _poolService.getDeviceStatus(
+    final bindingResult = await _poolService.getDeviceBinding(
       deviceId: _deviceId,
       token: token,
     );
     if (!mounted) return;
 
-    setState(() {
-      if (result['success'] == true) {
-        _deviceBinding = result['data'] as Map<String, dynamic>;
-      } else if (!silent) {
-        _deviceBinding = null;
+    if (bindingResult['success'] != true) {
+      if (!silent) {
+        setState(() => _deviceBinding = null);
       }
+      return;
+    }
+
+    final baseBinding = Map<String, dynamic>.from(
+      bindingResult['data'] as Map<String, dynamic>,
+    );
+    baseBinding['is_online'] = false;
+
+    setState(() {
+      _deviceBinding = baseBinding;
     });
+
+    final statusResult = await _poolService.getDeviceStatus(
+      deviceId: _deviceId,
+      token: token,
+    );
+    if (!mounted) return;
+
+    if (statusResult['success'] == true) {
+      setState(() {
+        _deviceBinding = {
+          ...baseBinding,
+          ...(statusResult['data'] as Map<String, dynamic>),
+        };
+      });
+    }
   }
 
   Future<void> _loadPools({String? selectId}) async {
@@ -665,10 +688,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 child: _PoolCard(
                   pool: pool,
                   litrosStr: litrosStr,
-                  temperatureC:
-                      (isDeviceBoundToSelectedPool && isDeviceOnline)
-                      ? temperatureC
-                      : null,
+                  temperatureC: isDeviceBoundToSelectedPool ? temperatureC : null,
                 ),
               ),
             ),
