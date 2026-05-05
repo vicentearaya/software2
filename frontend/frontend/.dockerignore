@@ -1,0 +1,10 @@
+.dart_tool/
+build/
+macos/
+windows/
+linux/
+android/
+ios/
+test/
+*.env
+.gitignore
