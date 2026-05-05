@@ -926,6 +926,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
       icon = Icons.check_circle_rounded;
       text = "¡Apta para baño! Disfruta tu piscina 🏊";
       subText = "Todos los parámetros están en rango óptimo.";
+    } else if (estado == 'ADVERTENCIA') {
+      bgColor = const Color(0xFFF59E0B); // Ámbar / Naranja Warning
+      iconColor = Colors.white;
+      icon = Icons.info_rounded;
+      text = "Precaución — Parámetros en advertencia ⚠️";
+      subText = "Los valores están fuera del rango óptimo pero aún son aceptables.";
     } else if (estado == 'NO APTA') {
       bgColor = const Color(0xFFEF4444); // Rojo Brillante
       iconColor = Colors.white;
@@ -1116,21 +1122,39 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Map<String, dynamic> _buildManualStatusFromInputs(double ph, double cloro) {
-    final bool phOk = ph >= 7.2 && ph <= 7.8;
-    final bool cloroOk = cloro >= 1.0 && cloro <= 3.0;
+    // Rangos alineados con backend/core/config_pool.py:
+    //   pH:    óptimo 7.2-7.8, advertencia 6.8-8.2, fuera = crítico
+    //   Cloro: óptimo 1.0-3.0, advertencia 0.5-5.0, fuera = crítico
+    final bool phOptimo = ph >= 7.2 && ph <= 7.8;
+    final bool phWarning = !phOptimo && ph >= 6.8 && ph <= 8.2;
+    final bool cloroOptimo = cloro >= 1.0 && cloro <= 3.0;
+    final bool cloroWarning = !cloroOptimo && cloro >= 0.5 && cloro <= 5.0;
 
     String phState = 'NORMAL';
-    if (!phOk) {
+    if (!phOptimo) {
       phState = ph < 7.2 ? 'BAJO' : 'ALTO';
     }
 
     String cloroState = 'NORMAL';
-    if (!cloroOk) {
+    if (!cloroOptimo) {
       cloroState = cloro < 1.0 ? 'BAJO' : 'ALTO';
     }
 
+    // Determinar estado global con 3 niveles:
+    //   APTA: ambos en rango óptimo
+    //   ADVERTENCIA: al menos uno en rango warning, ninguno fuera de warning
+    //   NO APTA: al menos uno fuera del rango de advertencia (crítico)
+    String estadoGlobal;
+    if (phOptimo && cloroOptimo) {
+      estadoGlobal = 'APTA';
+    } else if ((phOptimo || phWarning) && (cloroOptimo || cloroWarning)) {
+      estadoGlobal = 'ADVERTENCIA';
+    } else {
+      estadoGlobal = 'NO APTA';
+    }
+
     return {
-      'estado': (phOk && cloroOk) ? 'APTA' : 'NO APTA',
+      'estado': estadoGlobal,
       'parametros': {
         'ph': {'valor': ph, 'estado': phState, 'fuente': 'manual'},
         'cloro': {'valor': cloro, 'estado': cloroState, 'fuente': 'manual'},
