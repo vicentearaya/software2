@@ -15,14 +15,17 @@ _mock_db = MagicMock()
 with patch("pymongo.MongoClient", return_value=MagicMock(**{"__getitem__.return_value": _mock_db})):
     from main import app
     from routers.auth import get_current_user
+    import routers.mantenciones as _mantenciones_mod
 
 client = TestClient(app)
 
 @pytest.fixture(autouse=True)
 def reset_mocks():
-    """Limpia el estado del mock entre tests."""
+    """Limpia el estado del mock entre tests y parchea _db del router."""
     _mock_db.reset_mock()
     app.dependency_overrides.clear()
+    # Parchar el _db a nivel de módulo del router de mantenciones
+    _mantenciones_mod._db = _mock_db
 
 
 # ──────────────────────────────────────────────────────────
