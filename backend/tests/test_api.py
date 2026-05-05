@@ -25,6 +25,8 @@ _mock_db = MagicMock()
 
 with patch("pymongo.MongoClient", return_value=MagicMock(**{"__getitem__.return_value": _mock_db})):
     from main import app  # noqa: E402
+    from db import get_db
+    import routers.auth as _auth_mod
 
 client = TestClient(app)
 _pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -35,6 +37,12 @@ _pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 def reset_mocks():
     """Limpia el estado del mock entre tests."""
     _mock_db.reset_mock()
+    # Asegurar que get_db siempre devuelve nuestro mock
+    app.dependency_overrides[get_db] = lambda: _mock_db
+    # Parchar _db a nivel de módulo en auth (usa _db directamente)
+    _auth_mod._db = _mock_db
+    yield
+    app.dependency_overrides.clear()
 
 
 # ── GET / ─────────────────────────────────────────────────────────────────────
@@ -44,39 +52,40 @@ def test_root_returns_200():
     assert response.json() == {"message": "CleanPool API funcionando"}
 
 
-# ── GET /readings ─────────────────────────────────────────────────────────────
-def test_readings_sin_datos():
-    """Cuando MongoDB no tiene documentos, retorna mensaje de sin datos."""
-    # Forzamos que retorne None explícitamente
-    _mock_db["lecturas"].find_one.return_value = None
+# ── GET /lecturas/estado ──────────────────────────────────────────────────────
+def test_lecturas_estado_sin_datos():
+    """Cuando MongoDB no tiene lecturas para un pool_id, retorna 404."""
+    _mock_db.lecturas.find_one.return_value = None
 
-    response = client.get("/readings")
-    assert response.status_code == 200
-    assert response.json() == {"message": "Sin lecturas disponibles aún."}
+    response = client.get("/lecturas/estado", params={"pool_id": "pool_inexistente"})
+    assert response.status_code == 404
+    assert response.json()["detail"] == "No se encontraron mediciones para esta piscina"
 
 
-def test_readings_con_datos():
-    """Cuando hay un documento, lo retorna con el nuevo formato de estados de T-09."""
+def test_lecturas_estado_con_datos():
+    """Cuando hay un documento, retorna evaluación completa con estados."""
     fake_doc = {
-        "id_piscina": "p-001",
+        "pool_id": "p-001",
         "ph": 7.2,
-        "temp": 25.0,
         "cloro": 1.5,
-        "conductividad": 450.0,
+        "temperatura": 25.0,
+        "conductividad": 1500.0,
         "timestamp": "2026-03-21T14:00:00+00:00",
     }
-    # Forzamos el retorno del dict
-    _mock_db["lecturas"].find_one.return_value = fake_doc
+    _mock_db.lecturas.find_one.return_value = fake_doc
+    # Mock del pool (para volumen) — readings.py usa db.pools (atributo)
+    _mock_db.pools.find_one.return_value = {
+        "pool_id": "p-001",
+        "volumen_m3": 50.0,
+    }
 
-    response = client.get("/readings")
+    response = client.get("/lecturas/estado", params={"pool_id": "p-001"})
     assert response.status_code == 200
     data = response.json()
-    assert data["id_piscina"] == "p-001"
-    assert data["parametros"]["ph"]["valor"] == 7.2
-    assert data["parametros"]["ph"]["estado"] == "optimo"
-    # Temp 25.0: 24 <= 25 <= 28 es optimo. En mi anterior assert puse alerta, error mío.
-    assert data["parametros"]["temp"]["estado"] == "optimo"
-    assert data["parametros"]["cloro"]["estado"] == "optimo"
+    assert data["piscina_apta"] is True
+    assert "detalle_sensores" in data
+    assert data["detalle_sensores"]["ph"]["estado"] == "OPTIMO"
+    assert data["detalle_sensores"]["cloro"]["estado"] == "OPTIMO"
 
 
 # ── POST /auth/login ──────────────────────────────────────────────────────────
@@ -126,14 +135,14 @@ def test_login_missing_fields():
 # -- POST /auth/register
 def test_register_usuario_existente():
     """Si el usuario ya existe, retorna 400 Bad Request."""
-    _mock_db["usuarios"].find_one.return_value = {"username": "test@test.com"}
+    _mock_db["usuarios"].find_one.return_value = {"username": "testuser"}
 
     response = client.post(
         "/auth/register",
-        json={"name": "Test User", "email": "test@test.com", "password": "password123"}
+        json={"name": "Test User", "username": "testuser", "email": "test@test.com", "password": "password123"}
     )
     assert response.status_code == 400
-    assert response.json()["detail"] == "El correo ya esta registrado."
+    assert response.json()["detail"] == "El correo o nombre de usuario ya está registrado."
 
 
 def test_register_exitoso():
@@ -143,10 +152,11 @@ def test_register_exitoso():
 
     response = client.post(
         "/auth/register",
-        json={"name": "New User", "email": "new@test.com", "password": "password123"}
+        json={"name": "New User", "username": "newuser", "email": "new@test.com", "password": "password123"}
     )
     assert response.status_code == 201
     body = response.json()
     assert body["success"] is True
     assert "token" in body
     assert body["user"]["email"] == "new@test.com"
+    assert body["user"]["username"] == "newuser"
