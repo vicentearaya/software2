@@ -37,148 +37,97 @@ class PoolCleaningScreen extends StatelessWidget {
 
   Widget _buildContent() {
     return ListView(
-        physics: const BouncingScrollPhysics(),
-        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 20.0),
-        children: [
-          _buildHerramientasSection(),
-          const SizedBox(height: 24),
-          _buildFrecuenciaSection(),
-          const SizedBox(height: 24),
-          _buildPasoAPasoSection(),
-          const SizedBox(height: 24),
-          _buildProTipsSection(),
-          const SizedBox(height: 40),
-        ],
-      );
+      physics: const BouncingScrollPhysics(),
+      padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 16.0),
+      children: [
+        _buildHerramientasSection(),
+        const SizedBox(height: 14),
+        _buildFrecuenciaSection(),
+        const SizedBox(height: 14),
+        _buildPasoAPasoSection(),
+        const SizedBox(height: 14),
+        _buildProTipsSection(),
+        const SizedBox(height: 32),
+      ],
+    );
   }
 
+  // ── Sección 1: Herramientas ──────────────────
   Widget _buildHerramientasSection() {
     final herramientas = [
       {
         'Herramienta': 'Saca-hojas (Red)',
         'Función': 'Recoger residuos flotantes.',
         'Uso': 'Hojas, insectos, flores.',
-        'Icon': Icons.catching_pokemon_outlined,
+        'Icon': Icons.content_cut_rounded,
       },
       {
         'Herramienta': 'Cepillo de pared',
         'Función': 'Desprender algas y suciedad.',
         'Uso': 'Paredes, escalones y esquinas.',
-        'Icon': Icons.imagesearch_roller_outlined,
+        'Icon': Icons.brush_outlined,
       },
       {
         'Herramienta': 'Limpiafondos',
         'Función': 'Aspirar la suciedad del suelo.',
         'Uso': 'Arena, tierra, algas muertas.',
-        'Icon': Icons.cleaning_services_outlined,
+        'Icon': Icons.air_rounded,
       },
       {
         'Herramienta': 'Manguera flotante',
         'Función': 'Conectar limpiafondos a succión.',
         'Uso': 'Aspiración.',
-        'Icon': Icons.linear_scale,
+        'Icon': Icons.cable_rounded,
       },
     ];
 
     return _buildCardContainer(
       title: '1. Herramientas Básicas',
-      icon: Icons.handyman_outlined,
+      icon: Icons.construction_outlined,
       iconColor: const Color(0xFFE67E22),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             'Se acoplan al mango telescópico para llegar a cualquier punto de la piscina.',
-            style: GoogleFonts.inter(
+            style: GoogleFonts.interTight(
               color: AppColors.textSecondary,
               fontSize: 13,
+              height: 1.4,
             ),
           ),
-          const SizedBox(height: 16),
-          ...herramientas.map((h) => Container(
-                margin: const EdgeInsets.only(bottom: 12),
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: AppColors.surfaceElevated.withValues(alpha: 0.5),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: AppColors.border),
-                ),
-                child: Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFE67E22).withValues(alpha: 0.15),
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(h['Icon'] as IconData,
-                          color: const Color(0xFFE67E22), size: 18),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            h['Herramienta'] as String,
-                            style: GoogleFonts.syne(
-                              color: AppColors.textPrimary,
-                              fontSize: 14,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            'Función: ${h['Función']}',
-                            style: GoogleFonts.inter(
-                              color: AppColors.textSecondary,
-                              fontSize: 12,
-                            ),
-                          ),
-                          Text(
-                            'Uso: ${h['Uso']}',
-                            style: GoogleFonts.inter(
-                              color: AppColors.textMuted,
-                              fontSize: 12,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
+          const SizedBox(height: 14),
+          ...herramientas.map((h) => _ToolCard(
+                name: h['Herramienta'] as String,
+                function: h['Función'] as String,
+                usage: h['Uso'] as String,
+                icon: h['Icon'] as IconData,
+                color: const Color(0xFFE67E22),
               )),
         ],
       ),
     );
   }
 
+  // ── Sección 2: Frecuencia ────────────────────
   Widget _buildFrecuenciaSection() {
     final frecuencias = [
-      {
-        'Tarea': 'Recoger hojas',
-        'Verano': 'Diario',
-        'Resto': '2 veces / sem',
-      },
-      {
-        'Tarea': 'Limpiar skimmer',
-        'Verano': 'Diario',
-        'Resto': 'Semanal',
-      },
+      {'Tarea': 'Recoger hojas', 'Verano': 'Diario', 'Resto': '2 veces / sem'},
+      {'Tarea': 'Limpiar skimmer', 'Verano': 'Diario', 'Resto': 'Semanal'},
       {
         'Tarea': 'Cepillar paredes',
         'Verano': '1-2 veces / sem',
-        'Resto': 'Cada 15 días',
+        'Resto': 'Cada 15 días'
       },
       {
         'Tarea': 'Aspirar fondo',
         'Verano': '1 vez / sem',
-        'Resto': '1 vez / mes',
+        'Resto': '1 vez / mes'
       },
       {
         'Tarea': 'Medir pH/Cloro',
         'Verano': 'Cada 2 días',
-        'Resto': 'Semanal',
+        'Resto': 'Semanal'
       },
     ];
 
@@ -188,11 +137,15 @@ class PoolCleaningScreen extends StatelessWidget {
       iconColor: AppColors.primary,
       child: Column(
         children: [
+          // Header de la tabla
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             decoration: BoxDecoration(
-              color: AppColors.primary.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(8),
+              color: AppColors.primary.withOpacity(0.08),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(
+                color: AppColors.primary.withOpacity(0.12),
+              ),
             ),
             child: Row(
               children: [
@@ -202,8 +155,9 @@ class PoolCleaningScreen extends StatelessWidget {
                     'TAREA',
                     style: GoogleFonts.syne(
                       color: AppColors.primaryLight,
-                      fontSize: 11,
+                      fontSize: 10,
                       fontWeight: FontWeight.bold,
+                      letterSpacing: 0.5,
                     ),
                   ),
                 ),
@@ -213,8 +167,9 @@ class PoolCleaningScreen extends StatelessWidget {
                     textAlign: TextAlign.center,
                     style: GoogleFonts.syne(
                       color: AppColors.statusWarning,
-                      fontSize: 11,
+                      fontSize: 10,
                       fontWeight: FontWeight.bold,
+                      letterSpacing: 0.5,
                     ),
                   ),
                 ),
@@ -224,58 +179,72 @@ class PoolCleaningScreen extends StatelessWidget {
                     textAlign: TextAlign.right,
                     style: GoogleFonts.syne(
                       color: AppColors.primary,
-                      fontSize: 11,
+                      fontSize: 10,
                       fontWeight: FontWeight.bold,
+                      letterSpacing: 0.5,
                     ),
                   ),
                 ),
               ],
             ),
           ),
-          const SizedBox(height: 8),
-          ...frecuencias.map((f) => Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                child: Row(
-                  children: [
-                    Expanded(
-                      flex: 2,
-                      child: Text(
-                        f['Tarea']!,
-                        style: GoogleFonts.inter(
-                          color: AppColors.textPrimary,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500,
-                        ),
+          const SizedBox(height: 4),
+          ...frecuencias.asMap().entries.map((entry) {
+            final f = entry.value;
+            final isEven = entry.key.isEven;
+            return Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              decoration: BoxDecoration(
+                color: isEven
+                    ? AppColors.surfaceElevated.withOpacity(0.3)
+                    : Colors.transparent,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    flex: 2,
+                    child: Text(
+                      f['Tarea']!,
+                      style: GoogleFonts.interTight(
+                        color: AppColors.textPrimary,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
                       ),
                     ),
-                    Expanded(
-                      child: Text(
-                        f['Verano']!,
-                        textAlign: TextAlign.center,
-                        style: GoogleFonts.inter(
-                          color: AppColors.statusWarning,
-                          fontSize: 11,
-                        ),
+                  ),
+                  Expanded(
+                    child: Text(
+                      f['Verano']!,
+                      textAlign: TextAlign.center,
+                      style: GoogleFonts.interTight(
+                        color: AppColors.statusWarning,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w500,
                       ),
                     ),
-                    Expanded(
-                      child: Text(
-                        f['Resto']!,
-                        textAlign: TextAlign.right,
-                        style: GoogleFonts.inter(
-                          color: AppColors.primaryLight,
-                          fontSize: 11,
-                        ),
+                  ),
+                  Expanded(
+                    child: Text(
+                      f['Resto']!,
+                      textAlign: TextAlign.right,
+                      style: GoogleFonts.interTight(
+                        color: AppColors.primaryLight,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w500,
                       ),
                     ),
-                  ],
-                ),
-              )),
+                  ),
+                ],
+              ),
+            );
+          }),
         ],
       ),
     );
   }
 
+  // ── Sección 3: Paso a Paso ───────────────────
   Widget _buildPasoAPasoSection() {
     return _buildCardContainer(
       title: '3. El Paso a Paso',
@@ -289,57 +258,21 @@ class PoolCleaningScreen extends StatelessWidget {
             content:
                 'Usa el saca-hojas para retirar todo lo que flote en el espejo de agua. Vacía el canastillo del skimmer para que la bomba no pierda fuerza de succión.',
           ),
-          const Padding(
-            padding: EdgeInsets.only(left: 14),
-            child: Align(
-              alignment: Alignment.centerLeft,
-              child: SizedBox(
-                height: 12,
-                child: VerticalDivider(
-                  color: AppColors.border,
-                  thickness: 2,
-                ),
-              ),
-            ),
-          ),
+          _buildStepConnector(),
           _buildStepItem(
             stepNumber: '2',
             title: 'Cepillado (Fundamental)',
             content:
                 'Pasa el cepillo por paredes y borde de flotación. Esto desprende micro-algas para que el filtro las atrape o el limpiafondos las succione.',
           ),
-          const Padding(
-            padding: EdgeInsets.only(left: 14),
-            child: Align(
-              alignment: Alignment.centerLeft,
-              child: SizedBox(
-                height: 12,
-                child: VerticalDivider(
-                  color: AppColors.border,
-                  thickness: 2,
-                ),
-              ),
-            ),
-          ),
+          _buildStepConnector(),
           _buildStepItem(
             stepNumber: '3',
             title: 'Aspirar Fondo (Manguera)',
             content:
                 '1. Conecta la manguera al limpiafondos y mételo al agua.\n2. Pon el otro extremo en un chorro de retorno hasta que deje de salir aire.\n3. Conéctalo a la boquilla de aspiración.\n4. Mueve lento y lineal para no levantar mugre.',
           ),
-          const Padding(
-            padding: EdgeInsets.only(left: 14),
-            child: Align(
-              alignment: Alignment.centerLeft,
-              child: SizedBox(
-                height: 12,
-                child: VerticalDivider(
-                  color: AppColors.border,
-                  thickness: 2,
-                ),
-              ),
-            ),
-          ),
+          _buildStepConnector(),
           _buildStepItem(
             stepNumber: '4',
             title: 'Limpiar Pre-filtro de Bomba',
@@ -347,6 +280,30 @@ class PoolCleaningScreen extends StatelessWidget {
                 'Apaga la bomba, abre la tapa transparente y limpia el canastillo de hojas y suciedad atrapada.',
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildStepConnector() {
+    return Padding(
+      padding: const EdgeInsets.only(left: 14),
+      child: Align(
+        alignment: Alignment.centerLeft,
+        child: Container(
+          width: 2,
+          height: 16,
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                AppColors.accent.withOpacity(0.3),
+                AppColors.accent.withOpacity(0.08),
+              ],
+            ),
+            borderRadius: BorderRadius.circular(1),
+          ),
+        ),
       ),
     );
   }
@@ -360,12 +317,15 @@ class PoolCleaningScreen extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Container(
-          width: 28,
-          height: 28,
+          width: 30,
+          height: 30,
           decoration: BoxDecoration(
-            color: AppColors.accent.withValues(alpha: 0.15),
+            color: AppColors.accent.withOpacity(0.1),
             shape: BoxShape.circle,
-            border: Border.all(color: AppColors.accent, width: 1),
+            border: Border.all(
+              color: AppColors.accent.withOpacity(0.3),
+              width: 1.5,
+            ),
           ),
           alignment: Alignment.center,
           child: Text(
@@ -386,17 +346,17 @@ class PoolCleaningScreen extends StatelessWidget {
                 title,
                 style: GoogleFonts.syne(
                   color: AppColors.textPrimary,
-                  fontSize: 15,
-                  fontWeight: FontWeight.w600,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
                 ),
               ),
               const SizedBox(height: 4),
               Text(
                 content,
-                style: GoogleFonts.inter(
+                style: GoogleFonts.interTight(
                   color: AppColors.textSecondary,
                   fontSize: 13,
-                  height: 1.5,
+                  height: 1.55,
                 ),
               ),
             ],
@@ -406,21 +366,38 @@ class PoolCleaningScreen extends StatelessWidget {
     );
   }
 
+  // ── Sección 4: Pro Tips ──────────────────────
   Widget _buildProTipsSection() {
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.statusGood.withValues(alpha: 0.05),
+        color: AppColors.statusGood.withOpacity(0.04),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.statusGood.withValues(alpha: 0.3)),
+        border: Border.all(
+          color: AppColors.statusGood.withOpacity(0.18),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.statusGood.withOpacity(0.04),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(18),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              const Icon(Icons.star_outline_rounded,
-                  color: AppColors.statusGood, size: 24),
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: AppColors.statusGood.withOpacity(0.12),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Icon(Icons.star_outline_rounded,
+                    color: AppColors.statusGood, size: 20),
+              ),
               const SizedBox(width: 10),
               Text(
                 '4. Pro Tips',
@@ -456,39 +433,49 @@ class PoolCleaningScreen extends StatelessWidget {
   }
 
   Widget _buildProTipItem({required String title, required String content}) {
-    return Column(
+    return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          children: [
-            const Icon(Icons.check_circle_outline, color: AppColors.statusGood, size: 16),
-            const SizedBox(width: 6),
-            Text(
-              title,
-              style: GoogleFonts.syne(
-                color: AppColors.statusGood,
-                fontSize: 13,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ],
+        Container(
+          margin: const EdgeInsets.only(top: 2),
+          padding: const EdgeInsets.all(4),
+          decoration: BoxDecoration(
+            color: AppColors.statusGood.withOpacity(0.12),
+            borderRadius: BorderRadius.circular(6),
+          ),
+          child: const Icon(Icons.check_rounded,
+              color: AppColors.statusGood, size: 12),
         ),
-        const SizedBox(height: 4),
-        Padding(
-          padding: const EdgeInsets.only(left: 22.0),
-          child: Text(
-            content,
-            style: GoogleFonts.inter(
-              color: AppColors.textPrimary,
-              fontSize: 13,
-              height: 1.4,
-            ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: GoogleFonts.syne(
+                  color: AppColors.statusGood,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const SizedBox(height: 3),
+              Text(
+                content,
+                style: GoogleFonts.interTight(
+                  color: AppColors.textPrimary,
+                  fontSize: 13,
+                  height: 1.5,
+                ),
+              ),
+            ],
           ),
         ),
       ],
     );
   }
 
+  // ── Card Container base ──────────────────────
   Widget _buildCardContainer({
     required String title,
     required IconData icon,
@@ -499,19 +486,29 @@ class PoolCleaningScreen extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: AppColors.border.withOpacity(0.5)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.08),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(18),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
               Container(
-                padding: const EdgeInsets.all(8),
+                padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: iconColor.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(8),
+                  color: iconColor.withOpacity(0.12),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: iconColor.withOpacity(0.2),
+                  ),
                 ),
                 child: Icon(icon, color: iconColor, size: 20),
               ),
@@ -528,9 +525,107 @@ class PoolCleaningScreen extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 18),
           child,
         ],
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────
+// Tarjeta de herramienta con hover
+// ─────────────────────────────────────────────
+class _ToolCard extends StatefulWidget {
+  final String name;
+  final String function;
+  final String usage;
+  final IconData icon;
+  final Color color;
+
+  const _ToolCard({
+    required this.name,
+    required this.function,
+    required this.usage,
+    required this.icon,
+    required this.color,
+  });
+
+  @override
+  State<_ToolCard> createState() => _ToolCardState();
+}
+
+class _ToolCardState extends State<_ToolCard> {
+  bool _isHovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return MouseRegion(
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        margin: const EdgeInsets.only(bottom: 10),
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: _isHovered
+              ? widget.color.withOpacity(0.04)
+              : AppColors.surfaceElevated.withOpacity(0.4),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: _isHovered
+                ? widget.color.withOpacity(0.25)
+                : AppColors.border.withOpacity(0.5),
+          ),
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: widget.color.withOpacity(0.12),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(
+                  color: widget.color.withOpacity(0.2),
+                ),
+              ),
+              child: Icon(widget.icon, color: widget.color, size: 18),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    widget.name,
+                    style: GoogleFonts.syne(
+                      color: AppColors.textPrimary,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const SizedBox(height: 3),
+                  Text(
+                    widget.function,
+                    style: GoogleFonts.interTight(
+                      color: AppColors.textSecondary,
+                      fontSize: 12,
+                      height: 1.3,
+                    ),
+                  ),
+                  Text(
+                    'Uso: ${widget.usage}',
+                    style: GoogleFonts.interTight(
+                      color: AppColors.textMuted,
+                      fontSize: 11,
+                      height: 1.3,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
