@@ -86,7 +86,6 @@
 /Users/miilwaukee/.pub-cache/hosted/pub.dev/file-7.0.1/lib/src/io.dart
 /Users/miilwaukee/.pub-cache/hosted/pub.dev/flutter_lints-6.0.0/LICENSE
 /Users/miilwaukee/.pub-cache/hosted/pub.dev/glob-2.1.3/LICENSE
-/Users/miilwaukee/.pub-cache/hosted/pub.dev/go_router-14.8.1/LICENSE
 /Users/miilwaukee/.pub-cache/hosted/pub.dev/google_fonts-6.3.3/LICENSE
 /Users/miilwaukee/.pub-cache/hosted/pub.dev/google_fonts-6.3.3/lib/google_fonts.dart
 /Users/miilwaukee/.pub-cache/hosted/pub.dev/google_fonts-6.3.3/lib/src/file_io_desktop_and_mobile.dart
@@ -405,18 +404,27 @@
 /Users/miilwaukee/.pub-cache/hosted/pub.dev/xdg_directories-1.1.0/LICENSE
 /Users/miilwaukee/.pub-cache/hosted/pub.dev/xdg_directories-1.1.0/lib/xdg_directories.dart
 /Users/miilwaukee/.pub-cache/hosted/pub.dev/yaml-3.1.3/LICENSE
+/Users/miilwaukee/Documents/Software 2/aplicacion_proyecto/frontend/lib/core/constants/api_config.dart
 /Users/miilwaukee/Documents/Software 2/aplicacion_proyecto/frontend/lib/core/constants/app_colors.dart
 /Users/miilwaukee/Documents/Software 2/aplicacion_proyecto/frontend/lib/core/constants/app_strings.dart
+/Users/miilwaukee/Documents/Software 2/aplicacion_proyecto/frontend/lib/core/network/api_client.dart
 /Users/miilwaukee/Documents/Software 2/aplicacion_proyecto/frontend/lib/core/theme/app_theme.dart
 /Users/miilwaukee/Documents/Software 2/aplicacion_proyecto/frontend/lib/core/utils/app_utils.dart
 /Users/miilwaukee/Documents/Software 2/aplicacion_proyecto/frontend/lib/features/auth/login_screen.dart
 /Users/miilwaukee/Documents/Software 2/aplicacion_proyecto/frontend/lib/features/auth/register_screen.dart
 /Users/miilwaukee/Documents/Software 2/aplicacion_proyecto/frontend/lib/features/dashboard/dashboard_screen.dart
+/Users/miilwaukee/Documents/Software 2/aplicacion_proyecto/frontend/lib/features/dashboard/pool_data.dart
+/Users/miilwaukee/Documents/Software 2/aplicacion_proyecto/frontend/lib/features/dashboard/widgets/add_pool_screen.dart
+/Users/miilwaukee/Documents/Software 2/aplicacion_proyecto/frontend/lib/features/dashboard/widgets/dashboard_empty_view.dart
+/Users/miilwaukee/Documents/Software 2/aplicacion_proyecto/frontend/lib/features/dashboard/widgets/manual_treatment_card.dart
+/Users/miilwaukee/Documents/Software 2/aplicacion_proyecto/frontend/lib/features/dashboard/widgets/pool_inspector_widgets.dart
+/Users/miilwaukee/Documents/Software 2/aplicacion_proyecto/frontend/lib/features/dashboard/widgets/pool_water_status_panel.dart
 /Users/miilwaukee/Documents/Software 2/aplicacion_proyecto/frontend/lib/features/device/device_screen.dart
 /Users/miilwaukee/Documents/Software 2/aplicacion_proyecto/frontend/lib/features/guides/frequent_problems_screen.dart
 /Users/miilwaukee/Documents/Software 2/aplicacion_proyecto/frontend/lib/features/guides/guides_screen.dart
 /Users/miilwaukee/Documents/Software 2/aplicacion_proyecto/frontend/lib/features/guides/pool_cleaning_screen.dart
 /Users/miilwaukee/Documents/Software 2/aplicacion_proyecto/frontend/lib/features/guides/pool_filter_screen.dart
+/Users/miilwaukee/Documents/Software 2/aplicacion_proyecto/frontend/lib/features/inventory/inventory_screen.dart
 /Users/miilwaukee/Documents/Software 2/aplicacion_proyecto/frontend/lib/features/profile/profile_screen.dart
 /Users/miilwaukee/Documents/Software 2/aplicacion_proyecto/frontend/lib/main.dart
 /Users/miilwaukee/Documents/Software 2/aplicacion_proyecto/frontend/lib/models/maintenance.dart

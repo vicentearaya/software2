@@ -1,48 +1,29 @@
-import 'dart:convert';
 import 'package:http/http.dart' as http;
-import '../../core/constants/api_config.dart';
+
+import '../../core/network/api_client.dart';
 import '../../models/maintenance.dart';
 
 class MaintenanceService {
-  /// Obtiene el historial de mantenciones del usuario.
-  /// Sigue el patrón de retorno de otros servicios del proyecto.
-  Future<Map<String, dynamic>> getMaintenanceHistory(String token) async {
-    try {
-      final response = await http.get(
-        Uri.parse('${ApiConfig.baseUrl}/mantenciones/'),
-        headers: {
-          'Authorization': 'Bearer $token',
-          'Content-Type': 'application/json',
-        },
-      );
+  final ApiClient _api;
 
-      if (response.statusCode == 200) {
-        final responseData = jsonDecode(response.body);
-        final List<dynamic> list = responseData;
-        final mantenciones = list
-            .map((json) => Maintenance.fromJson(json))
-            .toList();
-        return {'success': true, 'data': mantenciones};
-      } else {
-        String defaultMessage = 'Error al obtener el historial de mantenimiento';
-        dynamic responseData;
-        try {
-          responseData = jsonDecode(response.body);
-        } catch (_) {
-          responseData = null;
-        }
-        return {
-          'success': false,
-          'message': responseData is Map<String, dynamic>
-              ? (responseData['detail'] ?? defaultMessage)
-              : '$defaultMessage (HTTP ${response.statusCode})',
-        };
-      }
-    } catch (e) {
+  MaintenanceService({ApiClient? apiClient, http.Client? client})
+      : _api = apiClient ?? ApiClient(httpClient: client);
+
+  Future<Map<String, dynamic>> getMaintenanceHistory(String token) async {
+    final response = await _api.get('/mantenciones/', token: token);
+    if (response['success'] != true) {
+      return response;
+    }
+    final raw = response['data'];
+    if (raw is! List) {
       return {
         'success': false,
-        'message': 'Error de conexión: No se pudo obtener el historial.',
+        'message': 'Respuesta inválida del servidor al obtener el historial.',
       };
     }
+    final mantenciones = raw
+        .map((json) => Maintenance.fromJson(json as Map<String, dynamic>))
+        .toList();
+    return {'success': true, 'data': mantenciones};
   }
 }
