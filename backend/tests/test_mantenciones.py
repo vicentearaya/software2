@@ -2,7 +2,6 @@ from unittest.mock import MagicMock, patch
 import os
 import pytest
 from fastapi.testclient import TestClient
-from datetime import datetime
 
 # Configurar variables de entorno antes de importar la app
 os.environ["MONGODB_URI"] = "mongodb://localhost"
@@ -15,17 +14,19 @@ _mock_db = MagicMock()
 with patch("pymongo.MongoClient", return_value=MagicMock(**{"__getitem__.return_value": _mock_db})):
     from main import app
     from routers.auth import get_current_user
-    import routers.mantenciones as _mantenciones_mod
+    from db import get_db
 
 client = TestClient(app)
 
+
 @pytest.fixture(autouse=True)
 def reset_mocks():
-    """Limpia el estado del mock entre tests y parchea _db del router."""
+    """Limpia el estado del mock entre tests."""
     _mock_db.reset_mock()
     app.dependency_overrides.clear()
-    # Parchar el _db a nivel de módulo del router de mantenciones
-    _mantenciones_mod._db = _mock_db
+    app.dependency_overrides[get_db] = lambda: _mock_db
+    yield
+    app.dependency_overrides.clear()
 
 
 # ──────────────────────────────────────────────────────────

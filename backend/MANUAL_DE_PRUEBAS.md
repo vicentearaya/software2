@@ -12,7 +12,7 @@
 Este documento guía al evaluador a través de los **casos de prueba** que validan:
 - ✅ Autenticación JWT (login, registro, /auth/me)
 - ✅ CRUD de Piscinas del usuario (/piscinas)
-- ✅ Estado de piscina con prioridad sensor > manual (/api/v1/pools/{id}/status)
+- ✅ Estado de piscina con prioridad sensor > manual (`GET /piscinas/{id}/status` con JWT; alias legacy `GET /api/v1/pools/{id}/status`)
 - ✅ Mantenciones con historial (/mantenciones)
 - ✅ Ingesta IoT con X-API-KEY (/api/v1/lectura)
 - ✅ Evaluación de sensores (/lecturas/estado)
@@ -55,6 +55,8 @@ python -m pytest tests/ -v --tb=short
 
 **Salida esperada:** Todos los tests PASSED.
 
+En GitHub Actions, el workflow **CI** (`.github/workflows/ci.yml`) ejecuta los mismos tests en push y pull request a la rama `main`.
+
 ---
 
 ## **📍 MAPA DE ENDPOINTS VIGENTES**
@@ -69,17 +71,18 @@ python -m pytest tests/ -v --tb=short
 | `POST` | `/piscinas` | JWT | Crear piscina |
 | `PUT` | `/piscinas/{pool_id}` | JWT | Actualizar piscina |
 | `DELETE` | `/piscinas/{pool_id}` | JWT | Eliminar piscina y datos asociados |
+| `GET` | `/piscinas/{pool_id}/status` | JWT | Estado del agua (sensor > manual); **vía oficial de la app** |
 | `POST` | `/piscinas/{pool_id}/tratamiento` | JWT | Calcular y guardar tratamiento manual |
 | `POST` | `/mantenciones/` | JWT | Registrar mantención |
 | `GET` | `/mantenciones/` | JWT | Historial de mantenciones del usuario |
 | `POST` | `/api/v1/lectura` | X-API-KEY | Ingestar lectura de sensores IoT |
 | `GET` | `/lecturas/estado` | No | Estado evaluado de sensores |
-| `POST` | `/api/v1/pools` | No | Crear pool (módulo configuración) |
-| `GET` | `/api/v1/pools` | No | Listar pools (módulo configuración) |
-| `GET` | `/api/v1/pools/{pool_id}` | No | Detalle de pool |
-| `PUT` | `/api/v1/pools/{pool_id}` | No | Actualizar pool |
-| `DELETE` | `/api/v1/pools/{pool_id}` | No | Eliminar pool |
-| `GET` | `/api/v1/pools/{pool_id}/status` | No | Estado actual de la piscina |
+| `POST` | `/api/v1/pools` | No | Crear pool (colección `pools`, configuración legacy) |
+| `GET` | `/api/v1/pools` | No | Listar pools (legacy) |
+| `GET` | `/api/v1/pools/{pool_id}` | No | Detalle de pool (legacy) |
+| `PUT` | `/api/v1/pools/{pool_id}` | No | Actualizar pool (legacy) |
+| `DELETE` | `/api/v1/pools/{pool_id}` | No | Eliminar pool (legacy) |
+| `GET` | `/api/v1/pools/{pool_id}/status` | No | Mismo cálculo que `/piscinas/.../status` (sin comprobar propietario; preferir ruta con JWT) |
 
 ---
 
@@ -327,7 +330,11 @@ curl http://localhost:8000/
 
 ## **✅ CASO 9: Estado de Piscina**
 
-**Endpoint:** `GET /api/v1/pools/{pool_id}/status`
+**Vía oficial (app Flutter):** `GET /piscinas/{pool_id}/status`  
+**Header:** `Authorization: Bearer <JWT>`  
+Comprueba que la piscina pertenezca al usuario y devuelve el mismo JSON que el alias legacy.
+
+**Alias legacy (sin comprobar propietario):** `GET /api/v1/pools/{pool_id}/status`
 
 **Resultado esperado (200) — Piscina APTA:**
 ```json
@@ -357,9 +364,9 @@ curl http://localhost:8000/
 }
 ```
 
-**Piscina inexistente (404):**
+**Piscina inexistente o no del usuario (404):**
 ```json
-{"detail": "Piscina con ID 'xxx' no encontrada en la colección de usuario."}
+{"detail": "Piscina no encontrada o no pertenece a tu cuenta."}
 ```
 
 ---
@@ -403,7 +410,7 @@ curl http://localhost:8000/
 | 7b | GET /mantenciones/ | JWT | 200 + lista | ✅ |
 | 7c | GET /mantenciones/ | Sin JWT | 401 | ✅ |
 | 8 | POST /api/v1/lectura | X-API-KEY + LecturaIn | 200 + ok | ✅ |
-| 9 | GET /api/v1/pools/{id}/status | pool_id | 200 + estado | ✅ |
+| 9 | GET /piscinas/{id}/status | JWT + pool_id | 200 + estado | ✅ |
 | 10 | GET /lecturas/estado | pool_id query | 200 + StatusGlobalResponse | ✅ |
 
 ---

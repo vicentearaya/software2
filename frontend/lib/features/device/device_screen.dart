@@ -1,6 +1,5 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
+
 import '../../core/constants/app_colors.dart';
 import '../../shared/services/auth_service.dart';
 import '../../shared/services/pool_service.dart';
@@ -17,29 +16,14 @@ class _DeviceScreenState extends State<DeviceScreen> {
   final _authService = AuthService();
   final _poolService = PoolService();
 
-  // Estos campos se mantienen por compatibilidad del flujo actual
-  // (carga/polling) aunque esta pantalla ya no renderiza el estado.
-  // ignore: unused_field
   bool _loading = true;
-  // ignore: unused_field
   Map<String, dynamic>? _deviceStatus;
-  // ignore: unused_field
   String? _error;
-  Timer? _pollingTimer;
 
   @override
   void initState() {
     super.initState();
     _loadDeviceStatus();
-    _pollingTimer = Timer.periodic(const Duration(seconds: 15), (_) {
-      _loadDeviceStatus(showLoader: false);
-    });
-  }
-
-  @override
-  void dispose() {
-    _pollingTimer?.cancel();
-    super.dispose();
   }
 
   Future<void> _loadDeviceStatus({bool showLoader = true}) async {
@@ -86,10 +70,28 @@ class _DeviceScreenState extends State<DeviceScreen> {
     return Scaffold(
       appBar: AppBar(title: const Text('Dispositivo'), centerTitle: true),
       body: RefreshIndicator(
-        onRefresh: _loadDeviceStatus,
+        color: AppColors.primary,
+        onRefresh: () => _loadDeviceStatus(showLoader: false),
         child: ListView(
+          physics: const AlwaysScrollableScrollPhysics(),
           padding: const EdgeInsets.all(20),
           children: [
+            if (_loading)
+              const Padding(
+                padding: EdgeInsets.symmetric(vertical: 24),
+                child: Center(
+                  child: CircularProgressIndicator(color: AppColors.primary),
+                ),
+              )
+            else if (_error != null)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 24),
+                child: Text(
+                  _error!,
+                  style: TextStyle(color: AppColors.statusDanger),
+                  textAlign: TextAlign.center,
+                ),
+              ),
             Container(
               padding: const EdgeInsets.all(18),
               decoration: BoxDecoration(
@@ -101,22 +103,24 @@ class _DeviceScreenState extends State<DeviceScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'En construcción',
+                    'Dispositivo',
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.textPrimary,
-                    ),
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.textPrimary,
+                        ),
                   ),
                   const SizedBox(height: 10),
-                        Text(
-                          'Esta sección mostrará información del dispositivo en una versión futura.',
-                          style: TextStyle(
-                            color: AppColors.textSecondary,
-                            height: 1.5,
-                          ),
-                        ),
-                  ],
+                  Text(
+                    _deviceStatus != null
+                        ? 'Última consulta correcta. Los detalles ampliados se mostrarán en una versión futura.'
+                        : 'Esta sección mostrará información del dispositivo en una versión futura.',
+                    style: const TextStyle(
+                      color: AppColors.textSecondary,
+                      height: 1.5,
                     ),
+                  ),
+                ],
+              ),
             ),
           ],
         ),

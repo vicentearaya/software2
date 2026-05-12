@@ -26,7 +26,6 @@ _mock_db = MagicMock()
 with patch("pymongo.MongoClient", return_value=MagicMock(**{"__getitem__.return_value": _mock_db})):
     from main import app  # noqa: E402
     from db import get_db
-    import routers.auth as _auth_mod
 
 client = TestClient(app)
 _pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -39,8 +38,6 @@ def reset_mocks():
     _mock_db.reset_mock()
     # Asegurar que get_db siempre devuelve nuestro mock
     app.dependency_overrides[get_db] = lambda: _mock_db
-    # Parchar _db a nivel de módulo en auth (usa _db directamente)
-    _auth_mod._db = _mock_db
     yield
     app.dependency_overrides.clear()
 

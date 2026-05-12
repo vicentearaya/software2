@@ -22,8 +22,7 @@ _mock_db = MagicMock()
 with patch("pymongo.MongoClient", return_value=MagicMock(**{"__getitem__.return_value": _mock_db})):
     from main import app
     from routers.auth import get_current_user
-    import routers.mantenciones as _mantenciones_mod
-    import routers.auth as _auth_mod
+    from db import get_db
 
 client = TestClient(app)
 _pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -35,9 +34,7 @@ def reset_mocks():
     """Limpia el estado del mock entre tests."""
     _mock_db.reset_mock()
     app.dependency_overrides.clear()
-    # Parchar _db a nivel de módulo en routers que lo usan
-    _mantenciones_mod._db = _mock_db
-    _auth_mod._db = _mock_db
+    app.dependency_overrides[get_db] = lambda: _mock_db
     yield
     app.dependency_overrides.clear()
 
@@ -253,38 +250,44 @@ class TestPiscinasCrudFlow:
 # ══════════════════════════════════════════════════════════════════════════
 
 class TestPoolStatusFlow:
-    """Flujo de integración: consultar estado de una piscina con datos de sensor/manual."""
+    """Estado del agua vía GET /piscinas/{id}/status (JWT + misma lógica que el alias /api/v1/pools)."""
+
+    def _status_auth(self):
+        app.dependency_overrides[get_current_user] = lambda: {
+            "username": "status_user",
+            "name": "Usuario Estado",
+        }
 
     def test_pool_status_with_sensor_data(self):
         """
-        Integración: GET /api/v1/pools/{id}/status cuando hay datos de sensor.
+        Integración: GET /piscinas/{id}/status cuando hay datos de sensor.
         Sensor: pH=7.5, cloro=2.0 → APTA
         """
         from db import get_db
 
+        self._status_auth()
+
         fake_oid = ObjectId()
         mock_db_local = MagicMock()
 
-        # Mock de la piscina
         mock_db_local.piscinas.find_one.return_value = {
             "_id": fake_oid,
+            "username": "status_user",
             "nombre": "Piscina Status Test",
             "volumen": 50.0,
         }
-        # Mock de lectura de sensor
         mock_db_local.lecturas.find_one.return_value = {
             "pool_id": str(fake_oid),
             "ph": 7.5,
             "cloro": 2.0,
             "temperatura": 26.0,
-            "timestamp": "2026-05-04T10:00:00Z"
+            "timestamp": "2026-05-04T10:00:00Z",
         }
-        # Mock de mantenimiento manual (sin datos)
         mock_db_local.mantenimientos.find_one.return_value = None
 
         app.dependency_overrides[get_db] = lambda: mock_db_local
 
-        resp = client.get(f"/api/v1/pools/{str(fake_oid)}/status")
+        resp = client.get(f"/piscinas/{str(fake_oid)}/status")
         assert resp.status_code == 200, f"Status falló: {resp.text}"
         data = resp.json()
         assert data["ok"] is True
@@ -294,16 +297,19 @@ class TestPoolStatusFlow:
 
     def test_pool_status_not_apt(self):
         """
-        Integración: GET /api/v1/pools/{id}/status cuando pH está fuera de rango.
+        Integración: GET /piscinas/{id}/status cuando pH está fuera de rango.
         Sensor: pH=5.0, cloro=0.3 → NO APTA
         """
         from db import get_db
+
+        self._status_auth()
 
         fake_oid = ObjectId()
         mock_db_local = MagicMock()
 
         mock_db_local.piscinas.find_one.return_value = {
             "_id": fake_oid,
+            "username": "status_user",
             "nombre": "Piscina Fuera Rango",
             "volumen": 30.0,
         }
@@ -312,29 +318,31 @@ class TestPoolStatusFlow:
             "ph": 5.0,
             "cloro": 0.3,
             "temperatura": 35.0,
-            "timestamp": "2026-05-04T10:00:00Z"
+            "timestamp": "2026-05-04T10:00:00Z",
         }
         mock_db_local.mantenimientos.find_one.return_value = None
 
         app.dependency_overrides[get_db] = lambda: mock_db_local
 
-        resp = client.get(f"/api/v1/pools/{str(fake_oid)}/status")
+        resp = client.get(f"/piscinas/{str(fake_oid)}/status")
         assert resp.status_code == 200
         data = resp.json()
         assert data["estado"] == "NO APTA"
 
     def test_pool_status_404_when_pool_not_found(self):
         """
-        Integración: GET /api/v1/pools/{id}/status retorna 404 si la piscina no existe.
+        Integración: GET /piscinas/{id}/status retorna 404 si la piscina no existe o no es del usuario.
         """
         from db import get_db
+
+        self._status_auth()
 
         mock_db_local = MagicMock()
         mock_db_local.piscinas.find_one.return_value = None
 
         app.dependency_overrides[get_db] = lambda: mock_db_local
 
-        resp = client.get("/api/v1/pools/nonexistent_id/status")
+        resp = client.get("/piscinas/nonexistent_id/status")
         assert resp.status_code == 404
 
 
@@ -349,16 +357,16 @@ class TestMantencionesIntegrationFlow:
         """
         Integración: POST /mantenciones/ → GET /mantenciones/
         Verifica que el registro creado aparece en el historial.
-        Nota: mantenciones.py usa _db a nivel de módulo, por lo que los mocks
-        deben ir a través de _mock_db (global del módulo de tests).
         """
         app.dependency_overrides[get_current_user] = lambda: {
             "username": "tecnico_integ",
-            "name": "Técnico Integración"
+            "name": "Técnico Integración",
         }
 
         # Mock de insert
-        _mock_db["mantenciones"].insert_one.return_value = MagicMock(inserted_id="fake_mant_id")
+        _mock_db["mantenciones"].insert_one.return_value = MagicMock(
+            inserted_id="fake_mant_id"
+        )
 
         # 1. CREAR
         create_resp = client.post("/mantenciones/", json={

@@ -3,9 +3,13 @@ from datetime import datetime, timezone
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
 from bson import ObjectId
+from pymongo.database import Database
 
 from db import get_db
+from models import TratamientoManualRequest
 from routers.auth import get_current_user
+from services.calculator import calcular_tratamiento
+from services.pool_status import build_pool_status_for_owner
 
 router = APIRouter(tags=["Piscinas"])
 
@@ -122,8 +126,18 @@ def delete_pool(pool_id: str, current_user: dict = Depends(get_current_user), db
 
     return {"ok": True, "message": "Piscina eliminada correctamente"}
 
-from models import TratamientoManualRequest
-from services.calculator import calcular_tratamiento
+
+@router.get("/piscinas/{pool_id}/status")
+def obtener_estado_piscina(
+    pool_id: str,
+    current_user: dict = Depends(get_current_user),
+    db: Database = Depends(get_db),
+):
+    """
+    Estado del agua (sensor con prioridad sobre manual). Vía oficial unificada con la app móvil.
+    """
+    return build_pool_status_for_owner(db, pool_id, current_user["username"])
+
 
 @router.post("/piscinas/{pool_id}/tratamiento", status_code=status.HTTP_201_CREATED)
 def calcular_y_guardar_tratamiento(
