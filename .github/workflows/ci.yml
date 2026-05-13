@@ -30,8 +30,16 @@ jobs:
       - uses: subosito/flutter-action@v2
         with:
           channel: 'stable'
-      - name: Flutter pub get & test
+      - name: Flutter pub get
         run: |
           cd frontend
           flutter pub get
-          flutter test -q
+      # Rive: sin esto, RiveNative.init() falla en Linux (widget_test + WelcomeScreen nativo).
+      - name: Setup Rive native (Linux)
+        run: |
+          cd frontend
+          dart run rive_native:setup --verbose --clean --platform linux
+      - name: Flutter test
+        run: |
+          cd frontend
+          flutter test
