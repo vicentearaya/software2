@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../core/constants/app_colors.dart';
+import '../../core/constants/app_routes.dart';
 import '../../core/constants/app_strings.dart';
 import '../../core/utils/app_utils.dart';
 import '../../shared/services/auth_service.dart';
-import 'register_screen.dart';
 import '../../shared/widgets/main_screen.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -188,10 +188,7 @@ class _LoginScreenState extends State<LoginScreen> {
           style: Theme.of(context).textTheme.bodyMedium,
         ),
         GestureDetector(
-          onTap: () => Navigator.push(
-            context,
-            MaterialPageRoute(builder: (_) => const RegisterScreen()),
-          ),
+          onTap: () => Navigator.pushNamed(context, AppRoutes.register),
           child: Text(
             AppStrings.register,
             style: GoogleFonts.interTight(
