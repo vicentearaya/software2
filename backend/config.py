@@ -1,6 +1,6 @@
 from functools import lru_cache
 
-from pydantic import MongoDsn, field_validator
+from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -24,6 +24,20 @@ class Settings(BaseSettings):
     database_name: str = "cleanpool"
     api_version: str = "v1"
     debug: bool = False
+
+    # MongoDB solo para logs estructurados (independiente de la BD de la app)
+    mongodb_logs_uri: str | None = None
+    mongodb_logs_database: str = "cleanpool_logs"
+    mongodb_logs_collection: str = "api_request_logs"
+
+    @field_validator("mongodb_logs_uri", mode="before")
+    @classmethod
+    def _empty_logs_uri_to_none(cls, v: object) -> str | None:
+        if v is None:
+            return None
+        if isinstance(v, str) and not v.strip():
+            return None
+        return v  # type: ignore[return-value]
 
     @field_validator("secret_key")
     @classmethod

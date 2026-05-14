@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from config import get_settings
+from middleware.request_logging import RequestLoggingMiddleware
 from routers import auth, readings, mantenciones
 from routers import ingesta
 from routers import device_bindings
@@ -32,6 +33,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+app.add_middleware(RequestLoggingMiddleware)
 
 app.include_router(readings.router)
 app.include_router(auth.router)
