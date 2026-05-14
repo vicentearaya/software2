@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/constants/app_colors.dart';
+import '../../core/utils/app_utils.dart';
 import '../../shared/services/auth_service.dart';
 import '../auth/login_screen.dart';
 
@@ -43,6 +44,71 @@ class InventoryProduct {
         notas: json['notas'] as String?,
         creadoEn: DateTime.parse(json['creadoEn'] as String),
       );
+
+  InventoryProduct copyWith({
+    String? id,
+    String? nombre,
+    String? categoria,
+    double? cantidad,
+    String? unidad,
+    String? notas,
+    DateTime? creadoEn,
+  }) {
+    return InventoryProduct(
+      id: id ?? this.id,
+      nombre: nombre ?? this.nombre,
+      categoria: categoria ?? this.categoria,
+      cantidad: cantidad ?? this.cantidad,
+      unidad: unidad ?? this.unidad,
+      notas: notas ?? this.notas,
+      creadoEn: creadoEn ?? this.creadoEn,
+    );
+  }
+}
+
+/// Cantidad legible para la UI (evita `5.0` cuando es entero).
+String _formatInventoryAmount(double n) {
+  if (n.isNaN || n.isInfinite) return '0';
+  final rounded = n.round();
+  if ((n - rounded).abs() < 1e-6) return rounded.toString();
+  var s = n.toStringAsFixed(4);
+  if (s.contains('.')) {
+    s = s.replaceFirst(RegExp(r'\.?0+$'), '');
+  }
+  return s;
+}
+
+/// Placeholder numérico coherente con la unidad del producto (misma que el stock).
+String _inventoryQuantityPlaceholder(String unidad) {
+  switch (unidad) {
+    case 'kg':
+    case 'L':
+      return 'Ej: 0.8';
+    case 'g':
+    case 'ml':
+      return 'Ej: 500';
+    case 'unidades':
+      return 'Ej: 2';
+    default:
+      return 'Ej: 1';
+  }
+}
+
+/// Una línea de ayuda: el valor se interpreta en la misma unidad que el stock.
+String _inventoryQuantityFieldHelper(String unidad) {
+  switch (unidad) {
+    case 'kg':
+      return 'En kg, igual que el stock. Ej.: 800 g → ingresa 0.8';
+    case 'L':
+      return 'En litros, igual que el stock. Ej.: 250 ml → ingresa 0.25';
+    case 'g':
+    case 'ml':
+      return 'En $unidad, igual que el stock actual.';
+    case 'unidades':
+      return 'En unidades, igual que el stock actual.';
+    default:
+      return 'Ingresa el valor en $unidad, la misma unidad que el stock.';
+  }
 }
 
 // ── Helpers de categoría ────────────────────────
@@ -107,13 +173,375 @@ class _InventoryScreenState extends State<InventoryScreen> {
     }
   }
 
-  Future<void> _saveInventory() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_storageKey, jsonEncode(_products.map((p) => p.toJson()).toList()));
+  Future<bool> _persistInventory() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(
+        _storageKey,
+        jsonEncode(_products.map((p) => p.toJson()).toList()),
+      );
+      return true;
+    } catch (_) {
+      return false;
+    }
   }
 
-  void _addProduct(InventoryProduct p) { setState(() => _products.add(p)); _saveInventory(); }
-  void _removeProduct(int i) { setState(() => _products.removeAt(i)); _saveInventory(); }
+  Future<void> _addProduct(InventoryProduct p) async {
+    setState(() => _products.add(p));
+    if (!await _persistInventory()) {
+      setState(() => _products.removeLast());
+      if (mounted) {
+        AppUtils.showSnackBar(
+          context,
+          'No se pudo guardar el inventario',
+          isError: true,
+        );
+      }
+      return;
+    }
+    if (mounted) {
+      AppUtils.showSnackBar(context, 'Producto agregado');
+    }
+  }
+
+  Future<void> _removeProduct(int i) async {
+    final removed = _products[i];
+    setState(() => _products.removeAt(i));
+    if (!await _persistInventory()) {
+      setState(() => _products.insert(i, removed));
+      if (mounted) {
+        AppUtils.showSnackBar(
+          context,
+          'No se pudo guardar el inventario',
+          isError: true,
+        );
+      }
+      return;
+    }
+    if (mounted) {
+      AppUtils.showSnackBar(context, 'Producto eliminado');
+    }
+  }
+
+  Future<void> _replaceProductAt(int index, InventoryProduct next) async {
+    final previous = _products[index];
+    setState(() => _products[index] = next);
+    if (!await _persistInventory()) {
+      setState(() => _products[index] = previous);
+      if (mounted) {
+        AppUtils.showSnackBar(
+          context,
+          'No se pudo guardar el inventario',
+          isError: true,
+        );
+      }
+      return;
+    }
+    if (mounted) {
+      AppUtils.showSnackBar(context, 'Stock actualizado');
+    }
+  }
+
+  void _openAddStockSheet(int index) {
+    final product = _products[index];
+    final ctrl = TextEditingController();
+    final formKey = GlobalKey<FormState>();
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: AppColors.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (sheetCtx) {
+        return Padding(
+          padding: EdgeInsets.only(
+            left: 20,
+            right: 20,
+            top: 16,
+            bottom: 16 + MediaQuery.of(sheetCtx).viewInsets.bottom,
+          ),
+          child: Form(
+            key: formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                  'Agregar más',
+                  style: GoogleFonts.syne(
+                    color: AppColors.textPrimary,
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  product.nombre,
+                  style: GoogleFonts.interTight(
+                    color: AppColors.textSecondary,
+                    fontSize: 14,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Stock actual: ${_formatInventoryAmount(product.cantidad)} ${product.unidad}',
+                  style: GoogleFonts.interTight(
+                    color: AppColors.textMuted,
+                    fontSize: 12,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                TextFormField(
+                  controller: ctrl,
+                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                  inputFormatters: [
+                    FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
+                  ],
+                  style: GoogleFonts.interTight(
+                    color: AppColors.textPrimary,
+                    fontSize: 15,
+                  ),
+                  decoration: InputDecoration(
+                    labelText: 'Cantidad a agregar',
+                    hintText: _inventoryQuantityPlaceholder(product.unidad),
+                    helperText: _inventoryQuantityFieldHelper(product.unidad),
+                    helperMaxLines: 2,
+                    suffixText: product.unidad,
+                    suffixStyle: GoogleFonts.interTight(
+                      color: AppColors.textSecondary,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                    ),
+                    labelStyle: GoogleFonts.interTight(color: AppColors.textSecondary),
+                    helperStyle: GoogleFonts.interTight(
+                      color: AppColors.textMuted,
+                      fontSize: 12,
+                    ),
+                    filled: true,
+                    fillColor: AppColors.surfaceElevated,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: AppColors.border),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: AppColors.border),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
+                    ),
+                  ),
+                  validator: (v) {
+                    if (v == null || v.trim().isEmpty) {
+                      return 'Ingresa una cantidad en ${product.unidad}';
+                    }
+                    final n = double.tryParse(v.trim());
+                    if (n == null || n <= 0) return 'Debe ser mayor que cero';
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 20),
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () => Navigator.pop(sheetCtx),
+                        child: Text(
+                          'Cancelar',
+                          style: GoogleFonts.interTight(color: AppColors.textSecondary),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: () async {
+                          if (!formKey.currentState!.validate()) return;
+                          final add = double.parse(ctrl.text.trim());
+                          Navigator.pop(sheetCtx);
+                          await _replaceProductAt(
+                            index,
+                            product.copyWith(cantidad: product.cantidad + add),
+                          );
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.primary,
+                          foregroundColor: Colors.white,
+                        ),
+                        child: Text(
+                          'Agregar',
+                          style: GoogleFonts.syne(fontWeight: FontWeight.w600),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    ).whenComplete(() {
+      // Evita usar el controller tras dispose (cierre del sheet + animación).
+      Future.delayed(const Duration(milliseconds: 400), () {
+        ctrl.dispose();
+      });
+    });
+  }
+
+  void _openUseStockSheet(int index) {
+    final product = _products[index];
+    final ctrl = TextEditingController();
+    final formKey = GlobalKey<FormState>();
+    const eps = 1e-9;
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: AppColors.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (sheetCtx) {
+        return Padding(
+          padding: EdgeInsets.only(
+            left: 20,
+            right: 20,
+            top: 16,
+            bottom: 16 + MediaQuery.of(sheetCtx).viewInsets.bottom,
+          ),
+          child: Form(
+            key: formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                  'Registrar uso',
+                  style: GoogleFonts.syne(
+                    color: AppColors.textPrimary,
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  product.nombre,
+                  style: GoogleFonts.interTight(
+                    color: AppColors.textSecondary,
+                    fontSize: 14,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Stock actual: ${_formatInventoryAmount(product.cantidad)} ${product.unidad}',
+                  style: GoogleFonts.interTight(
+                    color: AppColors.textMuted,
+                    fontSize: 12,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                TextFormField(
+                  controller: ctrl,
+                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                  inputFormatters: [
+                    FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
+                  ],
+                  style: GoogleFonts.interTight(
+                    color: AppColors.textPrimary,
+                    fontSize: 15,
+                  ),
+                  decoration: InputDecoration(
+                    labelText: 'Cantidad usada',
+                    hintText: _inventoryQuantityPlaceholder(product.unidad),
+                    helperText: _inventoryQuantityFieldHelper(product.unidad),
+                    helperMaxLines: 2,
+                    suffixText: product.unidad,
+                    suffixStyle: GoogleFonts.interTight(
+                      color: AppColors.textSecondary,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                    ),
+                    labelStyle: GoogleFonts.interTight(color: AppColors.textSecondary),
+                    helperStyle: GoogleFonts.interTight(
+                      color: AppColors.textMuted,
+                      fontSize: 12,
+                    ),
+                    filled: true,
+                    fillColor: AppColors.surfaceElevated,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: AppColors.border),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: AppColors.border),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
+                    ),
+                  ),
+                  validator: (v) {
+                    if (v == null || v.trim().isEmpty) {
+                      return 'Ingresa una cantidad en ${product.unidad}';
+                    }
+                    final used = double.tryParse(v.trim());
+                    if (used == null || used <= 0) return 'Debe ser mayor que cero';
+                    if (used - product.cantidad > eps) {
+                      return 'No puedes usar más del stock disponible (${_formatInventoryAmount(product.cantidad)} ${product.unidad})';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 20),
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () => Navigator.pop(sheetCtx),
+                        child: Text(
+                          'Cancelar',
+                          style: GoogleFonts.interTight(color: AppColors.textSecondary),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: () async {
+                          if (!formKey.currentState!.validate()) return;
+                          final used = double.parse(ctrl.text.trim());
+                          Navigator.pop(sheetCtx);
+                          await _replaceProductAt(
+                            index,
+                            product.copyWith(cantidad: product.cantidad - used),
+                          );
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.primary,
+                          foregroundColor: Colors.white,
+                        ),
+                        child: Text(
+                          'Descontar',
+                          style: GoogleFonts.syne(fontWeight: FontWeight.w600),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    ).whenComplete(() {
+      Future.delayed(const Duration(milliseconds: 400), () {
+        ctrl.dispose();
+      });
+    });
+  }
 
   void _openAddForm() {
     Navigator.of(context).push(PageRouteBuilder(
@@ -325,6 +753,8 @@ class _InventoryScreenState extends State<InventoryScreen> {
                         child: _ProductCard(
                           product: entry.value,
                           categoryInfo: info,
+                          onAddMore: () => _openAddStockSheet(entry.key),
+                          onRegisterUse: () => _openUseStockSheet(entry.key),
                           onDelete: () => _removeProduct(entry.key),
                         ),
                       );
@@ -353,8 +783,16 @@ class _InventoryScreenState extends State<InventoryScreen> {
 class _ProductCard extends StatefulWidget {
   final InventoryProduct product;
   final _CategoryInfo categoryInfo;
+  final VoidCallback onAddMore;
+  final VoidCallback onRegisterUse;
   final VoidCallback onDelete;
-  const _ProductCard({required this.product, required this.categoryInfo, required this.onDelete});
+  const _ProductCard({
+    required this.product,
+    required this.categoryInfo,
+    required this.onAddMore,
+    required this.onRegisterUse,
+    required this.onDelete,
+  });
 
   @override
   State<_ProductCard> createState() => _ProductCardState();
@@ -366,6 +804,8 @@ class _ProductCardState extends State<_ProductCard> {
   @override
   Widget build(BuildContext context) {
     final c = widget.categoryInfo;
+    final stockLabel =
+        '${_formatInventoryAmount(widget.product.cantidad)} ${widget.product.unidad}';
     return MouseRegion(
       onEnter: (_) => setState(() => _hovered = true),
       onExit: (_) => setState(() => _hovered = false),
@@ -381,6 +821,7 @@ class _ProductCardState extends State<_ProductCard> {
               : [],
         ),
         child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Container(
               width: 40, height: 40,
@@ -398,16 +839,72 @@ class _ProductCardState extends State<_ProductCard> {
                 children: [
                   Text(widget.product.nombre, style: GoogleFonts.interTight(
                     color: AppColors.textPrimary, fontSize: 14, fontWeight: FontWeight.w600)),
-                  const SizedBox(height: 3),
-                  Text('${widget.product.cantidad} ${widget.product.unidad}',
-                      style: GoogleFonts.interTight(color: AppColors.textSecondary, fontSize: 12)),
+                  const SizedBox(height: 6),
+                  Text(
+                    'Stock actual',
+                    style: GoogleFonts.interTight(
+                      color: AppColors.textMuted,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    stockLabel,
+                    style: GoogleFonts.interTight(
+                      color: AppColors.textSecondary,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
                   if (widget.product.notas != null && widget.product.notas!.isNotEmpty)
                     Padding(
-                      padding: const EdgeInsets.only(top: 3),
+                      padding: const EdgeInsets.only(top: 6),
                       child: Text(widget.product.notas!, style: GoogleFonts.interTight(
                         color: AppColors.textMuted, fontSize: 11, fontStyle: FontStyle.italic),
                         maxLines: 1, overflow: TextOverflow.ellipsis),
                     ),
+                  const SizedBox(height: 10),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 6,
+                    children: [
+                      TextButton.icon(
+                        onPressed: widget.onAddMore,
+                        icon: const Icon(Icons.add_circle_outline_rounded, size: 18, color: AppColors.primary),
+                        label: Text(
+                          'Agregar más',
+                          style: GoogleFonts.interTight(
+                            color: AppColors.primary,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        style: TextButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          minimumSize: Size.zero,
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        ),
+                      ),
+                      TextButton.icon(
+                        onPressed: widget.onRegisterUse,
+                        icon: const Icon(Icons.remove_circle_outline_rounded, size: 18, color: AppColors.textSecondary),
+                        label: Text(
+                          'Registrar uso',
+                          style: GoogleFonts.interTight(
+                            color: AppColors.textSecondary,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        style: TextButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          minimumSize: Size.zero,
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        ),
+                      ),
+                    ],
+                  ),
                 ],
               ),
             ),
@@ -438,7 +935,7 @@ class _ProductCardState extends State<_ProductCard> {
 
 // ── Formulario agregar producto ─────────────────
 class _AddProductScreen extends StatefulWidget {
-  final void Function(InventoryProduct) onSave;
+  final Future<void> Function(InventoryProduct) onSave;
   const _AddProductScreen({required this.onSave});
   @override
   State<_AddProductScreen> createState() => _AddProductScreenState();
@@ -455,9 +952,9 @@ class _AddProductScreenState extends State<_AddProductScreen> {
   @override
   void dispose() { _nombreCtrl.dispose(); _cantidadCtrl.dispose(); _notasCtrl.dispose(); super.dispose(); }
 
-  void _submit() {
+  Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
-    widget.onSave(InventoryProduct(
+    await widget.onSave(InventoryProduct(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
       nombre: _nombreCtrl.text.trim(),
       categoria: _cat,
@@ -465,7 +962,7 @@ class _AddProductScreenState extends State<_AddProductScreen> {
       unidad: _uni,
       notas: _notasCtrl.text.trim().isEmpty ? null : _notasCtrl.text.trim(),
     ));
-    Navigator.of(context).pop();
+    if (mounted) Navigator.of(context).pop();
   }
 
   @override
