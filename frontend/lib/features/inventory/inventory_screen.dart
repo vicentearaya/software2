@@ -6,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/utils/app_utils.dart';
 import '../../shared/services/auth_service.dart';
+import '../../shared/services/inventory_service.dart';
 import '../auth/login_screen.dart';
 
 // ── Modelo de producto ──────────────────────────
@@ -143,9 +144,35 @@ class InventoryScreen extends StatefulWidget {
 class _InventoryScreenState extends State<InventoryScreen> {
   static const String _storageKey = 'user_inventory';
   final AuthService _authService = AuthService();
+  final InventoryService _inventoryService = InventoryService();
   bool _loading = true;
+  bool _actionInProgress = false;
   bool _isAuthenticated = false;
   List<InventoryProduct> _products = [];
+
+  Future<void> _runInventoryAction(Future<void> Function() action) async {
+    if (_actionInProgress) return;
+    setState(() => _actionInProgress = true);
+    try {
+      await action();
+    } finally {
+      if (mounted) setState(() => _actionInProgress = false);
+    }
+  }
+
+  Widget _withActionOverlay(Widget child) {
+    return Stack(
+      children: [
+        child,
+        if (_actionInProgress) ...[
+          const ModalBarrier(dismissible: false, color: Colors.black26),
+          const Center(
+            child: CircularProgressIndicator(color: AppColors.primary),
+          ),
+        ],
+      ],
+    );
+  }
 
   @override
   void initState() {
@@ -160,86 +187,212 @@ class _InventoryScreenState extends State<InventoryScreen> {
       return;
     }
     _isAuthenticated = true;
-    await _loadInventory();
+    if (mounted) setState(() => _loading = true);
+    await _reloadFromApi();
+    await _migrateLocalIfNeeded(token);
+    await _reloadFromApi();
     if (mounted) setState(() => _loading = false);
   }
 
-  Future<void> _loadInventory() async {
+  /// Carga la lista desde el backend. Muestra SnackBar en error (coherente con [ApiClient]).
+  Future<void> _reloadFromApi() async {
+    final token = await _authService.getToken();
+    if (token == null) {
+      if (mounted) {
+        setState(() {
+          _isAuthenticated = false;
+          _products = [];
+        });
+      }
+      return;
+    }
+    final res = await _inventoryService.getItems(token);
+    if (!mounted) return;
+    if (res['success'] != true) {
+      AppUtils.showSnackBar(
+        context,
+        res['message']?.toString() ?? 'No se pudo cargar el inventario',
+        isError: true,
+      );
+      setState(() => _products = []);
+      return;
+    }
+    final data = res['data'];
+    final parsed = <InventoryProduct>[];
+    if (data is Map<String, dynamic> && data['items'] is List) {
+      for (final e in data['items'] as List) {
+        if (e is Map<String, dynamic>) {
+          parsed.add(InventoryProduct.fromJson(e));
+        }
+      }
+    }
+    setState(() => _products = parsed);
+  }
+
+  /// Si había datos solo en el dispositivo y el servidor está vacío, sube cada ítem una vez.
+  Future<void> _migrateLocalIfNeeded(String token) async {
+    if (_products.isNotEmpty) return;
     final prefs = await SharedPreferences.getInstance();
     final raw = prefs.getString(_storageKey);
-    if (raw != null) {
-      final List<dynamic> decoded = jsonDecode(raw);
-      _products = decoded.map((e) => InventoryProduct.fromJson(e)).toList();
-    }
-  }
-
-  Future<bool> _persistInventory() async {
+    if (raw == null || raw.isEmpty) return;
+    List<dynamic> decoded;
     try {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString(
-        _storageKey,
-        jsonEncode(_products.map((p) => p.toJson()).toList()),
-      );
-      return true;
+      decoded = jsonDecode(raw) as List<dynamic>;
     } catch (_) {
-      return false;
+      return;
+    }
+    if (decoded.isEmpty) return;
+
+    var failures = 0;
+    for (final e in decoded) {
+      if (e is! Map<String, dynamic>) continue;
+      final p = InventoryProduct.fromJson(Map<String, dynamic>.from(e));
+      final res = await _inventoryService.createItem(
+        token: token,
+        body: {
+          'nombre': p.nombre,
+          'categoria': p.categoria,
+          'cantidad': p.cantidad,
+          'unidad': p.unidad,
+          'notas': p.notas,
+        },
+      );
+      if (res['success'] != true) failures++;
+    }
+    if (!mounted) return;
+    if (failures == 0) {
+      await prefs.remove(_storageKey);
+    } else {
+      AppUtils.showSnackBar(
+        context,
+        'No se migraron todos los productos locales ($failures error(es)). Reintenta más tarde.',
+        isError: true,
+      );
     }
   }
 
-  Future<void> _addProduct(InventoryProduct p) async {
-    setState(() => _products.add(p));
-    if (!await _persistInventory()) {
-      setState(() => _products.removeLast());
-      if (mounted) {
+  Future<bool> _addProduct(InventoryProduct p) async {
+    var ok = false;
+    await _runInventoryAction(() async {
+      final token = await _authService.getToken();
+      if (token == null) {
+        if (mounted) {
+          AppUtils.showSnackBar(context, 'Sesión expirada', isError: true);
+        }
+        return;
+      }
+      final res = await _inventoryService.createItem(
+        token: token,
+        body: {
+          'nombre': p.nombre,
+          'categoria': p.categoria,
+          'cantidad': p.cantidad,
+          'unidad': p.unidad,
+          'notas': p.notas,
+        },
+      );
+      if (!mounted) return;
+      if (res['success'] != true) {
         AppUtils.showSnackBar(
           context,
-          'No se pudo guardar el inventario',
+          res['message']?.toString() ?? 'No se pudo crear el producto',
           isError: true,
         );
+        return;
       }
-      return;
-    }
-    if (mounted) {
-      AppUtils.showSnackBar(context, 'Producto agregado');
-    }
+      await _reloadFromApi();
+      if (mounted) {
+        AppUtils.showSnackBar(context, 'Producto agregado');
+      }
+      ok = true;
+    });
+    return ok;
   }
 
-  Future<void> _removeProduct(int i) async {
-    final removed = _products[i];
-    setState(() => _products.removeAt(i));
-    if (!await _persistInventory()) {
-      setState(() => _products.insert(i, removed));
-      if (mounted) {
+  Future<void> _removeProduct(String id) async {
+    await _runInventoryAction(() async {
+      final token = await _authService.getToken();
+      if (token == null) {
+        if (mounted) {
+          AppUtils.showSnackBar(context, 'Sesión expirada', isError: true);
+        }
+        return;
+      }
+      final res = await _inventoryService.deleteItem(itemId: id, token: token);
+      if (!mounted) return;
+      if (res['success'] != true) {
         AppUtils.showSnackBar(
           context,
-          'No se pudo guardar el inventario',
+          res['message']?.toString() ?? 'No se pudo eliminar',
           isError: true,
         );
+        return;
       }
-      return;
-    }
-    if (mounted) {
-      AppUtils.showSnackBar(context, 'Producto eliminado');
-    }
+      await _reloadFromApi();
+      if (mounted) {
+        AppUtils.showSnackBar(context, 'Producto eliminado');
+      }
+    });
   }
 
-  Future<void> _replaceProductAt(int index, InventoryProduct next) async {
-    final previous = _products[index];
-    setState(() => _products[index] = next);
-    if (!await _persistInventory()) {
-      setState(() => _products[index] = previous);
-      if (mounted) {
+  Future<void> _addStockRemote(String itemId, double add) async {
+    await _runInventoryAction(() async {
+      final token = await _authService.getToken();
+      if (token == null) {
+        if (mounted) {
+          AppUtils.showSnackBar(context, 'Sesión expirada', isError: true);
+        }
+        return;
+      }
+      final res = await _inventoryService.addStock(
+        itemId: itemId,
+        cantidad: add,
+        token: token,
+      );
+      if (!mounted) return;
+      if (res['success'] != true) {
         AppUtils.showSnackBar(
           context,
-          'No se pudo guardar el inventario',
+          res['message']?.toString() ?? 'No se pudo actualizar el stock',
           isError: true,
         );
+        return;
       }
-      return;
-    }
-    if (mounted) {
-      AppUtils.showSnackBar(context, 'Stock actualizado');
-    }
+      await _reloadFromApi();
+      if (mounted) {
+        AppUtils.showSnackBar(context, 'Stock actualizado');
+      }
+    });
+  }
+
+  Future<void> _useStockRemote(String itemId, double used) async {
+    await _runInventoryAction(() async {
+      final token = await _authService.getToken();
+      if (token == null) {
+        if (mounted) {
+          AppUtils.showSnackBar(context, 'Sesión expirada', isError: true);
+        }
+        return;
+      }
+      final res = await _inventoryService.useStock(
+        itemId: itemId,
+        cantidad: used,
+        token: token,
+      );
+      if (!mounted) return;
+      if (res['success'] != true) {
+        AppUtils.showSnackBar(
+          context,
+          res['message']?.toString() ?? 'No se pudo registrar el uso',
+          isError: true,
+        );
+        return;
+      }
+      await _reloadFromApi();
+      if (mounted) {
+        AppUtils.showSnackBar(context, 'Stock actualizado');
+      }
+    });
   }
 
   void _openAddStockSheet(int index) {
@@ -361,10 +514,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
                           if (!formKey.currentState!.validate()) return;
                           final add = double.parse(ctrl.text.trim());
                           Navigator.pop(sheetCtx);
-                          await _replaceProductAt(
-                            index,
-                            product.copyWith(cantidad: product.cantidad + add),
-                          );
+                          await _addStockRemote(product.id, add);
                         },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppColors.primary,
@@ -514,10 +664,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
                           if (!formKey.currentState!.validate()) return;
                           final used = double.parse(ctrl.text.trim());
                           Navigator.pop(sheetCtx);
-                          await _replaceProductAt(
-                            index,
-                            product.copyWith(cantidad: product.cantidad - used),
-                          );
+                          await _useStockRemote(product.id, used);
                         },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppColors.primary,
@@ -544,11 +691,14 @@ class _InventoryScreenState extends State<InventoryScreen> {
   }
 
   void _openAddForm() {
+    if (_actionInProgress) return;
     Navigator.of(context).push(PageRouteBuilder(
-      pageBuilder: (_, a, __) => _AddProductScreen(onSave: _addProduct),
-      transitionsBuilder: (_, a, __, child) => SlideTransition(
+      pageBuilder: (context, animation, secondaryAnimation) =>
+          _AddProductScreen(onSave: _addProduct),
+      transitionsBuilder: (context, animation, secondaryAnimation, child) =>
+          SlideTransition(
         position: Tween<Offset>(begin: const Offset(0, 1), end: Offset.zero)
-            .animate(CurvedAnimation(parent: a, curve: Curves.easeOutCubic)),
+            .animate(CurvedAnimation(parent: animation, curve: Curves.easeOutCubic)),
         child: child,
       ),
     ));
@@ -609,7 +759,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
 
   // ── Estado vacío ──────────────────────────────
   Widget _buildEmptyState() {
-    return Scaffold(
+    return _withActionOverlay(Scaffold(
       body: SafeArea(
         child: Center(
           child: Padding(
@@ -633,7 +783,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
                     style: GoogleFonts.interTight(color: AppColors.textSecondary, fontSize: 14, height: 1.6), textAlign: TextAlign.center),
                 const SizedBox(height: 40),
                 ElevatedButton.icon(
-                  onPressed: _openAddForm,
+                  onPressed: _actionInProgress ? null : _openAddForm,
                   icon: const Icon(Icons.add_rounded, size: 20),
                   label: Text('Agregar productos a tu inventario',
                       style: GoogleFonts.syne(fontWeight: FontWeight.w600, fontSize: 15)),
@@ -647,7 +797,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
           ),
         ),
       ),
-    );
+    ));
   }
 
   // ── Lista clasificada por categoría ───────────
@@ -663,7 +813,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
     // Ordenar categorías según el orden definido
     final orderedKeys = kCategorias.where((c) => grouped.containsKey(c)).toList();
 
-    return Scaffold(
+    return _withActionOverlay(Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
         child: CustomScrollView(
@@ -755,7 +905,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
                           categoryInfo: info,
                           onAddMore: () => _openAddStockSheet(entry.key),
                           onRegisterUse: () => _openUseStockSheet(entry.key),
-                          onDelete: () => _removeProduct(entry.key),
+                          onDelete: () => _removeProduct(entry.value.id),
                         ),
                       );
                     }, childCount: items.length),
@@ -769,13 +919,13 @@ class _InventoryScreenState extends State<InventoryScreen> {
         ),
       ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: _openAddForm,
+        onPressed: _actionInProgress ? null : _openAddForm,
         backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
         icon: const Icon(Icons.add_rounded),
         label: Text('Agregar', style: GoogleFonts.syne(fontWeight: FontWeight.w600)),
       ),
-    );
+    ));
   }
 }
 
@@ -935,7 +1085,7 @@ class _ProductCardState extends State<_ProductCard> {
 
 // ── Formulario agregar producto ─────────────────
 class _AddProductScreen extends StatefulWidget {
-  final Future<void> Function(InventoryProduct) onSave;
+  final Future<bool> Function(InventoryProduct) onSave;
   const _AddProductScreen({required this.onSave});
   @override
   State<_AddProductScreen> createState() => _AddProductScreenState();
@@ -948,21 +1098,27 @@ class _AddProductScreenState extends State<_AddProductScreen> {
   final _notasCtrl = TextEditingController();
   String _cat = 'Desinfectante';
   String _uni = 'kg';
+  bool _saving = false;
 
   @override
   void dispose() { _nombreCtrl.dispose(); _cantidadCtrl.dispose(); _notasCtrl.dispose(); super.dispose(); }
 
   Future<void> _submit() async {
-    if (!_formKey.currentState!.validate()) return;
-    await widget.onSave(InventoryProduct(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
-      nombre: _nombreCtrl.text.trim(),
-      categoria: _cat,
-      cantidad: double.parse(_cantidadCtrl.text.trim()),
-      unidad: _uni,
-      notas: _notasCtrl.text.trim().isEmpty ? null : _notasCtrl.text.trim(),
-    ));
-    if (mounted) Navigator.of(context).pop();
+    if (!_formKey.currentState!.validate() || _saving) return;
+    setState(() => _saving = true);
+    try {
+      final ok = await widget.onSave(InventoryProduct(
+        id: DateTime.now().millisecondsSinceEpoch.toString(),
+        nombre: _nombreCtrl.text.trim(),
+        categoria: _cat,
+        cantidad: double.parse(_cantidadCtrl.text.trim()),
+        unidad: _uni,
+        notas: _notasCtrl.text.trim().isEmpty ? null : _notasCtrl.text.trim(),
+      ));
+      if (mounted && ok) Navigator.of(context).pop();
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
   }
 
   @override
@@ -1053,9 +1209,21 @@ class _AddProductScreenState extends State<_AddProductScreen> {
               const SizedBox(height: 36),
 
               ElevatedButton.icon(
-                onPressed: _submit,
-                icon: const Icon(Icons.check_rounded, size: 20),
-                label: Text('Guardar producto', style: GoogleFonts.syne(fontWeight: FontWeight.w600, fontSize: 15)),
+                onPressed: _saving ? null : _submit,
+                icon: _saving
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
+                      )
+                    : const Icon(Icons.check_rounded, size: 20),
+                label: Text(
+                  _saving ? 'Guardando...' : 'Guardar producto',
+                  style: GoogleFonts.syne(fontWeight: FontWeight.w600, fontSize: 15),
+                ),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primary, foregroundColor: Colors.white,
                   minimumSize: const Size(double.infinity, 54),

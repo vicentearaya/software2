@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field, ConfigDict
+from pydantic import BaseModel, Field, ConfigDict, field_validator
 from datetime import datetime, timezone
 from typing import Optional, Any
 
@@ -238,3 +238,43 @@ class Mantencion(MantencionIn):
     """
     username: str = Field(..., description="Nombre de usuario del técnico")
     creado_en: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+
+# ── Inventario de productos (químicos) por usuario ───────────────────────────
+
+INVENTARIO_CATEGORIAS = frozenset(
+    {"Desinfectante", "Regulador pH", "Algicida", "Floculante", "Otro"}
+)
+INVENTARIO_UNIDADES = frozenset({"kg", "g", "L", "ml", "unidades"})
+
+
+class InventarioItemCreate(BaseModel):
+    nombre: str = Field(..., min_length=1, max_length=200)
+    categoria: str = Field(..., description="Categoría del producto")
+    cantidad: float = Field(..., gt=0, description="Cantidad inicial en la unidad indicada")
+    unidad: str = Field(..., description="Unidad de stock (kg, g, L, ml, unidades)")
+    notas: Optional[str] = Field(default=None, max_length=2000)
+
+    @field_validator("categoria")
+    @classmethod
+    def validate_categoria(cls, v: str) -> str:
+        if v not in INVENTARIO_CATEGORIAS:
+            raise ValueError(
+                f"Categoría no válida. Use una de: {', '.join(sorted(INVENTARIO_CATEGORIAS))}"
+            )
+        return v
+
+    @field_validator("unidad")
+    @classmethod
+    def validate_unidad(cls, v: str) -> str:
+        if v not in INVENTARIO_UNIDADES:
+            raise ValueError(
+                f"Unidad no válida. Use una de: {', '.join(sorted(INVENTARIO_UNIDADES))}"
+            )
+        return v
+
+
+class InventarioStockDelta(BaseModel):
+    """Cantidad a sumar (agregar) o restar (usar), en la misma unidad que el ítem."""
+
+    cantidad: float = Field(..., gt=0)
