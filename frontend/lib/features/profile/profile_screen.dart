@@ -49,6 +49,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
   // Filtro activo; por defecto muestra todos los registros.
   _HistoryFilter _activeFilter = _HistoryFilter.all;
 
+  String get _userInitials {
+    final rawName = (_user?['name'] as String?)?.trim();
+    if (rawName == null || rawName.isEmpty) return 'U';
+
+    final parts = rawName
+        .split(RegExp(r'\s+'))
+        .where((p) => p.isNotEmpty)
+        .toList();
+
+    if (parts.length == 1) {
+      return parts.first.substring(0, 1).toUpperCase();
+    }
+
+    return '${parts.first.substring(0, 1)}${parts.last.substring(0, 1)}'
+        .toUpperCase();
+  }
+
   @override
   void initState() {
     super.initState();
@@ -81,6 +98,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     final threshold = now.subtract(cutoff);
     return _history.where((m) => m.fecha.isAfter(threshold)).toList();
+  }
+
+  DateTime? get _lastMaintenanceDate {
+    if (_history.isEmpty) return null;
+    final sorted = List<Maintenance>.from(_history)
+      ..sort((a, b) => b.fecha.compareTo(a.fecha));
+    return sorted.first.fecha;
   }
 
   Future<void> _loadData() async {
@@ -151,6 +175,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _buildHeader(),
+              const SizedBox(height: 14),
+              _buildSummaryCards(),
               const SizedBox(height: 32),
               const Text(
                 'Historial de Mantenciones',
@@ -218,44 +244,280 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Widget _buildHeader() {
+    final name = (_user?['name'] as String?)?.trim();
+    final email = (_user?['email'] as String?)?.trim();
+    final username = (_user?['username'] as String?)?.trim();
+    final normalizedUsername = username == null
+        ? null
+        : username.replaceAll('@', '').trim();
+
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         color: AppColors.surface,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(18),
         border: Border.all(color: AppColors.border),
-      ),
-      child: Row(
-        children: [
-          CircleAvatar(
-            radius: 35,
-            backgroundColor: AppColors.primary.withOpacity(0.1),
-            child: const Icon(Icons.person, size: 35, color: AppColors.primary),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.12),
+            blurRadius: 18,
+            offset: const Offset(0, 8),
           ),
-          const SizedBox(width: 20),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  _user?['name'] ?? 'Usuario',
-                  style: const TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.textPrimary,
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 64,
+                height: 64,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: const LinearGradient(
+                    colors: [AppColors.primary, AppColors.accent],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.primary.withOpacity(0.35),
+                      blurRadius: 14,
+                      offset: const Offset(0, 6),
+                    ),
+                  ],
+                ),
+                child: Center(
+                  child: Text(
+                    _userInitials,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 22,
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                 ),
-                Text(
-                  _user?['email'] ?? 'Sin correo',
-                  style: const TextStyle(color: AppColors.textSecondary),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      name == null || name.isEmpty ? 'Usuario' : name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: AppColors.textPrimary,
+                        fontSize: 22,
+                        fontWeight: FontWeight.w700,
+                        height: 1.1,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      email == null || email.isEmpty ? 'Sin correo registrado' : email,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: AppColors.textSecondary,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Container(
+                      padding:
+                          const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: AppColors.surfaceElevated,
+                        borderRadius: BorderRadius.circular(999),
+                        border: Border.all(color: AppColors.border),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.alternate_email_rounded,
+                              color: AppColors.primary, size: 14),
+                          const SizedBox(width: 6),
+                          Text(
+                            normalizedUsername == null ||
+                                    normalizedUsername.isEmpty
+                                ? 'usuario'
+                                : normalizedUsername,
+                            style: const TextStyle(
+                              color: AppColors.textSecondary,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              letterSpacing: 0.2,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _formatHistoryDate(DateTime date) {
+    const months = <String>[
+      'ene',
+      'feb',
+      'mar',
+      'abr',
+      'may',
+      'jun',
+      'jul',
+      'ago',
+      'sep',
+      'oct',
+      'nov',
+      'dic',
+    ];
+
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final target = DateTime(date.year, date.month, date.day);
+    final hour = date.hour.toString().padLeft(2, '0');
+    final minute = date.minute.toString().padLeft(2, '0');
+
+    if (target == today) {
+      return 'Hoy, $hour:$minute';
+    }
+
+    if (target == today.subtract(const Duration(days: 1))) {
+      return 'Ayer, $hour:$minute';
+    }
+
+    final day = date.day.toString().padLeft(2, '0');
+    final month = months[date.month - 1];
+    final year = date.year;
+    return '$day $month $year, $hour:$minute';
+  }
+
+  Widget _buildSummaryCards() {
+    final total = _history.length;
+    final lastDate = _lastMaintenanceDate;
+
+    return Row(
+      children: [
+        Expanded(
+          child: _buildSummaryCard(
+            title: 'Total',
+            value: '$total',
+            subtitle: total == 1 ? 'registro' : 'registros',
+            icon: Icons.inventory_2_outlined,
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: _buildSummaryCard(
+            title: 'Ultima',
+            value: lastDate == null ? '--' : _formatHistoryDate(lastDate),
+            subtitle: 'actualizacion',
+            icon: Icons.schedule_rounded,
+            isDate: true,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSummaryCard({
+    required String title,
+    required String value,
+    required String subtitle,
+    required IconData icon,
+    bool isDate = false,
+  }) {
+    final isCompactMetric = !isDate;
+
+    return Container(
+      constraints: const BoxConstraints(minHeight: 92),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(icon, color: AppColors.primary, size: 16),
+              const SizedBox(width: 6),
+              Text(
+                title,
+                style: const TextStyle(
+                  color: AppColors.textSecondary,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+          if (isCompactMetric)
+            Padding(
+              padding: const EdgeInsets.only(top: 10),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    value,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      color: AppColors.textPrimary,
+                      fontSize: 23,
+                      fontWeight: FontWeight.w700,
+                      height: 1,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    subtitle,
+                    style: const TextStyle(
+                      color: AppColors.textMuted,
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
+              ),
+            )
+          else
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SizedBox(height: 8),
                 Text(
-                  '@${_user?['username'] ?? 'usuario'}',
-                  style: const TextStyle(color: AppColors.textMuted, fontSize: 12),
+                  value,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: AppColors.textPrimary,
+                    fontSize: 19,
+                    fontWeight: FontWeight.w600,
+                    height: 1.1,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  subtitle,
+                  style: const TextStyle(
+                    color: AppColors.textMuted,
+                    fontSize: 12,
+                  ),
                 ),
               ],
             ),
-          ),
         ],
       ),
     );
@@ -349,58 +611,116 @@ class _ProfileScreenState extends State<ProfileScreen> {
       itemCount: displayed.length,
       itemBuilder: (context, index) {
         final item = displayed[index];
+
         return Container(
-          margin: const EdgeInsets.only(bottom: 12),
+          margin: const EdgeInsets.only(bottom: 14),
+          padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
             color: AppColors.surface,
             borderRadius: BorderRadius.circular(16),
             border: Border.all(color: AppColors.border),
-          ),
-          child: ListTile(
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            leading: const CircleAvatar(
-              backgroundColor: Color(0xFF1E2D40),
-              child: Icon(Icons.water_drop_outlined, color: AppColors.primary, size: 20),
-            ),
-            title: Text(
-              'Piscina: ${item.idPiscina}',
-              style: const TextStyle(
-                fontWeight: FontWeight.bold,
-                color: AppColors.textPrimary,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.08),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
               ),
-            ),
-            subtitle: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const SizedBox(height: 6),
-                Text(
-                  item.productosResumen,
-                  style: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
-                ),
-                if (item.ph != null || item.cloro != null || item.temperatura != null) ...[
-                  const SizedBox(height: 4),
-                  Text(
-                    item.parametrosResumen,
-                    style: const TextStyle(
-                      color: AppColors.primary,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
-                    ),
+            ],
+          ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: 42,
+                height: 42,
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withOpacity(0.14),
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: AppColors.primary.withOpacity(0.25),
+                    width: 1,
                   ),
-                ],
-                const SizedBox(height: 6),
-                Row(
+                ),
+                child: const Icon(
+                  Icons.water_drop_outlined,
+                  color: AppColors.primary,
+                  size: 20,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Icon(Icons.access_time, size: 12, color: AppColors.textMuted),
-                    const SizedBox(width: 4),
                     Text(
-                      '${item.fecha.day}/${item.fecha.month}/${item.fecha.year} ${item.fecha.hour}:${item.fecha.minute.toString().padLeft(2, '0')}',
-                      style: const TextStyle(fontSize: 11, color: AppColors.textMuted),
+                      item.idPiscina,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: AppColors.textPrimary,
+                        fontSize: 20,
+                        fontWeight: FontWeight.w700,
+                        height: 1.1,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      item.productosResumen,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: AppColors.textSecondary,
+                        fontSize: 14,
+                        height: 1.35,
+                      ),
+                    ),
+                    if (item.ph != null || item.cloro != null || item.temperatura != null) ...[
+                      const SizedBox(height: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 6,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppColors.primary.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(
+                            color: AppColors.primary.withOpacity(0.2),
+                          ),
+                        ),
+                        child: Text(
+                          item.parametrosResumen,
+                          style: const TextStyle(
+                            color: AppColors.primaryLight,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ],
+                    const SizedBox(height: 10),
+                    Row(
+                      children: [
+                        const Icon(
+                          Icons.schedule_rounded,
+                          size: 14,
+                          color: AppColors.textMuted,
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          _formatHistoryDate(item.fecha),
+                          style: const TextStyle(
+                            color: AppColors.textMuted,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         );
       },
@@ -437,3 +757,4 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 }
+
