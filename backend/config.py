@@ -11,7 +11,7 @@ class Settings(BaseSettings):
         case_sensitive=False,
     )
 
-    # MongoDB Atlas
+    # MongoDB (operativa: lecturas, usuarios, inventario, etc.)
     mongodb_uri: str
 
     # Seguridad
@@ -29,6 +29,12 @@ class Settings(BaseSettings):
     mongodb_logs_uri: str | None = None
     mongodb_logs_database: str = "cleanpool_logs"
     mongodb_logs_collection: str = "api_request_logs"
+
+    # MQTT (broker Mosquitto; consumo en código se añade por fases)
+    mqtt_host: str | None = None
+    mqtt_port: int = 1883
+    mqtt_user: str | None = None
+    mqtt_password: str | None = None
 
     @field_validator("mongodb_logs_uri", mode="before")
     @classmethod
