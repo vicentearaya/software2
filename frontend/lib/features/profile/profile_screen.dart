@@ -5,6 +5,31 @@ import '../../shared/services/maintenance_service.dart';
 import '../../models/maintenance.dart';
 import '../auth/login_screen.dart';
 
+// ---------------------------------------------------------------------------
+// Enum que representa los filtros de tiempo disponibles para el historial.
+// ---------------------------------------------------------------------------
+enum _HistoryFilter {
+  all,
+  last30Days,
+  lastWeek,
+  last3Days,
+}
+
+extension _HistoryFilterLabel on _HistoryFilter {
+  String get label {
+    switch (this) {
+      case _HistoryFilter.all:
+        return 'Todos';
+      case _HistoryFilter.last30Days:
+        return 'Últimos 30 días';
+      case _HistoryFilter.lastWeek:
+        return 'Última semana';
+      case _HistoryFilter.last3Days:
+        return 'Últimos 3 días';
+    }
+  }
+}
+
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
 
@@ -21,10 +46,41 @@ class _ProfileScreenState extends State<ProfileScreen> {
   bool _isLoading = true;
   String? _error;
 
+  // Filtro activo; por defecto muestra todos los registros.
+  _HistoryFilter _activeFilter = _HistoryFilter.all;
+
   @override
   void initState() {
     super.initState();
     _loadData();
+  }
+
+  // ---------------------------------------------------------------------------
+  // Devuelve la sublista de _history que cumple el filtro seleccionado.
+  // El cálculo es client-side sobre los datos ya cargados.
+  // ---------------------------------------------------------------------------
+  List<Maintenance> get _filteredHistory {
+    if (_activeFilter == _HistoryFilter.all) return _history;
+
+    final now = DateTime.now();
+    final Duration cutoff;
+
+    switch (_activeFilter) {
+      case _HistoryFilter.last30Days:
+        cutoff = const Duration(days: 30);
+        break;
+      case _HistoryFilter.lastWeek:
+        cutoff = const Duration(days: 7);
+        break;
+      case _HistoryFilter.last3Days:
+        cutoff = const Duration(days: 3);
+        break;
+      case _HistoryFilter.all:
+        return _history;
+    }
+
+    final threshold = now.subtract(cutoff);
+    return _history.where((m) => m.fecha.isAfter(threshold)).toList();
   }
 
   Future<void> _loadData() async {
@@ -104,6 +160,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   color: AppColors.textPrimary,
                 ),
               ),
+              const SizedBox(height: 12),
+              _buildFilterChips(),
               const SizedBox(height: 16),
               _buildHistoryList(),
               const SizedBox(height: 40),
@@ -112,6 +170,49 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  // ---------------------------------------------------------------------------
+  // Fila de chips para seleccionar el filtro de tiempo.
+  // Solo se muestra cuando los datos ya fueron cargados correctamente.
+  // ---------------------------------------------------------------------------
+  Widget _buildFilterChips() {
+    if (_isLoading || _error != null) return const SizedBox.shrink();
+
+    return SizedBox(
+      height: 36,
+      child: ListView(
+        scrollDirection: Axis.horizontal,
+        children: _HistoryFilter.values.map((filter) {
+          final isSelected = _activeFilter == filter;
+          return Padding(
+            padding: const EdgeInsets.only(right: 8),
+            child: ChoiceChip(
+              label: Text(filter.label),
+              selected: isSelected,
+              onSelected: (_) {
+                if (_activeFilter != filter) {
+                  setState(() => _activeFilter = filter);
+                }
+              },
+              selectedColor: AppColors.primary,
+              backgroundColor: AppColors.surface,
+              side: BorderSide(
+                color: isSelected ? AppColors.primary : AppColors.border,
+              ),
+              labelStyle: TextStyle(
+                color: isSelected ? Colors.white : AppColors.textSecondary,
+                fontSize: 12,
+                fontWeight:
+                    isSelected ? FontWeight.w600 : FontWeight.normal,
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 10),
+              visualDensity: VisualDensity.compact,
+            ),
+          );
+        }).toList(),
       ),
     );
   }
@@ -194,6 +295,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
       );
     }
 
+    final displayed = _filteredHistory;
+
     if (_history.isEmpty) {
       return Container(
         width: double.infinity,
@@ -217,12 +320,35 @@ class _ProfileScreenState extends State<ProfileScreen> {
       );
     }
 
+    if (displayed.isEmpty) {
+      return Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(30),
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: AppColors.border.withOpacity(0.5)),
+        ),
+        child: Column(
+          children: [
+            const Icon(Icons.filter_list_off, color: AppColors.textMuted, size: 48),
+            const SizedBox(height: 16),
+            Text(
+              'Sin registros para "${_activeFilter.label}".',
+              textAlign: TextAlign.center,
+              style: const TextStyle(color: AppColors.textMuted),
+            ),
+          ],
+        ),
+      );
+    }
+
     return ListView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
-      itemCount: _history.length,
+      itemCount: displayed.length,
       itemBuilder: (context, index) {
-        final item = _history[index];
+        final item = displayed[index];
         return Container(
           margin: const EdgeInsets.only(bottom: 12),
           decoration: BoxDecoration(

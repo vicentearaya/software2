@@ -12,6 +12,12 @@
 @import app_settings;
 #endif
 
+#if __has_include(<rive_native/RiveNativePlugin.h>)
+#import <rive_native/RiveNativePlugin.h>
+#else
+@import rive_native;
+#endif
+
 #if __has_include(<shared_preferences_foundation/SharedPreferencesPlugin.h>)
 #import <shared_preferences_foundation/SharedPreferencesPlugin.h>
 #else
@@ -22,6 +28,7 @@
 
 + (void)registerWithRegistry:(NSObject<FlutterPluginRegistry>*)registry {
   [AppSettingsPlugin registerWithRegistrar:[registry registrarForPlugin:@"AppSettingsPlugin"]];
+  [RiveNativePlugin registerWithRegistrar:[registry registrarForPlugin:@"RiveNativePlugin"]];
   [SharedPreferencesPlugin registerWithRegistrar:[registry registrarForPlugin:@"SharedPreferencesPlugin"]];
 }
 

@@ -26,11 +26,18 @@ Para poder ejecutar el proyecto necesitas tener instaladas en tu sistema las sig
 ### Frontend (Flutter)
 - **Flutter SDK** (versión mínima `^3.11.3`).
 - Los paquetes principales utilizados en `frontend/pubspec.yaml`:
-  - `go_router` (Navegación por rutas)
-  - `google_fonts` y `cupertino_icons` (Diseño e iconografía UI)
-  - `shared_preferences` (Almacenamiento persistente local)
-  - `http` (Peticiones REST hacia la API del backend)
-  - `app_settings` (Interacción con configuraciones nativas del sistema operativo móvil)
+  - `google_fonts` y `cupertino_icons` (diseño e iconografía)
+  - `shared_preferences` (sesión local)
+  - `http` (peticiones REST; la app usa `ApiClient` en `lib/core/network/api_client.dart` como capa común)
+  - `app_settings` (ajustes del sistema en móvil)
+- **Navegación:** la app usa `MaterialApp` + `Navigator` convencional (no `go_router`).
+
+### Integración continua (CI)
+
+El archivo `.github/workflows/ci.yml` ejecuta en cada push y pull request hacia `main`:
+
+- **Backend:** instalación de dependencias y `pytest tests/`
+- **Frontend:** `flutter pub get` y `flutter test`
 
 ---
 

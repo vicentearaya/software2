@@ -1,6 +1,5 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
+
 import '../../core/constants/app_colors.dart';
 import '../../shared/services/auth_service.dart';
 import '../../shared/services/pool_service.dart';
@@ -20,21 +19,11 @@ class _DeviceScreenState extends State<DeviceScreen> {
   bool _loading = true;
   Map<String, dynamic>? _deviceStatus;
   String? _error;
-  Timer? _pollingTimer;
 
   @override
   void initState() {
     super.initState();
     _loadDeviceStatus();
-    _pollingTimer = Timer.periodic(const Duration(seconds: 15), (_) {
-      _loadDeviceStatus(showLoader: false);
-    });
-  }
-
-  @override
-  void dispose() {
-    _pollingTimer?.cancel();
-    super.dispose();
   }
 
   Future<void> _loadDeviceStatus({bool showLoader = true}) async {
@@ -78,15 +67,31 @@ class _DeviceScreenState extends State<DeviceScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final bool isConnected = _deviceStatus?['is_online'] == true;
-
     return Scaffold(
       appBar: AppBar(title: const Text('Dispositivo'), centerTitle: true),
       body: RefreshIndicator(
-        onRefresh: _loadDeviceStatus,
+        color: AppColors.primary,
+        onRefresh: () => _loadDeviceStatus(showLoader: false),
         child: ListView(
+          physics: const AlwaysScrollableScrollPhysics(),
           padding: const EdgeInsets.all(20),
           children: [
+            if (_loading)
+              const Padding(
+                padding: EdgeInsets.symmetric(vertical: 24),
+                child: Center(
+                  child: CircularProgressIndicator(color: AppColors.primary),
+                ),
+              )
+            else if (_error != null)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 24),
+                child: Text(
+                  _error!,
+                  style: TextStyle(color: AppColors.statusDanger),
+                  textAlign: TextAlign.center,
+                ),
+              ),
             Container(
               padding: const EdgeInsets.all(18),
               decoration: BoxDecoration(
@@ -98,91 +103,24 @@ class _DeviceScreenState extends State<DeviceScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Instrucciones de uso',
+                    'Dispositivo',
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.textPrimary,
-                    ),
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.textPrimary,
+                        ),
                   ),
                   const SizedBox(height: 10),
-                  const Text(
-                    '1) Coloca el dispositivo en la piscina que quieras medir.\n'
-                    '2) En el Dashboard, selecciona esa piscina.\n'
-                    '3) Pulsa "Vincular dispositivo a esta piscina".\n'
-                    '4) Si el dispositivo envía lecturas, aquí aparecerá como conectado.',
-                    style: TextStyle(
+                  Text(
+                    _deviceStatus != null
+                        ? 'Última consulta correcta. Los detalles ampliados se mostrarán en una versión futura.'
+                        : 'Esta sección mostrará información del dispositivo en una versión futura.',
+                    style: const TextStyle(
                       color: AppColors.textSecondary,
                       height: 1.5,
                     ),
                   ),
                 ],
               ),
-            ),
-            const SizedBox(height: 16),
-            Container(
-              padding: const EdgeInsets.all(18),
-              decoration: BoxDecoration(
-                color: isConnected
-                    ? AppColors.statusGood.withOpacity(0.12)
-                    : AppColors.statusDanger.withOpacity(0.12),
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(
-                  color: isConnected
-                      ? AppColors.statusGood.withOpacity(0.45)
-                      : AppColors.statusDanger.withOpacity(0.45),
-                ),
-              ),
-              child: _loading
-                  ? const Center(
-                      child: CircularProgressIndicator(
-                        color: AppColors.primary,
-                      ),
-                    )
-                  : Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Icon(
-                              isConnected
-                                  ? Icons.wifi_tethering_rounded
-                                  : Icons.wifi_off_rounded,
-                              color: isConnected
-                                  ? AppColors.statusGood
-                                  : AppColors.statusDanger,
-                            ),
-                            const SizedBox(width: 8),
-                            Text(
-                              isConnected ? 'Conectado' : 'Desconectado',
-                              style: TextStyle(
-                                color: isConnected
-                                    ? AppColors.statusGood
-                                    : AppColors.statusDanger,
-                                fontWeight: FontWeight.w700,
-                                fontSize: 16,
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 10),
-                        Text(
-                          isConnected
-                              ? 'Vinculado a la piscina: ${_deviceStatus!['pool_id']}\nÚltima señal: ${_deviceStatus!['last_seen_at'] ?? '-'}'
-                              : (_error ??
-                                    'No existe vínculo activo para este dispositivo.'),
-                          style: const TextStyle(
-                            color: AppColors.textPrimary,
-                            height: 1.4,
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        OutlinedButton.icon(
-                          onPressed: _loadDeviceStatus,
-                          icon: const Icon(Icons.refresh_rounded),
-                          label: const Text('Actualizar estado'),
-                        ),
-                      ],
-                    ),
             ),
           ],
         ),

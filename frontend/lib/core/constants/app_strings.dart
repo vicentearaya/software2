@@ -3,6 +3,25 @@ class AppStrings {
 
   static const String appName = 'CleanPool';
 
+  // Bienvenida (landing)
+  static const String welcomeHeadline = 'Bienvenido';
+  static const String welcomeTitle = 'Monitorea tu piscina con confianza';
+
+  /// Párrafos del cuerpo (orden de lectura).
+  static const List<String> welcomeBodyParagraphs = <String>[
+    'CleanPool es una app diseñada para que cualquier persona pueda gestionar, '
+        'mantener y cuidar su piscina de forma fácil y segura.',
+    'Permite registrar lecturas de pH, cloro y temperatura del agua en tiempo casi real, '
+        'entregando recomendaciones claras según el estado de la piscina. Así puedes saber cuándo '
+        'ajustar químicos, limpiar, revisar el sistema de filtrado o tomar medidas preventivas.',
+    'Además, CleanPool ayuda a organizar el inventario de productos, registrar mantenciones y '
+        'consultar guías para resolver problemas frecuentes como agua turbia, algas o desbalances químicos.',
+    'Con CleanPool, el mantenimiento de tu piscina deja de ser complicado y se vuelve simple, '
+        'ordenado y eficiente.',
+  ];
+
+  static const String welcomeRegister = 'Registrarse';
+
   // Auth
   static const String login = 'Iniciar sesión';
   static const String register = 'Crear cuenta';

@@ -1,3 +1,6 @@
+# CleanPool — stack del servidor universitario
+# 1883 MQTT | 8883 API | 8884 Web | 8885 MongoDB | 8886 Dokploy (externo)
+
 services:
   mongo:
     image: mongo:4.4
@@ -7,6 +10,24 @@ services:
     restart: always
     volumes:
       - mongo_data:/data/db
+    healthcheck:
+      test: ["CMD", "mongo", "--quiet", "--eval", "db.adminCommand('ping').ok"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  mosquitto:
+    image: eclipse-mosquitto:2
+    container_name: cleanpool_mosquitto
+    ports:
+      - "1883:1883"
+    restart: always
+    volumes:
+      - ./infra/mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
+      - ./infra/mosquitto/passwd:/mosquitto/config/passwd:ro
+      - mosquitto_data:/mosquitto/data
+      - mosquitto_log:/mosquitto/log
 
   backend:
     build:
@@ -17,19 +38,29 @@ services:
       - "8883:8000"
     restart: always
     depends_on:
-      - mongo
+      mongo:
+        condition: service_healthy
+      mosquitto:
+        condition: service_started
     environment:
       - DOMAIN=${DOMAIN}
       - MONGODB_URI=mongodb://mongo:27017/cleanpool
+      - MONGODB_LOGS_URI=mongodb://mongo:27017/
+      - MONGODB_LOGS_DATABASE=cleanpool_logs
+      - MONGODB_LOGS_COLLECTION=api_request_logs
       - SECRET_KEY=${SECRET_KEY}
       - API_KEY=${API_KEY}
+      - MQTT_HOST=mosquitto
+      - MQTT_PORT=1883
+      - MQTT_USER=${MQTT_USER:-cleanpool}
+      - MQTT_PASSWORD=${API_KEY}
 
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
       args:
-        - API_URL=http://localhost:8883
+        - API_URL=${API_URL:-http://localhost:8883}
     container_name: cleanpool_frontend
     ports:
       - "8884:80"
@@ -39,3 +70,5 @@ services:
 
 volumes:
   mongo_data:
+  mosquitto_data:
+  mosquitto_log:

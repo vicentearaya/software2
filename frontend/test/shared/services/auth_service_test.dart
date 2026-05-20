@@ -15,9 +15,23 @@ void main() {
   group('AuthService Login Tests', () {
     test('login success returns token and saves to SharedPreferences', () async {
       final mockClient = MockClient((request) async {
-        expect(request.url.path, '/auth/login');
-        return http.Response(
-            jsonEncode({'access_token': 'dummy_valid_jwt_token_123'}), 200);
+        if (request.url.path.endsWith('/auth/login')) {
+          return http.Response(
+            jsonEncode({'access_token': 'dummy_valid_jwt_token_123'}),
+            200,
+          );
+        }
+        if (request.url.path.endsWith('/auth/me')) {
+          return http.Response(
+            jsonEncode({
+              'username': 'tester',
+              'email': 'test@test.com',
+              'name': 'Tester',
+            }),
+            200,
+          );
+        }
+        return http.Response('{}', 404);
       });
 
       final authService = AuthService(client: mockClient);

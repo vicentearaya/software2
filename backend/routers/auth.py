@@ -4,6 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
 from passlib.context import CryptContext
+from pymongo.database import Database
 
 from config import get_settings
 from db import get_db
@@ -12,7 +13,6 @@ from models import Token, UserLogin, UserRegister
 router = APIRouter(prefix="/auth", tags=["Auth"])
 
 settings = get_settings()
-_db = get_db()
 
 _pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 _oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
@@ -31,11 +31,12 @@ def _create_access_token(data: dict) -> str:
     return jwt.encode(payload, settings.secret_key, algorithm=settings.algorithm)
 
 
-def get_current_user(token: str = Depends(_oauth2_scheme)) -> dict:
+def get_current_user(
+    token: str = Depends(_oauth2_scheme),
+    db: Database = Depends(get_db),
+) -> dict:
     """
     Valida el JWT del header Authorization: Bearer <token>.
-    Lista para inyectar en cualquier endpoint con Depends(get_current_user).
-    No aplicada a ningún endpoint todavía — eso viene en tareas posteriores.
     """
     credentials_exc = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
@@ -52,7 +53,7 @@ def get_current_user(token: str = Depends(_oauth2_scheme)) -> dict:
     except JWTError:
         raise credentials_exc
 
-    user = _db["usuarios"].find_one({"username": username}, {"_id": 0})
+    user = db["usuarios"].find_one({"username": username}, {"_id": 0})
     if user is None:
         raise credentials_exc
     return user
@@ -64,14 +65,15 @@ def get_current_user(token: str = Depends(_oauth2_scheme)) -> dict:
     summary="Login con usuario y contraseña",
     description="Autentica contra la colección `usuarios`. Retorna JWT firmado con HS256.",
 )
-def login(credentials: UserLogin) -> Token:
-    # Schema esperado: {"username": str, "password": str (bcrypt hash)}
-    user = _db["usuarios"].find_one({
-        "$or": [
-            {"username": credentials.username},
-            {"email": credentials.username}
-        ]
-    })
+def login(credentials: UserLogin, db: Database = Depends(get_db)) -> Token:
+    user = db["usuarios"].find_one(
+        {
+            "$or": [
+                {"username": credentials.username},
+                {"email": credentials.username},
+            ]
+        }
+    )
 
     if not user or not _verify_password(credentials.password, user.get("password", "")):
         raise HTTPException(
@@ -91,13 +93,15 @@ def login(credentials: UserLogin) -> Token:
     summary="Registro de nuevo usuario",
     description="Crea un usuario nuevo en la colección `usuarios` y retorna un JWT y datos del usuario.",
 )
-def register(user_in: UserRegister) -> dict:
-    if _db["usuarios"].find_one({
-        "$or": [
-            {"email": user_in.email},
-            {"username": user_in.username}
-        ]
-    }):
+def register(user_in: UserRegister, db: Database = Depends(get_db)) -> dict:
+    if db["usuarios"].find_one(
+        {
+            "$or": [
+                {"email": user_in.email},
+                {"username": user_in.username},
+            ]
+        }
+    ):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="El correo o nombre de usuario ya está registrado.",
@@ -108,9 +112,9 @@ def register(user_in: UserRegister) -> dict:
         "username": user_in.username,
         "name": user_in.name,
         "email": user_in.email,
-        "password": hashed_password
+        "password": hashed_password,
     }
-    _db["usuarios"].insert_one(new_user)
+    db["usuarios"].insert_one(new_user)
 
     token = _create_access_token({"sub": user_in.username})
     return {
@@ -119,8 +123,8 @@ def register(user_in: UserRegister) -> dict:
         "user": {
             "name": user_in.name,
             "username": user_in.username,
-            "email": user_in.email
-        }
+            "email": user_in.email,
+        },
     }
 
 

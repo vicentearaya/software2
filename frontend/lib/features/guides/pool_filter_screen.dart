@@ -37,86 +37,102 @@ class PoolFilterScreen extends StatelessWidget {
 
   Widget _buildContent() {
     return ListView(
-        physics: const BouncingScrollPhysics(),
-        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 20.0),
-        children: [
-          _buildInfoCard(
-            title: '1. Programación Diaria',
-            subtitle: 'Modo FILTRACIÓN - Mantiene el agua libre de partículas.',
-            icon: Icons.access_time,
-            iconColor: AppColors.primary,
-            children: [
-              _buildSubsection(
-                title: 'Temporada de Verano',
-                description: 'Uso intenso y calor.',
-                items: [
-                  {'label': 'Tiempo', 'value': 'Entre 8 y 12 horas diarias.'},
-                  {
-                    'label': 'Consejo',
-                    'value':
-                        'Evita 12 horas seguidas. Mejor dividir en bloques (ej. 6h mañana y 6h tarde) para evitar estancamiento.'
-                  },
-                ],
-                icon: Icons.wb_sunny_outlined,
-                color: AppColors.statusWarning,
+      physics: const BouncingScrollPhysics(),
+      padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 16.0),
+      children: [
+        _buildInfoCard(
+          title: '1. Programación Diaria',
+          subtitle: 'Modo FILTRACIÓN — Mantiene el agua libre de partículas.',
+          icon: Icons.timer_outlined,
+          iconColor: AppColors.primary,
+          children: [
+            _buildSubsection(
+              title: 'Temporada de Verano',
+              description: 'Uso intenso y calor.',
+              items: [
+                {'label': 'Tiempo', 'value': 'Entre 8 y 12 horas diarias.'},
+                {
+                  'label': 'Consejo',
+                  'value':
+                      'Evita 12 horas seguidas. Mejor dividir en bloques (ej. 6h mañana y 6h tarde) para evitar estancamiento.'
+                },
+              ],
+              icon: Icons.wb_sunny_outlined,
+              color: AppColors.statusWarning,
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              child: Container(
+                height: 1,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      AppColors.border.withOpacity(0.1),
+                      AppColors.border,
+                      AppColors.border.withOpacity(0.1),
+                    ],
+                  ),
+                ),
               ),
-              const Divider(color: AppColors.border, height: 24),
-              _buildSubsection(
-                title: 'Temporada de Invierno',
-                description: 'Mantenimiento preventivo.',
-                items: [
-                  {'label': 'Tiempo', 'value': 'Entre 2 y 4 horas diarias.'},
-                  {
-                    'label': 'Objetivo',
-                    'value':
-                        'Evitar proliferación de algas o larvas, aunque la piscina no se use.'
-                  },
-                ],
-                icon: Icons.ac_unit,
-                color: AppColors.primaryLight,
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          _buildInfoCard(
-            title: '2. Modos de la Válvula',
-            subtitle: 'Cuándo usar las funciones adicionales al filtro.',
-            icon: Icons.settings_input_component_outlined,
-            iconColor: AppColors.accent,
-            children: [
-              _buildModeItem(
-                title: 'Modo RECIRCULACIÓN',
-                subtitle: 'Sin pasar por el filtro.',
-                whenToUse: 'Al añadir químicos potentes (cloro choque, algicida).',
-                why:
-                    'Mezcla el producto rápidamente (30-60 min) sin saturar la arena.',
-                icon: Icons.autorenew,
-              ),
-              const SizedBox(height: 12),
-              _buildModeItem(
-                title: 'Modo DESAGÜE / VACIADO',
-                subtitle: 'Waste / Drenaje directo a la calle.',
-                whenToUse: 'Para aspirar fondo muy sucio (tierra o algas muertas).',
-                why:
-                    'Evita saturar el filtro en 5 minutos en modo filtración.',
-                icon: Icons.water_drop_outlined,
-              ),
-              const SizedBox(height: 12),
-              _buildModeItem(
-                title: 'Modo LAVADO y ENJUAGUE',
-                subtitle: 'Backwash / Rinse',
-                whenToUse: 'Una vez a la semana en verano.',
-                why:
-                    'Si los chorros de retorno pierden fuerza, es señal de filtro saturado. Ayuda a limpiar la arena para recuperar presión.',
-                icon: Icons.cleaning_services_outlined,
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          _buildGoldenRulesCard(),
-          const SizedBox(height: 40),
-        ],
-      );
+            ),
+            _buildSubsection(
+              title: 'Temporada de Invierno',
+              description: 'Mantenimiento preventivo.',
+              items: [
+                {'label': 'Tiempo', 'value': 'Entre 2 y 4 horas diarias.'},
+                {
+                  'label': 'Objetivo',
+                  'value':
+                      'Evitar proliferación de algas o larvas, aunque la piscina no se use.'
+                },
+              ],
+              icon: Icons.ac_unit_rounded,
+              color: AppColors.primaryLight,
+            ),
+          ],
+        ),
+        const SizedBox(height: 14),
+        _buildInfoCard(
+          title: '2. Modos de la Válvula',
+          subtitle: 'Cuándo usar las funciones adicionales al filtro.',
+          icon: Icons.tune_rounded,
+          iconColor: AppColors.accent,
+          children: [
+            _buildModeItem(
+              title: 'Modo RECIRCULACIÓN',
+              subtitle: 'Sin pasar por el filtro.',
+              whenToUse:
+                  'Al añadir químicos potentes (cloro choque, algicida).',
+              why:
+                  'Mezcla el producto rápidamente (30-60 min) sin saturar la arena.',
+              icon: Icons.recycling_rounded,
+            ),
+            const SizedBox(height: 10),
+            _buildModeItem(
+              title: 'Modo DESAGÜE / VACIADO',
+              subtitle: 'Waste / Drenaje directo a la calle.',
+              whenToUse:
+                  'Para aspirar fondo muy sucio (tierra o algas muertas).',
+              why:
+                  'Evita saturar el filtro en 5 minutos en modo filtración.',
+              icon: Icons.shower_outlined,
+            ),
+            const SizedBox(height: 10),
+            _buildModeItem(
+              title: 'Modo LAVADO y ENJUAGUE',
+              subtitle: 'Backwash / Rinse',
+              whenToUse: 'Una vez a la semana en verano.',
+              why:
+                  'Si los chorros de retorno pierden fuerza, es señal de filtro saturado. Ayuda a limpiar la arena para recuperar presión.',
+              icon: Icons.build_circle_outlined,
+            ),
+          ],
+        ),
+        const SizedBox(height: 14),
+        _buildGoldenRulesCard(),
+        const SizedBox(height: 32),
+      ],
+    );
   }
 
   Widget _buildInfoCard({
@@ -130,21 +146,31 @@ class PoolFilterScreen extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: AppColors.border.withOpacity(0.5)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.08),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(18),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
               Container(
-                padding: const EdgeInsets.all(8),
+                padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: iconColor.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(8),
+                  color: iconColor.withOpacity(0.12),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: iconColor.withOpacity(0.2),
+                  ),
                 ),
-                child: Icon(icon, color: iconColor),
+                child: Icon(icon, color: iconColor, size: 20),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -159,12 +185,13 @@ class PoolFilterScreen extends StatelessWidget {
                         fontWeight: FontWeight.w700,
                       ),
                     ),
-                    const SizedBox(height: 2),
+                    const SizedBox(height: 3),
                     Text(
                       subtitle,
-                      style: GoogleFonts.inter(
+                      style: GoogleFonts.interTight(
                         color: AppColors.textSecondary,
                         fontSize: 12,
+                        height: 1.3,
                       ),
                     ),
                   ],
@@ -172,7 +199,7 @@ class PoolFilterScreen extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 18),
           ...children,
         ],
       ),
@@ -191,7 +218,7 @@ class PoolFilterScreen extends StatelessWidget {
       children: [
         Row(
           children: [
-            Icon(icon, size: 18, color: color),
+            Icon(icon, size: 16, color: color),
             const SizedBox(width: 8),
             Text(
               title,
@@ -203,10 +230,10 @@ class PoolFilterScreen extends StatelessWidget {
             ),
           ],
         ),
-        const SizedBox(height: 4),
+        const SizedBox(height: 3),
         Text(
           description,
-          style: GoogleFonts.inter(
+          style: GoogleFonts.interTight(
             color: AppColors.textMuted,
             fontSize: 12,
           ),
@@ -219,37 +246,41 @@ class PoolFilterScreen extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Container(
-                  width: 60,
-                  margin: const EdgeInsets.only(right: 12, top: 2),
-                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  margin: const EdgeInsets.only(right: 10, top: 2),
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 8, vertical: 3),
                   decoration: BoxDecoration(
-                    color: AppColors.surfaceElevated,
-                    borderRadius: BorderRadius.circular(4),
+                    color: color.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(6),
+                    border: Border.all(
+                      color: color.withOpacity(0.2),
+                    ),
                   ),
                   child: Text(
                     item['label']!.toUpperCase(),
                     textAlign: TextAlign.center,
-                    style: GoogleFonts.inter(
-                      color: AppColors.textSecondary,
-                      fontSize: 10,
-                      fontWeight: FontWeight.w600,
+                    style: GoogleFonts.interTight(
+                      color: color,
+                      fontSize: 9,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 0.3,
                     ),
                   ),
                 ),
                 Expanded(
                   child: Text(
                     item['value']!,
-                    style: GoogleFonts.inter(
+                    style: GoogleFonts.interTight(
                       color: AppColors.textPrimary,
                       fontSize: 13,
-                      height: 1.4,
+                      height: 1.45,
                     ),
                   ),
                 ),
               ],
             ),
           );
-        }).toList(),
+        }),
       ],
     );
   }
@@ -262,40 +293,53 @@ class PoolFilterScreen extends StatelessWidget {
     required IconData icon,
   }) {
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: AppColors.surfaceElevated.withValues(alpha: 0.5),
+        color: AppColors.surfaceElevated.withOpacity(0.4),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: AppColors.border.withOpacity(0.5)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Icon(icon, size: 16, color: AppColors.primaryLight),
-              const SizedBox(width: 8),
-              Text(
-                title,
-                style: GoogleFonts.syne(
-                  color: AppColors.primaryLight,
-                  fontSize: 13,
-                  fontWeight: FontWeight.bold,
+              Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: AppColors.primaryLight.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(icon, size: 14, color: AppColors.primaryLight),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: GoogleFonts.syne(
+                        color: AppColors.primaryLight,
+                        fontSize: 13,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    Text(
+                      subtitle,
+                      style: GoogleFonts.interTight(
+                        color: AppColors.textMuted,
+                        fontSize: 11,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 2),
-          Text(
-            subtitle,
-            style: GoogleFonts.inter(
-              color: AppColors.textMuted,
-              fontSize: 11,
-            ),
-          ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 12),
           _buildBulletPoint('Cuándo:', whenToUse),
-          const SizedBox(height: 4),
+          const SizedBox(height: 6),
           _buildBulletPoint('Por qué:', why),
         ],
       ),
@@ -307,28 +351,28 @@ class PoolFilterScreen extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.only(top: 4.0, right: 6.0),
+          padding: const EdgeInsets.only(top: 6.0, right: 8.0),
           child: Container(
-            width: 4,
-            height: 4,
-            decoration: const BoxDecoration(
+            width: 5,
+            height: 5,
+            decoration: BoxDecoration(
               color: AppColors.accent,
-              shape: BoxShape.circle,
+              borderRadius: BorderRadius.circular(2),
             ),
           ),
         ),
         Expanded(
           child: RichText(
             text: TextSpan(
-              style: GoogleFonts.inter(
+              style: GoogleFonts.interTight(
                 color: AppColors.textPrimary,
                 fontSize: 12,
-                height: 1.4,
+                height: 1.45,
               ),
               children: [
                 TextSpan(
                   text: '$label ',
-                  style: const TextStyle(fontWeight: FontWeight.bold),
+                  style: const TextStyle(fontWeight: FontWeight.w700),
                 ),
                 TextSpan(
                   text: text,
@@ -345,17 +389,34 @@ class PoolFilterScreen extends StatelessWidget {
   Widget _buildGoldenRulesCard() {
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.statusDanger.withValues(alpha: 0.05),
+        color: AppColors.statusDanger.withOpacity(0.04),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.statusDanger.withValues(alpha: 0.3)),
+        border: Border.all(
+          color: AppColors.statusDanger.withOpacity(0.2),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.statusDanger.withOpacity(0.04),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(18),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              const Icon(Icons.warning_amber_rounded, color: AppColors.statusDanger),
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: AppColors.statusDanger.withOpacity(0.12),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Icon(Icons.warning_amber_rounded,
+                    color: AppColors.statusDanger, size: 20),
+              ),
               const SizedBox(width: 10),
               Text(
                 '3. Reglas de Oro',
@@ -394,15 +455,23 @@ class PoolFilterScreen extends StatelessWidget {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(icon, color: AppColors.statusDanger.withValues(alpha: 0.8), size: 20),
+        Container(
+          padding: const EdgeInsets.all(6),
+          decoration: BoxDecoration(
+            color: AppColors.statusDanger.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Icon(icon,
+              color: AppColors.statusDanger.withOpacity(0.8), size: 16),
+        ),
         const SizedBox(width: 12),
         Expanded(
           child: Text(
             text,
-            style: GoogleFonts.inter(
+            style: GoogleFonts.interTight(
               color: AppColors.textPrimary,
               fontSize: 13,
-              height: 1.4,
+              height: 1.5,
             ),
           ),
         ),
