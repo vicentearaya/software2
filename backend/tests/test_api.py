@@ -5,9 +5,11 @@ T-15 — Pytest para CleanPool API.
 Corre con: pytest backend/tests/ -v
 """
 
+from datetime import datetime, timezone
 from unittest.mock import MagicMock, patch
 
 import pytest
+from bson import ObjectId
 from fastapi.testclient import TestClient
 from passlib.context import CryptContext
 
@@ -26,6 +28,7 @@ _mock_db = MagicMock()
 with patch("pymongo.MongoClient", return_value=MagicMock(**{"__getitem__.return_value": _mock_db})):
     from main import app  # noqa: E402
     from db import get_db
+    from routers.auth import get_current_user  # noqa: E402
 
 client = TestClient(app)
 _pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -157,3 +160,118 @@ def test_register_exitoso():
     assert "token" in body
     assert body["user"]["email"] == "new@test.com"
     assert body["user"]["username"] == "newuser"
+
+
+# ── GET /inventario (JWT override) ───────────────────────────────────────────
+def _inv_doc(oid, cantidad=100.0, username="admin"):
+    return {
+        "_id": oid,
+        "username": username,
+        "nombre": "Cloro",
+        "categoria": "Desinfectante",
+        "cantidad": cantidad,
+        "unidad": "g",
+        "notas": None,
+        "creado_en": datetime(2026, 1, 15, 12, 0, 0, tzinfo=timezone.utc),
+    }
+
+
+def test_inventario_listar():
+    app.dependency_overrides[get_current_user] = lambda: {"username": "admin"}
+    oid = ObjectId()
+    doc = _inv_doc(oid)
+
+    class _Cursor:
+        def sort(self, *a, **k):
+            return [doc]
+
+    _mock_db["inventario"].find.return_value = _Cursor()
+    response = client.get("/inventario")
+    assert response.status_code == 200
+    data = response.json()
+    assert len(data["items"]) == 1
+    assert data["items"][0]["nombre"] == "Cloro"
+    assert data["items"][0]["cantidad"] == 100.0
+    assert data["items"][0]["unidad"] == "g"
+    assert data["items"][0]["id"] == str(oid)
+
+
+def test_inventario_crear():
+    app.dependency_overrides[get_current_user] = lambda: {"username": "admin"}
+    oid = ObjectId()
+    doc = _inv_doc(oid, cantidad=500.0)
+    _mock_db["inventario"].insert_one.return_value = MagicMock(inserted_id=oid)
+    _mock_db["inventario"].find_one.return_value = doc
+
+    response = client.post(
+        "/inventario",
+        json={
+            "nombre": "Cloro",
+            "categoria": "Desinfectante",
+            "cantidad": 500,
+            "unidad": "g",
+            "notas": None,
+        },
+    )
+    assert response.status_code == 201
+    body = response.json()
+    assert body["cantidad"] == 500.0
+    assert body["categoria"] == "Desinfectante"
+
+
+def test_inventario_agregar_stock():
+    app.dependency_overrides[get_current_user] = lambda: {"username": "admin"}
+    oid = ObjectId()
+    updated = _inv_doc(oid, cantidad=600.0)
+    _mock_db["inventario"].find_one_and_update.return_value = updated
+
+    response = client.post(f"/inventario/{oid}/agregar", json={"cantidad": 100})
+    assert response.status_code == 200
+    assert response.json()["cantidad"] == 600.0
+
+
+def test_inventario_agregar_not_found():
+    app.dependency_overrides[get_current_user] = lambda: {"username": "admin"}
+    _mock_db["inventario"].find_one_and_update.return_value = None
+
+    response = client.post(f"/inventario/{ObjectId()}/agregar", json={"cantidad": 10})
+    assert response.status_code == 404
+
+
+def test_inventario_usar_stock_ok():
+    app.dependency_overrides[get_current_user] = lambda: {"username": "admin"}
+    oid = ObjectId()
+    updated = _inv_doc(oid, cantidad=400.0)
+    _mock_db["inventario"].find_one_and_update.return_value = updated
+
+    response = client.post(f"/inventario/{oid}/usar", json={"cantidad": 100})
+    assert response.status_code == 200
+    assert response.json()["cantidad"] == 400.0
+
+
+def test_inventario_usar_mas_del_disponible():
+    app.dependency_overrides[get_current_user] = lambda: {"username": "admin"}
+    oid = ObjectId()
+    _mock_db["inventario"].find_one_and_update.return_value = None
+    _mock_db["inventario"].find_one.return_value = _inv_doc(oid, cantidad=50.0)
+
+    response = client.post(f"/inventario/{oid}/usar", json={"cantidad": 100})
+    assert response.status_code == 422
+    assert response.json()["detail"] == "No puedes usar más del stock disponible"
+
+
+def test_inventario_usar_producto_no_encontrado():
+    app.dependency_overrides[get_current_user] = lambda: {"username": "admin"}
+    oid = ObjectId()
+    _mock_db["inventario"].find_one_and_update.return_value = None
+    _mock_db["inventario"].find_one.return_value = None
+
+    response = client.post(f"/inventario/{oid}/usar", json={"cantidad": 1})
+    assert response.status_code == 404
+    assert response.json()["detail"] == "Producto no encontrado"
+
+
+def test_inventario_id_invalido():
+    app.dependency_overrides[get_current_user] = lambda: {"username": "admin"}
+    response = client.post("/inventario/not-an-objectid/agregar", json={"cantidad": 1})
+    assert response.status_code == 400
