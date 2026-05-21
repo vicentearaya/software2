@@ -74,3 +74,25 @@ entregable_hito2.fdb_latexmk
 entregable_hito2.synctex.gz
 entregable_hito2.synctex(busy).tex
 entregable_hito2.synctex.gz(busy)
+
+# Exclusiones para mantener el frontend limpio y reproducible:
+# se ignoran archivos de entorno local (rutas SDK/variables de build),
+# artefactos autogenerados por Flutter (registrants/plugins/CMake),
+# dependencias y symlinks de CocoaPods, estado de usuario de Xcode
+# (cambian por maquina/cuenta) y logs locales de compilacion.
+# Estos archivos no representan cambios funcionales del producto
+# y solo agregan ruido o conflictos en revisiones y merges.
+docs
+frontend/android/local.properties
+frontend/ios/Flutter/Generated.xcconfig
+frontend/ios/Flutter/flutter_export_environment.sh
+frontend/**/GeneratedPluginRegistrant.*
+frontend/**/generated_plugin_registrant.*
+frontend/**/generated_plugins.cmake
+frontend/ios/Pods/
+frontend/macos/Pods/
+frontend/ios/.symlinks/
+frontend/ios/Runner.xcworkspace/xcuserdata/
+frontend/macos/Runner.xcodeproj/xcuserdata/
+frontend/macos/Pods/Pods.xcodeproj/xcuserdata/
+frontend/build_output*.txt
