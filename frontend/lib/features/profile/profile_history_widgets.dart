@@ -92,7 +92,7 @@ class _EmptyHistoryCard extends StatelessWidget {
           Icon(Icons.history, color: AppColors.textMuted, size: 48),
           SizedBox(height: 16),
           Text(
-            'Aun no registras mantenciones.',
+            'Aún no registras mantenciones.',
             textAlign: TextAlign.center,
             style: TextStyle(color: AppColors.textMuted),
           ),

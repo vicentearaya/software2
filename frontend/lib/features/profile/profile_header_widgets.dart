@@ -149,9 +149,9 @@ class ProfileSummaryCards extends StatelessWidget {
         const SizedBox(width: 12),
         Expanded(
           child: _SummaryCard(
-            title: 'Ultima',
+            title: 'Última',
             value: lastDate == null ? '--' : formatDate(lastDate),
-            subtitle: 'actualizacion',
+            subtitle: 'actualización',
             icon: Icons.schedule_rounded,
             isDate: true,
           ),

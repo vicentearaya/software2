@@ -53,7 +53,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       if (token == null) {
         if (!mounted) return;
         setState(() {
-          _error = 'Sesion expirada';
+          _error = 'Sesión expirada';
           _isLoading = false;
         });
         return;
@@ -152,7 +152,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   onPressed: _logout,
                   icon: const Icon(Icons.logout, size: 18),
                   label: const Text(
-                    'Cerrar Sesion',
+                    'Cerrar Sesión',
                     style: TextStyle(fontWeight: FontWeight.bold),
                   ),
                   style: ElevatedButton.styleFrom(

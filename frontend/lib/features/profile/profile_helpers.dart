@@ -13,11 +13,11 @@ extension HistoryFilterLabel on HistoryFilter {
       case HistoryFilter.all:
         return 'Todos';
       case HistoryFilter.last30Days:
-        return 'Ultimos 30 dias';
+        return 'Últimos 30 días';
       case HistoryFilter.lastWeek:
-        return 'Ultima semana';
+        return 'Última semana';
       case HistoryFilter.last3Days:
-        return 'Ultimos 3 dias';
+        return 'Últimos 3 días';
     }
   }
 }
