@@ -65,7 +65,7 @@ Para inicializar completamente el entorno de desarrollo, necesitas levantar tant
    El backend estará escuchando peticiones y operando correctamente en `http://localhost:8000`.
 
 ### 2. Iniciar el Frontend
-Manten tu primera terminal abierta (con el backend ya corriendo) y abre una **nueva ventana o pestaña** de terminal:
+Manten tu primera terminal abierta (con el backend corriendo) y abre una **nueva ventana o pestaña** de terminal:
 
 1. Dirígete a la carpeta contenedora del frontend.
    ```bash
@@ -79,4 +79,3 @@ Manten tu primera terminal abierta (con el backend ya corriendo) y abre una **nu
    ```bash
    flutter run
    ```
-
