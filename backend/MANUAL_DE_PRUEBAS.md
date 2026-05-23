@@ -44,7 +44,7 @@ En el navegador:
 http://localhost:8000/docs
 ```
 
-Deberías ver la interfaz interactiva de FastAPI con los endpoints listados.
+Deberías ver la interfaz interactiva de FastAPI con endpoints listados.
 
 ### **Paso 3: Correr tests automatizados**
 
