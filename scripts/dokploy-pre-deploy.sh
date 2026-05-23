@@ -1,23 +1,22 @@
 #!/usr/bin/env bash
-# Pre-deploy en Dokploy: libera nombres cleanpool_* (requiere root).
+# Pre-deploy en Dokploy (desde el clone del repo en el deploy).
 #
-# En Dokploy → Advanced → Pre Deploy Command:
-#   sudo KEEP_VOLUMES=1 bash scripts/dokploy-pre-deploy.sh
+# Preferido en producción (instalado en el host, sin pedir contraseña):
+#   sudo /usr/local/bin/cleanpool-kill-stack
+#
+# Alternativa si aún no instalaste cleanpool-kill-stack:
+#   sudo bash scripts/cleanpool-kill-stack.sh
 
 set -euo pipefail
 
-cd "$(dirname "$0")/.."
-SCRIPT_DIR="$(dirname "$0")"
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
-if [[ "${EUID:-}" -ne 0 ]]; then
-  echo "Ejecutando con sudo..."
-  exec sudo KEEP_VOLUMES=1 bash "$SCRIPT_DIR/dokploy-pre-deploy.sh"
+if [[ -x /usr/local/bin/cleanpool-kill-stack ]]; then
+  exec /usr/local/bin/cleanpool-kill-stack
 fi
 
-# shellcheck source=lib/force-remove-cleanpool.sh
-source "$SCRIPT_DIR/lib/force-remove-cleanpool.sh"
-force_remove_cleanpool_containers
+if [[ "${EUID:-}" -ne 0 ]]; then
+  exec sudo bash "$SCRIPT_DIR/cleanpool-kill-stack.sh"
+fi
 
-docker compose down --remove-orphans 2>/dev/null || true
-
-echo "Pre-deploy: contenedores CleanPool liberados (volúmenes conservados)."
+exec bash "$SCRIPT_DIR/cleanpool-kill-stack.sh"

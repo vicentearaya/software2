@@ -43,12 +43,20 @@ Si `docker compose` falla con *permission denied*, en el servidor unifica Docker
 5. Variables de entorno (pestaña Environment): mismas que en `.env.example`
    - `DOMAIN`, `SECRET_KEY`, `API_KEY`, `API_URL`, `MQTT_USER`
 6. Activa **Auto Deploy** / webhook de Git si está disponible en tu versión de Dokploy
-7. En **Advanced** → **Pre Deploy Command** (recomendado):
+7. **Una vez en el servidor** (permite pre-deploy sin contraseña y evita `permission denied` al redeploy):
    ```bash
-   sudo KEEP_VOLUMES=1 bash scripts/dokploy-pre-deploy.sh
+   cd ~/software2 && git pull origin main
+   sudo cp scripts/cleanpool-kill-stack.sh /usr/local/bin/cleanpool-kill-stack
+   sudo chmod +x /usr/local/bin/cleanpool-kill-stack
+   echo 'alumno ALL=(ALL) NOPASSWD: /usr/local/bin/cleanpool-kill-stack' | sudo tee /etc/sudoers.d/cleanpool-dokploy
+   sudo chmod 440 /etc/sudoers.d/cleanpool-dokploy
    ```
-   Así Dokploy libera los contenedores `cleanpool_*` antes de recrearlos (evita conflictos si antes desplegaste a mano por SSH).
-8. Primer deploy: **Deploy** (ver abajo si ya hay contenedores levantados)
+8. En **Advanced** → **Pre Deploy Command** (obligatorio en este servidor):
+   ```bash
+   sudo /usr/local/bin/cleanpool-kill-stack
+   ```
+   Sin esto, cada redeploy puede fallar con `cannot stop container: permission denied`.
+9. Primer deploy: **Deploy** (ver abajo si ya hay contenedores levantados)
 
 ## Flujo recomendado de ramas
 
@@ -98,17 +106,26 @@ sudo bash scripts/force-stop-stack.sh
 sudo docker compose up -d --build
 ```
 
-## Error: `cannot stop container: permission denied`
+## Error: `cannot stop container: permission denied` (redeploy Dokploy)
 
-En Ubuntu suele haber **dos Docker** (Snap + apt) y AppArmor bloquea las señales entre ellos.
+Dokploy ejecuta `docker stop` y AppArmor/Snap lo bloquea. **`docker rm` o `compose down` sin `kill -9` no sirven.**
 
-Solución en el servidor:
+**Ahora (SSH):**
+
+```bash
+sudo /usr/local/bin/cleanpool-kill-stack
+```
+
+Si no lo instalaste aún:
 
 ```bash
 cd ~/software2
-sudo bash scripts/force-stop-stack.sh
-sudo docker compose up -d --build
+sudo bash scripts/cleanpool-kill-stack.sh
 ```
+
+Luego en Dokploy: **Deploy** otra vez.
+
+**Para que no vuelva:** instala `cleanpool-kill-stack` y configura el Pre Deploy Command (pasos 7–8 arriba).
 
 A largo plazo, deja **solo un** Docker (recomendado: apt, desactivar Snap):
 
