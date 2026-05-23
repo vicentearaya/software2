@@ -275,3 +275,28 @@ def test_inventario_id_invalido():
     app.dependency_overrides[get_current_user] = lambda: {"username": "admin"}
     response = client.post("/inventario/not-an-objectid/agregar", json={"cantidad": 1})
     assert response.status_code == 400
+
+
+def test_productos_catalogo_listar():
+    app.dependency_overrides[get_current_user] = lambda: {"username": "admin"}
+
+    class _Cursor:
+        def sort(self, *a, **k):
+            return [
+                {
+                    "slug": "cloro_granulado",
+                    "nombre": "Cloro granulado",
+                    "categoria": "Desinfectante",
+                    "unidad": "g",
+                    "unidad_etiqueta": "gr",
+                    "orden": 3,
+                }
+            ]
+
+    _mock_db["productos_catalogo"].find.return_value = _Cursor()
+    response = client.get("/productos/catalogo")
+    assert response.status_code == 200
+    data = response.json()
+    assert len(data["items"]) == 1
+    assert data["items"][0]["nombre"] == "Cloro granulado"
+    assert data["items"][0]["unidadEtiqueta"] == "gr"

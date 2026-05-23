@@ -10,6 +10,7 @@ from routers import auth, readings, mantenciones
 from routers import ingesta
 from routers import device_bindings
 from routers import inventario
+from routers import productos
 from routers import piscinas
 from routers import pools
 
@@ -55,6 +56,7 @@ app.include_router(ingesta.router, prefix="/api/v1")
 app.include_router(device_bindings.router, prefix="/api/v1")
 app.include_router(piscinas.router)
 app.include_router(inventario.router)
+app.include_router(productos.router)
 app.include_router(pools.router)
 app.include_router(mantenciones.router)
 

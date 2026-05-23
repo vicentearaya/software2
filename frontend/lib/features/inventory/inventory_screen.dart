@@ -82,6 +82,8 @@ String _formatInventoryAmount(double n) {
 /// Placeholder numérico coherente con la unidad del producto (misma que el stock).
 String _inventoryQuantityPlaceholder(String unidad) {
   switch (unidad) {
+    case 'gr':
+      return 'Ej: 500';
     case 'kg':
     case 'L':
       return 'Ej: 0.8';
@@ -112,6 +114,33 @@ String _inventoryQuantityFieldHelper(String unidad) {
   }
 }
 
+/// Producto del catálogo global (colección `productos_catalogo`).
+class CatalogProduct {
+  final String slug;
+  final String nombre;
+  final String categoria;
+  final String unidad;
+  final String unidadEtiqueta;
+
+  const CatalogProduct({
+    required this.slug,
+    required this.nombre,
+    required this.categoria,
+    required this.unidad,
+    required this.unidadEtiqueta,
+  });
+
+  factory CatalogProduct.fromJson(Map<String, dynamic> json) => CatalogProduct(
+        slug: json['slug'] as String? ?? '',
+        nombre: json['nombre'] as String? ?? '',
+        categoria: json['categoria'] as String? ?? '',
+        unidad: json['unidad'] as String? ?? '',
+        unidadEtiqueta: json['unidadEtiqueta'] as String? ??
+            json['unidad'] as String? ??
+            '',
+      );
+}
+
 // ── Helpers de categoría ────────────────────────
 class _CategoryInfo {
   final IconData icon;
@@ -132,7 +161,6 @@ _CategoryInfo _getCategory(String cat) =>
 
 // ── Categorías y unidades ───────────────────────
 const List<String> kCategorias = ['Desinfectante', 'Regulador pH', 'Algicida', 'Floculante', 'Otro'];
-const List<String> kUnidades = ['kg', 'g', 'L', 'ml', 'unidades'];
 
 // ── Pantalla principal ──────────────────────────
 class InventoryScreen extends StatefulWidget {
@@ -271,7 +299,18 @@ class _InventoryScreenState extends State<InventoryScreen> {
     }
   }
 
-  Future<bool> _addProduct(InventoryProduct p) async {
+  InventoryProduct? _findProductByNombre(String nombre) {
+    for (final p in _products) {
+      if (p.nombre == nombre) return p;
+    }
+    return null;
+  }
+
+  Future<bool> _saveCatalogQuantities(
+    List<CatalogProduct> catalog,
+    Map<String, double> quantitiesBySlug,
+  ) async {
+    if (quantitiesBySlug.isEmpty) return false;
     var ok = false;
     await _runInventoryAction(() async {
       final token = await _authService.getToken();
@@ -281,30 +320,62 @@ class _InventoryScreenState extends State<InventoryScreen> {
         }
         return;
       }
-      final res = await _inventoryService.createItem(
-        token: token,
-        body: {
-          'nombre': p.nombre,
-          'categoria': p.categoria,
-          'cantidad': p.cantidad,
-          'unidad': p.unidad,
-          'notas': p.notas,
-        },
-      );
+
+      var failures = 0;
+      var saved = 0;
+      for (final item in catalog) {
+        final qty = quantitiesBySlug[item.slug];
+        if (qty == null) continue;
+
+        final existing = _findProductByNombre(item.nombre);
+        final Map<String, dynamic> res;
+        if (existing != null) {
+          res = await _inventoryService.addStock(
+            itemId: existing.id,
+            cantidad: qty,
+            token: token,
+          );
+        } else {
+          res = await _inventoryService.createItem(
+            token: token,
+            body: {
+              'nombre': item.nombre,
+              'categoria': item.categoria,
+              'cantidad': qty,
+              'unidad': item.unidad,
+            },
+          );
+        }
+        if (res['success'] == true) {
+          saved++;
+        } else {
+          failures++;
+        }
+      }
+
       if (!mounted) return;
-      if (res['success'] != true) {
+      await _reloadFromApi();
+      if (failures > 0 && saved == 0) {
         AppUtils.showSnackBar(
           context,
-          res['message']?.toString() ?? 'No se pudo crear el producto',
+          'No se pudieron guardar los productos',
           isError: true,
         );
         return;
       }
-      await _reloadFromApi();
-      if (mounted) {
-        AppUtils.showSnackBar(context, 'Producto agregado');
+      if (failures > 0) {
+        AppUtils.showSnackBar(
+          context,
+          'Se guardaron $saved producto(s); $failures no se pudieron registrar',
+          isError: true,
+        );
+      } else {
+        AppUtils.showSnackBar(
+          context,
+          saved == 1 ? 'Producto agregado' : '$saved productos agregados',
+        );
       }
-      ok = true;
+      ok = saved > 0;
     });
     return ok;
   }
@@ -694,7 +765,11 @@ class _InventoryScreenState extends State<InventoryScreen> {
     if (_actionInProgress) return;
     Navigator.of(context).push(PageRouteBuilder(
       pageBuilder: (context, animation, secondaryAnimation) =>
-          _AddProductScreen(onSave: _addProduct),
+          _BulkAddCatalogScreen(
+        inventoryService: _inventoryService,
+        authService: _authService,
+        onSave: _saveCatalogQuantities,
+      ),
       transitionsBuilder: (context, animation, secondaryAnimation, child) =>
           SlideTransition(
         position: Tween<Offset>(begin: const Offset(0, 1), end: Offset.zero)
@@ -1083,38 +1158,133 @@ class _ProductCardState extends State<_ProductCard> {
   }
 }
 
-// ── Formulario agregar producto ─────────────────
-class _AddProductScreen extends StatefulWidget {
-  final Future<bool> Function(InventoryProduct) onSave;
-  const _AddProductScreen({required this.onSave});
+// ── Formulario alta masiva (catálogo de la calculadora) ──
+class _BulkAddCatalogScreen extends StatefulWidget {
+  final InventoryService inventoryService;
+  final AuthService authService;
+  final Future<bool> Function(
+    List<CatalogProduct> catalog,
+    Map<String, double> quantitiesBySlug,
+  ) onSave;
+
+  const _BulkAddCatalogScreen({
+    required this.inventoryService,
+    required this.authService,
+    required this.onSave,
+  });
+
   @override
-  State<_AddProductScreen> createState() => _AddProductScreenState();
+  State<_BulkAddCatalogScreen> createState() => _BulkAddCatalogScreenState();
 }
 
-class _AddProductScreenState extends State<_AddProductScreen> {
-  final _formKey = GlobalKey<FormState>();
-  final _nombreCtrl = TextEditingController();
-  final _cantidadCtrl = TextEditingController();
-  final _notasCtrl = TextEditingController();
-  String _cat = 'Desinfectante';
-  String _uni = 'kg';
+class _BulkAddCatalogScreenState extends State<_BulkAddCatalogScreen> {
+  bool _loading = true;
   bool _saving = false;
+  String? _loadError;
+  List<CatalogProduct> _catalog = [];
+  final Map<String, TextEditingController> _controllers = {};
 
   @override
-  void dispose() { _nombreCtrl.dispose(); _cantidadCtrl.dispose(); _notasCtrl.dispose(); super.dispose(); }
+  void initState() {
+    super.initState();
+    _loadCatalog();
+  }
+
+  Future<void> _loadCatalog() async {
+    final token = await widget.authService.getToken();
+    if (token == null) {
+      if (mounted) {
+        setState(() {
+          _loading = false;
+          _loadError = 'Sesión expirada';
+        });
+      }
+      return;
+    }
+    final res = await widget.inventoryService.getCatalog(token);
+    if (!mounted) return;
+    if (res['success'] != true) {
+      setState(() {
+        _loading = false;
+        _loadError = res['message']?.toString() ?? 'No se pudo cargar el catálogo';
+      });
+      return;
+    }
+    final data = res['data'];
+    final parsed = <CatalogProduct>[];
+    if (data is Map<String, dynamic> && data['items'] is List) {
+      for (final e in data['items'] as List) {
+        if (e is Map<String, dynamic>) {
+          parsed.add(CatalogProduct.fromJson(e));
+        }
+      }
+    }
+    for (final item in parsed) {
+      _controllers[item.slug] = TextEditingController();
+    }
+    setState(() {
+      _catalog = parsed;
+      _loading = false;
+      _loadError = parsed.isEmpty ? 'No hay productos en el catálogo' : null;
+    });
+  }
+
+  @override
+  void dispose() {
+    for (final c in _controllers.values) {
+      c.dispose();
+    }
+    super.dispose();
+  }
+
+  Map<String, double> _collectFilledQuantities() {
+    final out = <String, double>{};
+    for (final item in _catalog) {
+      final ctrl = _controllers[item.slug];
+      if (ctrl == null) continue;
+      final raw = ctrl.text.trim();
+      if (raw.isEmpty) continue;
+      final n = double.tryParse(raw);
+      if (n != null && n > 0) {
+        out[item.slug] = n;
+      }
+    }
+    return out;
+  }
+
+  String? _validateFilledFields() {
+    for (final item in _catalog) {
+      final ctrl = _controllers[item.slug];
+      if (ctrl == null) continue;
+      final raw = ctrl.text.trim();
+      if (raw.isEmpty) continue;
+      final n = double.tryParse(raw);
+      if (n == null || n <= 0) {
+        return 'Revisa la cantidad de "${item.nombre}"';
+      }
+    }
+    return null;
+  }
 
   Future<void> _submit() async {
-    if (!_formKey.currentState!.validate() || _saving) return;
+    if (_saving) return;
+    final fieldError = _validateFilledFields();
+    if (fieldError != null) {
+      AppUtils.showSnackBar(context, fieldError, isError: true);
+      return;
+    }
+    final quantities = _collectFilledQuantities();
+    if (quantities.isEmpty) {
+      AppUtils.showSnackBar(
+        context,
+        'Ingresa al menos una cantidad para agregar productos',
+        isError: true,
+      );
+      return;
+    }
     setState(() => _saving = true);
     try {
-      final ok = await widget.onSave(InventoryProduct(
-        id: DateTime.now().millisecondsSinceEpoch.toString(),
-        nombre: _nombreCtrl.text.trim(),
-        categoria: _cat,
-        cantidad: double.parse(_cantidadCtrl.text.trim()),
-        unidad: _uni,
-        notas: _notasCtrl.text.trim().isEmpty ? null : _notasCtrl.text.trim(),
-      ));
+      final ok = await widget.onSave(_catalog, quantities);
       if (mounted && ok) Navigator.of(context).pop();
     } finally {
       if (mounted) setState(() => _saving = false);
@@ -1123,153 +1293,235 @@ class _AddProductScreenState extends State<_AddProductScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final catInfo = _getCategory(_cat);
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        backgroundColor: AppColors.surface, elevation: 0,
-        leading: IconButton(icon: const Icon(Icons.close_rounded, color: AppColors.textPrimary), onPressed: () => Navigator.pop(context)),
-        title: Text('Nuevo producto', style: GoogleFonts.syne(color: AppColors.textPrimary, fontSize: 18, fontWeight: FontWeight.w700)),
+        backgroundColor: AppColors.surface,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.close_rounded, color: AppColors.textPrimary),
+          onPressed: _saving ? null : () => Navigator.pop(context),
+        ),
+        title: Text(
+          'Agregar productos',
+          style: GoogleFonts.syne(
+            color: AppColors.textPrimary,
+            fontSize: 18,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
         centerTitle: true,
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Preview de categoría
-              AnimatedContainer(
-                duration: const Duration(milliseconds: 250),
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: catInfo.color.withValues(alpha: 0.06),
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: catInfo.color.withValues(alpha: 0.15)),
-                ),
-                child: Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(
-                        color: catInfo.color.withValues(alpha: 0.15),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Icon(catInfo.icon, color: catInfo.color, size: 22),
-                    ),
-                    const SizedBox(width: 12),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text('Categoría seleccionada', style: GoogleFonts.interTight(color: AppColors.textMuted, fontSize: 11)),
-                        Text(_cat, style: GoogleFonts.syne(color: catInfo.color, fontSize: 15, fontWeight: FontWeight.w700)),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 24),
+      body: _loading
+          ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
+          : _loadError != null
+              ? _buildLoadError()
+              : _buildForm(),
+    );
+  }
 
-              _label('Nombre del producto'),
-              const SizedBox(height: 8),
-              _field(controller: _nombreCtrl, hint: 'Ej: Cloro granulado',
-                  validator: (v) => (v == null || v.trim().isEmpty) ? 'Ingresa un nombre' : null),
-              const SizedBox(height: 20),
-
-              _label('Categoría'),
-              const SizedBox(height: 8),
-              _dropdown<String>(value: _cat, items: kCategorias, onChanged: (v) => setState(() => _cat = v!)),
-              const SizedBox(height: 20),
-
-              Row(children: [
-                Expanded(flex: 3, child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  _label('Cantidad'), const SizedBox(height: 8),
-                  _field(controller: _cantidadCtrl, hint: 'Ej: 5',
-                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                      inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*'))],
-                      validator: (v) {
-                        if (v == null || v.trim().isEmpty) return 'Requerido';
-                        final n = double.tryParse(v.trim());
-                        if (n == null || n <= 0) return 'Valor inválido';
-                        return null;
-                      }),
-                ])),
-                const SizedBox(width: 12),
-                Expanded(flex: 2, child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  _label('Unidad'), const SizedBox(height: 8),
-                  _dropdown<String>(value: _uni, items: kUnidades, onChanged: (v) => setState(() => _uni = v!)),
-                ])),
-              ]),
-              const SizedBox(height: 20),
-
-              _label('Notas (opcional)'),
-              const SizedBox(height: 8),
-              _field(controller: _notasCtrl, hint: 'Instrucciones, marca, etc.', maxLines: 3),
-              const SizedBox(height: 36),
-
-              ElevatedButton.icon(
-                onPressed: _saving ? null : _submit,
-                icon: _saving
-                    ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: Colors.white,
-                        ),
-                      )
-                    : const Icon(Icons.check_rounded, size: 20),
-                label: Text(
-                  _saving ? 'Guardando...' : 'Guardar producto',
-                  style: GoogleFonts.syne(fontWeight: FontWeight.w600, fontSize: 15),
-                ),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary, foregroundColor: Colors.white,
-                  minimumSize: const Size(double.infinity, 54),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)), elevation: 0),
-              ),
-            ],
-          ),
+  Widget _buildLoadError() {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 32),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.error_outline_rounded, size: 48, color: AppColors.statusDanger),
+            const SizedBox(height: 16),
+            Text(
+              _loadError!,
+              textAlign: TextAlign.center,
+              style: GoogleFonts.interTight(color: AppColors.textSecondary, fontSize: 14),
+            ),
+            const SizedBox(height: 24),
+            OutlinedButton.icon(
+              onPressed: () {
+                setState(() {
+                  _loading = true;
+                  _loadError = null;
+                });
+                _loadCatalog();
+              },
+              icon: const Icon(Icons.refresh_rounded),
+              label: Text('Reintentar', style: GoogleFonts.interTight()),
+            ),
+          ],
         ),
       ),
     );
   }
 
-  Widget _label(String t) => Text(t, style: GoogleFonts.interTight(color: AppColors.textSecondary, fontSize: 13, fontWeight: FontWeight.w600));
+  Widget _buildForm() {
+    final grouped = <String, List<CatalogProduct>>{};
+    for (final item in _catalog) {
+      grouped.putIfAbsent(item.categoria, () => []);
+      grouped[item.categoria]!.add(item);
+    }
+    final orderedCats = kCategorias.where((c) => grouped.containsKey(c)).toList();
 
-  Widget _field({required TextEditingController controller, required String hint,
-      String? Function(String?)? validator, TextInputType? keyboardType,
-      List<TextInputFormatter>? inputFormatters, int maxLines = 1}) {
-    return TextFormField(
-      controller: controller, validator: validator, keyboardType: keyboardType,
-      inputFormatters: inputFormatters, maxLines: maxLines,
-      style: GoogleFonts.interTight(color: AppColors.textPrimary, fontSize: 15),
-      decoration: InputDecoration(
-        hintText: hint, hintStyle: GoogleFonts.interTight(color: AppColors.textMuted, fontSize: 14),
-        filled: true, fillColor: AppColors.surfaceElevated,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: AppColors.border)),
-        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: AppColors.border)),
-        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: AppColors.primary, width: 1.5)),
-        errorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: AppColors.statusDanger)),
-      ),
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+          child: Text(
+            'Indica la cantidad de cada producto que tienes. '
+            'Los campos vacíos no se agregarán. Unidades iguales a las recomendaciones del sistema.',
+            style: GoogleFonts.interTight(
+              color: AppColors.textSecondary,
+              fontSize: 13,
+              height: 1.5,
+            ),
+          ),
+        ),
+        Expanded(
+          child: ListView(
+            padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+            children: [
+              for (final cat in orderedCats) ...[
+                _buildCategoryHeader(cat),
+                const SizedBox(height: 10),
+                ...grouped[cat]!.map(_buildProductRow),
+                const SizedBox(height: 16),
+              ],
+            ],
+          ),
+        ),
+        SafeArea(
+          top: false,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
+            child: ElevatedButton.icon(
+              onPressed: _saving ? null : _submit,
+              icon: _saving
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                    )
+                  : const Icon(Icons.check_rounded, size: 20),
+              label: Text(
+                _saving ? 'Guardando...' : 'Guardar productos',
+                style: GoogleFonts.syne(fontWeight: FontWeight.w600, fontSize: 15),
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                foregroundColor: Colors.white,
+                minimumSize: const Size(double.infinity, 54),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                elevation: 0,
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 
-  Widget _dropdown<T>({required T value, required List<T> items, required void Function(T?) onChanged}) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      decoration: BoxDecoration(
-        color: AppColors.surfaceElevated, borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.border),
-      ),
-      child: DropdownButtonHideUnderline(
-        child: DropdownButton<T>(
-          value: value, isExpanded: true, dropdownColor: AppColors.surface,
-          style: GoogleFonts.interTight(color: AppColors.textPrimary, fontSize: 15),
-          items: items.map((e) => DropdownMenuItem<T>(value: e, child: Text('$e'))).toList(),
-          onChanged: onChanged,
+  Widget _buildCategoryHeader(String cat) {
+    final info = _getCategory(cat);
+    return Row(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(6),
+          decoration: BoxDecoration(
+            color: info.color.withValues(alpha: 0.12),
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: info.color.withValues(alpha: 0.2)),
+          ),
+          child: Icon(info.icon, color: info.color, size: 16),
+        ),
+        const SizedBox(width: 10),
+        Text(
+          cat.toUpperCase(),
+          style: GoogleFonts.syne(
+            color: info.color,
+            fontSize: 12,
+            fontWeight: FontWeight.w700,
+            letterSpacing: 0.5,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildProductRow(CatalogProduct item) {
+    final ctrl = _controllers[item.slug]!;
+    final catInfo = _getCategory(item.categoria);
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: AppColors.border.withValues(alpha: 0.5)),
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                color: catInfo.color.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(catInfo.icon, color: catInfo.color, size: 16),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                item.nombre,
+                style: GoogleFonts.interTight(
+                  color: AppColors.textPrimary,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  height: 1.35,
+                ),
+              ),
+            ),
+            const SizedBox(width: 12),
+            SizedBox(
+              width: 110,
+              child: TextField(
+                controller: ctrl,
+                enabled: !_saving,
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                inputFormatters: [
+                  FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
+                ],
+                textAlign: TextAlign.right,
+                style: GoogleFonts.interTight(color: AppColors.textPrimary, fontSize: 15),
+                decoration: InputDecoration(
+                  hintText: _inventoryQuantityPlaceholder(item.unidadEtiqueta),
+                  hintStyle: GoogleFonts.interTight(color: AppColors.textMuted, fontSize: 13),
+                  suffixText: item.unidadEtiqueta,
+                  suffixStyle: GoogleFonts.interTight(
+                    color: AppColors.textSecondary,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                  ),
+                  isDense: true,
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                  filled: true,
+                  fillColor: AppColors.surfaceElevated,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: AppColors.border),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: AppColors.border),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );

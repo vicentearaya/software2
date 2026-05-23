@@ -14,6 +14,11 @@ class InventoryService {
     return _api.get('/inventario', token: token);
   }
 
+  /// Catálogo de productos (mismos que la calculadora de tratamiento).
+  Future<Map<String, dynamic>> getCatalog(String token) async {
+    return _api.get('/productos/catalogo', token: token);
+  }
+
   Future<Map<String, dynamic>> createItem({
     required Map<String, dynamic> body,
     required String token,
