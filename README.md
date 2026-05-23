@@ -79,3 +79,4 @@ Manten tu primera terminal abierta (con backend corriendo) y abre una **nueva ve
    ```bash
    flutter run
    ```
+ 
