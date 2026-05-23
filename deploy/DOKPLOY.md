@@ -64,6 +64,16 @@ docker compose exec backend python seed.py
 
 `seed.py` crea el usuario admin y datos de ejemplo en la BD local.
 
+## Error: `Bind for 0.0.0.0:8884 failed: port is already allocated`
+
+Quedó un contenedor **viejo de Dokploy** usando el puerto (nombre tipo `7c11c7b03fad_cleanpool_frontend`).
+
+```bash
+cd ~/software2
+sudo bash scripts/force-stop-stack.sh
+sudo docker compose up -d --build
+```
+
 ## Error: `cannot stop container: permission denied`
 
 En Ubuntu suele haber **dos Docker** (Snap + apt) y AppArmor bloquea las señales entre ellos.
