@@ -54,7 +54,7 @@ Para inicializar completamente el entorno de desarrollo, necesitas levantar tant
    ```bash
    source venv/bin/activate
    ```
-3. *(Opcional)* Si es la primera vez que configuras la base de datos, ejecuta el archivo semilla para insertar al usuario administrador (admin):
+3. *(Opcional)* Si es la primera vez que configuras la base de datos, ejecuta el archivo semilla para insertar al usuario administrador, (admin):
    ```bash
    python seed.py
    ```
