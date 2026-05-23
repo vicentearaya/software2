@@ -43,19 +43,17 @@ Si `docker compose` falla con *permission denied*, en el servidor unifica Docker
 5. Variables de entorno (pestaña Environment): mismas que en `.env.example`
    - `DOMAIN`, `SECRET_KEY`, `API_KEY`, `API_URL`, `MQTT_USER`
 6. Activa **Auto Deploy** / webhook de Git si está disponible en tu versión de Dokploy
-7. **Una vez en el servidor** (permite pre-deploy sin contraseña y evita `permission denied` al redeploy):
+7. **Una vez en el servidor** (script de kill + sudo sin contraseña):
    ```bash
    cd ~/software2 && git pull origin main
-   sudo cp scripts/cleanpool-kill-stack.sh /usr/local/bin/cleanpool-kill-stack
-   sudo chmod +x /usr/local/bin/cleanpool-kill-stack
-   echo 'alumno ALL=(ALL) NOPASSWD: /usr/local/bin/cleanpool-kill-stack' | sudo tee /etc/sudoers.d/cleanpool-dokploy
-   sudo chmod 440 /etc/sudoers.d/cleanpool-dokploy
+   sudo bash scripts/install-cleanpool-kill-stack.sh
    ```
-8. En **Advanced** → **Pre Deploy Command** (obligatorio en este servidor):
+8. En **Advanced** → **Run Command** (reemplaza el comando por defecto; usa tu `-p` de Dokploy):
    ```bash
-   sudo /usr/local/bin/cleanpool-kill-stack
+   bash -c 'sudo /usr/local/bin/cleanpool-kill-stack && docker compose -p produccin-appdespliegue-hwhkj3 -f ./docker-compose.yml up -d --build --remove-orphans'
    ```
-   Sin esto, cada redeploy puede fallar con `cannot stop container: permission denied`.
+   Sin el `cleanpool-kill-stack` antes del `up`, fallará con *container name already in use* o *permission denied*.
+   **No uses** `docker compose up` manual en `~/software2` si despliegas con Dokploy (solo un método).
 9. Primer deploy: **Deploy** (ver abajo si ya hay contenedores levantados)
 
 ## Flujo recomendado de ramas
