@@ -1,8 +1,10 @@
 #!/usr/bin/env bash
-# Fuerza la parada de contenedores CleanPool cuando "docker stop" falla con
-# "permission denied" por conflicto AppArmor entre Docker Snap y Docker apt.
+# Fuerza la parada de contenedores CleanPool cuando "docker stop/rm" falla con
+# "permission denied" (conflicto AppArmor / Docker Snap + apt).
 #
-# Uso: sudo bash scripts/force-stop-stack.sh
+# Uso:
+#   sudo bash scripts/force-stop-stack.sh          # baja stack y borra volúmenes
+#   sudo KEEP_VOLUMES=1 bash scripts/force-stop-stack.sh   # conserva Mongo
 
 set -euo pipefail
 
@@ -12,26 +14,18 @@ if [[ "${EUID:-}" -ne 0 ]]; then
 fi
 
 cd "$(dirname "$0")/.."
+SCRIPT_DIR="$(dirname "$0")"
 
-echo "==> Relajando perfiles AppArmor de Docker (temporal)..."
-for profile in docker-default snap.docker.dockerd snap.docker.docker; do
-  if aa-status 2>/dev/null | grep -q "$profile"; then
-    aa-complain "$profile" 2>/dev/null || true
-  fi
-done
+# shellcheck source=lib/force-remove-cleanpool.sh
+source "$SCRIPT_DIR/lib/force-remove-cleanpool.sh"
+force_remove_cleanpool_containers
 
-echo "==> Deteniendo contenedores CleanPool (nombres fijos y restos de Dokploy)..."
-while IFS= read -r name; do
-  [[ -z "$name" ]] && continue
-  pid="$(docker inspect -f '{{.State.Pid}}' "$name" 2>/dev/null || echo 0)"
-  if [[ -n "$pid" && "$pid" != "0" ]]; then
-    kill -9 "$pid" 2>/dev/null || true
-  fi
-  docker rm -f "$name" 2>/dev/null || true
-  echo "  eliminado: $name"
-done < <(docker ps -a --format '{{.Names}}' | grep -E 'cleanpool_|_cleanpool_' || true)
+if [[ "${KEEP_VOLUMES:-}" == "1" ]]; then
+  echo "==> docker compose down (sin -v, conservando volúmenes)..."
+  docker compose down --remove-orphans 2>/dev/null || true
+else
+  echo "==> docker compose down -v..."
+  docker compose down -v 2>/dev/null || true
+fi
 
-echo "==> docker compose down -v..."
-docker compose down -v 2>/dev/null || true
-
-echo "OK. Ahora levanta el stack: sudo docker compose up -d --build"
+echo "OK. Siguiente paso: Deploy en Dokploy, o: sudo docker compose up -d --build"

@@ -1,11 +1,11 @@
 # Despliegue en producción (rama `main`)
 
-Elige **una** estrategia de auto-deploy (no uses las dos a la vez o desplegarás dos veces):
+Usa **solo Dokploy** para auto-deploy en `main` (desactiva el workflow de GitHub Actions si no quieres dos despliegues a la vez).
 
 | Método | Archivo / herramienta |
 |--------|------------------------|
-| **Recomendado (este repo)** | GitHub Actions → `.github/workflows/deploy.yml` (SSH + `git pull` + `docker compose`) |
-| Alternativa | Dokploy en puerto **8886** (webhook / auto-deploy desde Git) |
+| **Producción** | Dokploy en puerto **8886** (webhook / auto-deploy desde Git) |
+| Manual / emergencia | SSH + `docker compose` en `/home/alumno/software2` |
 
 Dokploy corre en el puerto **8886** y no forma parte de este `docker-compose.yml`.
 
@@ -43,7 +43,12 @@ Si `docker compose` falla con *permission denied*, en el servidor unifica Docker
 5. Variables de entorno (pestaña Environment): mismas que en `.env.example`
    - `DOMAIN`, `SECRET_KEY`, `API_KEY`, `API_URL`, `MQTT_USER`
 6. Activa **Auto Deploy** / webhook de Git si está disponible en tu versión de Dokploy
-7. Primer deploy: **Deploy**
+7. En **Advanced** → **Pre Deploy Command** (recomendado):
+   ```bash
+   sudo KEEP_VOLUMES=1 bash scripts/dokploy-pre-deploy.sh
+   ```
+   Así Dokploy libera los contenedores `cleanpool_*` antes de recrearlos (evita conflictos si antes desplegaste a mano por SSH).
+8. Primer deploy: **Deploy** (ver abajo si ya hay contenedores levantados)
 
 ## Flujo recomendado de ramas
 
@@ -63,6 +68,25 @@ docker compose exec backend python seed.py
 ```
 
 `seed.py` crea el usuario admin y datos de ejemplo en la BD local.
+
+## Error: `container name "/cleanpool_..." is already in use`
+
+El `docker-compose.yml` usa nombres fijos (`container_name: cleanpool_mongo`, etc.). Si el stack ya está **Up** por un deploy manual, Dokploy no puede crear otros con el mismo nombre.
+
+**Ahora (una vez):** en el servidor por SSH (no uses solo `docker rm`; falla con *permission denied*):
+
+```bash
+cd ~/software2
+sudo KEEP_VOLUMES=1 bash scripts/force-stop-stack.sh
+```
+
+Luego en Dokploy pulsa **Deploy** otra vez.
+
+Si aún falla: `sudo systemctl restart docker` y repite el script.
+
+**Para siempre:** configura el Pre Deploy Command de arriba (`scripts/dokploy-pre-deploy.sh`).
+
+Importante: el cambio del README debe estar en **GitHub** (`git push origin main`). Dokploy despliega desde el remoto, no desde tu PC local.
 
 ## Error: `Bind for 0.0.0.0:8884 failed: port is already allocated`
 
