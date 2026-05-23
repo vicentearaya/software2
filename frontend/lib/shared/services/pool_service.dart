@@ -56,10 +56,18 @@ class PoolService {
     required String deviceId,
     required String poolId,
     required String token,
+    String? mqttTopicSlug,
   }) async {
+    final body = <String, dynamic>{
+      'device_id': deviceId,
+      'pool_id': poolId,
+    };
+    if (mqttTopicSlug != null && mqttTopicSlug.isNotEmpty) {
+      body['mqtt_topic_slug'] = mqttTopicSlug;
+    }
     return _api.post(
       '/api/v1/device/bind',
-      body: {'device_id': deviceId, 'pool_id': poolId},
+      body: body,
       token: token,
     );
   }

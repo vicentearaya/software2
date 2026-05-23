@@ -1,6 +1,25 @@
-# Despliegue con Dokploy (rama `main`)
+# Despliegue en producción (rama `main`)
+
+Elige **una** estrategia de auto-deploy (no uses las dos a la vez o desplegarás dos veces):
+
+| Método | Archivo / herramienta |
+|--------|------------------------|
+| **Recomendado (este repo)** | GitHub Actions → `.github/workflows/deploy.yml` (SSH + `git pull` + `docker compose`) |
+| Alternativa | Dokploy en puerto **8886** (webhook / auto-deploy desde Git) |
 
 Dokploy corre en el puerto **8886** y no forma parte de este `docker-compose.yml`.
+
+## GitHub Actions (SSH)
+
+1. En GitHub: **Settings → Secrets and variables → Actions → New repository secret**
+   - `SERVER_HOST` = IP del servidor (ej. `200.27.101.243`)
+   - `SERVER_USER` = `alumno`
+   - `SERVER_SSH_KEY` = clave privada SSH que pueda entrar al servidor (sin passphrase, o usa `key` + agent)
+   - `SERVER_SSH_PORT` = `22` (opcional)
+2. En el servidor, el repo debe existir en `/home/alumno/software2` y el usuario SSH debe poder ejecutar `git pull` y `docker compose` (grupo `docker`).
+3. Cada **push a `main`** ejecuta CI (`.github/workflows/ci.yml`) y este deploy en paralelo.
+
+Si `docker compose` falla con *permission denied*, en el servidor unifica Docker (ver sección de error más abajo) o cambia el script del workflow a `sudo docker compose` (requiere NOPASSWD en sudoers).
 
 ## Mapa de puertos
 
@@ -72,6 +91,14 @@ docker compose ps
 docker compose logs -f backend
 docker compose logs -f mosquitto
 ```
+
+## Presencia del ESP8266
+
+El backend suscribe `cleanpool/+/temperatura`, guarda lecturas en MongoDB y marca el dispositivo **ONLINE** si hubo lectura en los últimos **2 minutos**.
+
+Al vincular desde el Dashboard se envía `mqtt_topic_slug: piscina-1` (debe coincidir con `POOL_ID` del firmware).
+
+Tras desplegar, **re-vincula** el dispositivo una vez si el vínculo es anterior a este cambio.
 
 ## MQTT de prueba
 

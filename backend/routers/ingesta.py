@@ -4,6 +4,7 @@ from db import get_db
 from config import get_settings
 from core.config_pool import evaluar_sensor, EstadoAgua
 from models import LecturaIn, LecturaInCompat, LecturaTemperaturaIn, LecturaResponse
+from services.device_presence import ingest_temperature_reading
 
 router = APIRouter(tags=["Ingesta IoT"])
 
@@ -95,20 +96,13 @@ def ingest_temperatura(lectura: LecturaTemperaturaIn, db=Depends(get_db), _=Depe
     Se persiste la temperatura con pool_id y timestamp.
     Como no hay otros sensores en esta lectura, is_critical se define en False.
     """
-    doc = {
-        "pool_id": lectura.pool_id,
-        "temperatura": lectura.temperatura,
-        "timestamp": datetime.now(timezone.utc),
-        "is_critical": False,
-    }
-
-    result = db.lecturas.insert_one(doc)
-
-    return LecturaResponse(
-        ok=True,
-        id=str(result.inserted_id),
-        is_critical=False
+    inserted_id = ingest_temperature_reading(
+        db,
+        pool_id=lectura.pool_id,
+        temperatura=lectura.temperatura,
     )
+
+    return LecturaResponse(ok=True, id=inserted_id, is_critical=False)
 
 
 @router.post("/sensor/data", summary="POST lectura de sensores (compatibilidad)")

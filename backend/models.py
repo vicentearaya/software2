@@ -124,6 +124,11 @@ class DeviceBindingIn(BaseModel):
     """Vincula un dispositivo físico a una piscina específica."""
     device_id: str = Field(..., min_length=1, description="Identificador único del dispositivo físico")
     pool_id: str = Field(..., min_length=1, description="ID de piscina (ObjectId string de colección piscinas)")
+    mqtt_topic_slug: str | None = Field(
+        default=None,
+        min_length=1,
+        description="Segmento MQTT en cleanpool/{slug}/temperatura (ej. piscina-1)",
+    )
 
 
 class DeviceBindingResponse(BaseModel):
@@ -145,6 +150,11 @@ class DeviceStatusResponse(BaseModel):
     last_seen_at: Optional[datetime] = None
     is_online: bool
     connection_state: str = Field(description="ONLINE | OFFLINE")
+    mqtt_topic_slug: Optional[str] = None
+    last_temperature: Optional[float] = Field(
+        default=None,
+        description="Última temperatura reciente del sensor (null si está offline o sin datos)",
+    )
 
 
 class SensorEvaluacion(BaseModel):

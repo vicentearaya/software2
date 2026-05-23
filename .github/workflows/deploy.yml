@@ -1,0 +1,40 @@
+# Despliegue automático en el servidor universitario al hacer push a main.
+# Requiere secrets en GitHub: Settings → Secrets and variables → Actions.
+#
+# SERVER_HOST      → 200.27.101.243
+# SERVER_USER      → alumno
+# SERVER_SSH_KEY   → clave privada SSH (contenido completo del id_rsa)
+# SERVER_SSH_PORT  → 22 (opcional; si no existe, usa 22)
+
+name: Deploy to server
+
+on:
+  push:
+    branches: [main]
+  # Permite relanzar el deploy manualmente desde la pestaña Actions
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          port: ${{ secrets.SERVER_SSH_PORT || 22 }}
+          script_stop: true
+          script: |
+            set -euo pipefail
+            cd /home/alumno/software2
+            git fetch origin main
+            git checkout main
+            git pull --ff-only origin main
+            docker compose up -d --build
+            docker compose ps

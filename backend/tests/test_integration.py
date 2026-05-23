@@ -276,12 +276,14 @@ class TestPoolStatusFlow:
             "nombre": "Piscina Status Test",
             "volumen": 50.0,
         }
+        from datetime import datetime, timezone
+
         mock_db_local.lecturas.find_one.return_value = {
             "pool_id": str(fake_oid),
             "ph": 7.5,
             "cloro": 2.0,
             "temperatura": 26.0,
-            "timestamp": "2026-05-04T10:00:00Z",
+            "timestamp": datetime.now(timezone.utc),
         }
         mock_db_local.mantenimientos.find_one.return_value = None
 
@@ -313,12 +315,14 @@ class TestPoolStatusFlow:
             "nombre": "Piscina Fuera Rango",
             "volumen": 30.0,
         }
+        from datetime import datetime, timezone
+
         mock_db_local.lecturas.find_one.return_value = {
             "pool_id": str(fake_oid),
             "ph": 5.0,
             "cloro": 0.3,
             "temperatura": 35.0,
-            "timestamp": "2026-05-04T10:00:00Z",
+            "timestamp": datetime.now(timezone.utc),
         }
         mock_db_local.mantenimientos.find_one.return_value = None
 

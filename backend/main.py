@@ -1,7 +1,10 @@
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from config import get_settings
+from services.mqtt_worker import start_mqtt_worker, stop_mqtt_worker
 from middleware.request_logging import RequestLoggingMiddleware
 from routers import auth, readings, mantenciones
 from routers import ingesta
@@ -11,6 +14,14 @@ from routers import piscinas
 from routers import pools
 
 settings = get_settings()
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    start_mqtt_worker(settings)
+    yield
+    stop_mqtt_worker()
+
 
 app = FastAPI(
     title="CleanPool API",
@@ -25,6 +36,7 @@ app = FastAPI(
         "url": "https://github.com/software2-main",
     },
     debug=settings.debug,
+    lifespan=lifespan,
 )
 
 app.add_middleware(

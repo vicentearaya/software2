@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone
 
 from bson import ObjectId
 from fastapi import APIRouter, Depends, Header, HTTPException, status
@@ -13,9 +13,13 @@ from models import (
     LecturaTemperaturaDeviceIn,
 )
 from routers.auth import get_current_user
+from services.device_presence import (
+    ingest_temperature_reading,
+    is_device_online,
+    is_reading_fresh,
+)
 
 router = APIRouter(tags=["Device Bindings"])
-ONLINE_WINDOW = timedelta(minutes=5)
 
 
 def verify_api_key(x_api_key: str = Header(...), settings=Depends(get_settings)):
@@ -49,12 +53,15 @@ def bind_device_to_pool(
 
     now = datetime.now(timezone.utc)
     device_id = payload.device_id.strip()
+    mqtt_slug = (payload.mqtt_topic_slug or device_id).strip()
+
     db.device_bindings.update_one(
         {"device_id": device_id},
         {
             "$set": {
                 "device_id": device_id,
                 "pool_id": payload.pool_id,
+                "mqtt_topic_slug": mqtt_slug,
                 "username": current_user["username"],
                 "active": True,
                 "updated_at": now,
@@ -166,6 +173,7 @@ def get_device_status(
             "active": 1,
             "assigned_at": 1,
             "last_seen_at": 1,
+            "mqtt_topic_slug": 1,
         },
     )
     if not binding:
@@ -173,8 +181,19 @@ def get_device_status(
 
     last_seen = binding.get("last_seen_at")
     now = datetime.now(timezone.utc)
-    is_online = bool(last_seen and (now - last_seen) <= ONLINE_WINDOW)
+    is_online = is_device_online(last_seen)
     state = "ONLINE" if is_online else "OFFLINE"
+
+    last_temperature = None
+    latest = db.lecturas.find_one(
+        {"pool_id": binding["pool_id"]},
+        sort=[("timestamp", -1)],
+        projection={"temperatura": 1, "timestamp": 1},
+    )
+    if latest and is_reading_fresh(latest.get("timestamp")):
+        temp = latest.get("temperatura")
+        if temp is not None:
+            last_temperature = float(temp)
 
     return DeviceStatusResponse(
         ok=True,
@@ -185,6 +204,8 @@ def get_device_status(
         last_seen_at=last_seen,
         is_online=is_online,
         connection_state=state,
+        mqtt_topic_slug=binding.get("mqtt_topic_slug"),
+        last_temperature=last_temperature,
     )
 
 
@@ -199,7 +220,7 @@ def ingest_temperature_from_device(
     _=Depends(verify_api_key),
 ):
     """
-    Ingesta para ESP32 usando device_id.
+    Ingesta para ESP8266 usando device_id.
     El backend resuelve automáticamente el pool_id según el vínculo activo.
     """
     binding = db.device_bindings.find_one(
@@ -209,17 +230,11 @@ def ingest_temperature_from_device(
     if not binding:
         raise HTTPException(status_code=404, detail="No existe vínculo activo para el dispositivo")
 
-    doc = {
-        "pool_id": binding["pool_id"],
-        "device_id": payload.device_id.strip(),
-        "temperatura": payload.temperatura,
-        "timestamp": datetime.now(timezone.utc),
-        "is_critical": False,
-    }
-    result = db.lecturas.insert_one(doc)
-    db.device_bindings.update_one(
-        {"device_id": payload.device_id.strip(), "active": True},
-        {"$set": {"last_seen_at": doc["timestamp"], "updated_at": doc["timestamp"]}},
+    inserted_id = ingest_temperature_reading(
+        db,
+        pool_id=binding["pool_id"],
+        temperatura=payload.temperatura,
+        device_id=payload.device_id.strip(),
     )
 
-    return LecturaResponse(ok=True, id=str(result.inserted_id), is_critical=False)
+    return LecturaResponse(ok=True, id=inserted_id, is_critical=False)

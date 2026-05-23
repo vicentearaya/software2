@@ -14,6 +14,7 @@ from fastapi import HTTPException, status
 from pymongo.database import Database
 
 from services.calculator import evaluarAptitud, evaluar_parametros_individuales
+from services.device_presence import is_reading_fresh
 
 
 def _find_piscina_doc(db: Database, pool_id: str) -> Optional[Dict[str, Any]]:
@@ -61,7 +62,9 @@ def build_pool_status_payload(db: Database, pool_id: str) -> Dict[str, Any]:
             temperatura = lectura_manual.get("temperatura_medida")
             fuente_temperatura = "manual"
 
-    if lectura_sensor:
+    sensor_fresh = lectura_sensor and is_reading_fresh(lectura_sensor.get("timestamp"))
+
+    if lectura_sensor and sensor_fresh:
         if lectura_sensor.get("ph") is not None:
             ph = lectura_sensor.get("ph")
             fuente_ph = "sensor"

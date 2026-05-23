@@ -1,8 +1,11 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../core/constants/app_colors.dart';
+import '../../core/constants/device_config.dart';
 import '../../core/utils/app_utils.dart';
 import '../../shared/services/auth_service.dart';
 import '../../shared/services/pool_service.dart';
@@ -21,7 +24,6 @@ class DashboardScreen extends StatefulWidget {
 }
 
 class _DashboardScreenState extends State<DashboardScreen> {
-  static const String _deviceId = 'cleanpool-001';
   List<Map<String, dynamic>> _pools = [];
   Map<String, dynamic>? _selectedPool;
   bool _loading = true;
@@ -34,11 +36,23 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   final _authService = AuthService();
   final _poolService = PoolService();
+  Timer? _liveDataTimer;
 
   @override
   void initState() {
     super.initState();
     _loadPools();
+    _liveDataTimer = Timer.periodic(const Duration(seconds: 12), (_) {
+      if (_selectedPool == null) return;
+      _loadPoolStatus(showLoader: false);
+      _loadDeviceBinding(silent: true);
+    });
+  }
+
+  @override
+  void dispose() {
+    _liveDataTimer?.cancel();
+    super.dispose();
   }
 
   Future<void> _loadPoolStatus({bool showLoader = true}) async {
@@ -76,7 +90,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     }
 
     final bindingResult = await _poolService.getDeviceBinding(
-      deviceId: _deviceId,
+      deviceId: DeviceConfig.deviceId,
       token: token,
     );
     if (!mounted) return;
@@ -98,7 +112,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     });
 
     final statusResult = await _poolService.getDeviceStatus(
-      deviceId: _deviceId,
+      deviceId: DeviceConfig.deviceId,
       token: token,
     );
     if (!mounted) return;
@@ -245,9 +259,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
     setState(() => _bindingActionLoading = true);
     final result = await _poolService.bindDeviceToPool(
-      deviceId: _deviceId,
+      deviceId: DeviceConfig.deviceId,
       poolId: _selectedPool!['id'] as String,
       token: token,
+      mqttTopicSlug: DeviceConfig.mqttTopicSlug,
     );
 
     if (!mounted) return;
@@ -256,7 +271,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       setState(() {
         _deviceBinding = {
           ...?_deviceBinding,
-          'device_id': _deviceId,
+          'device_id': DeviceConfig.deviceId,
           'pool_id': _selectedPool!['id'],
           'is_online': _deviceBinding?['is_online'] == true,
         };
@@ -282,7 +297,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
     setState(() => _bindingActionLoading = true);
     final result = await _poolService.unbindDeviceFromPool(
-      deviceId: _deviceId,
+      deviceId: DeviceConfig.deviceId,
       poolId: _selectedPool!['id'] as String,
       token: token,
     );
@@ -384,7 +399,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final Map<String, dynamic>? temperaturaData =
         _poolStatus?['parametros']?['temperatura'] as Map<String, dynamic>?;
     final num? temperaturaValor = temperaturaData?['valor'] as num?;
-    final double? temperatureC = temperaturaValor?.toDouble();
+    final String? tempFuente = temperaturaData?['fuente'] as String?;
+    final bool showLiveTemperature = isDeviceBoundToSelectedPool &&
+        isDeviceOnline &&
+        temperaturaValor != null &&
+        tempFuente == 'sensor';
+    final double? temperatureC =
+        showLiveTemperature ? temperaturaValor!.toDouble() : null;
 
     return Scaffold(
       body: SafeArea(
@@ -563,8 +584,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   child: PoolHeroCard(
                     pool: pool,
                     litrosStr: litrosStr,
-                    temperatureC:
-                        isDeviceBoundToSelectedPool ? temperatureC : null,
+                    temperatureC: temperatureC,
                   ),
                 ),
               ),
@@ -574,15 +594,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   child: Column(
                     children: [
                       PoolVisualSection(pool: pool),
-                      if (isDeviceBoundToSelectedPool && !isDeviceOnline)
+                      if (isDeviceBoundToSelectedPool)
                         Padding(
                           padding: const EdgeInsets.only(top: 10),
-                          child: Text(
-                            'Dispositivo vinculado, sin señal reciente.',
-                            textAlign: TextAlign.center,
-                            style: GoogleFonts.interTight(
-                              color: AppColors.statusWarning,
-                              fontSize: 12,
+                          child: _DeviceConnectionHint(
+                            isOnline: isDeviceOnline,
+                            lastSeenLabel: _formatLastSeen(
+                              _deviceBinding?['last_seen_at']?.toString(),
                             ),
                           ),
                         ),
@@ -768,6 +786,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
         .replaceAllMapped(RegExp(r'(\d)(?=(\d{3})+(?!\d))'), (m) => '${m[1]}.');
   }
 
+  String _formatLastSeen(String? raw) {
+    if (raw == null || raw.isEmpty) return 'nunca';
+    final dt = DateTime.tryParse(raw);
+    if (dt == null) return raw;
+    final local = dt.toLocal();
+    final h = local.hour.toString().padLeft(2, '0');
+    final m = local.minute.toString().padLeft(2, '0');
+    return '${local.day.toString().padLeft(2, '0')}/${local.month.toString().padLeft(2, '0')} $h:$m';
+  }
+
   Map<String, dynamic> _buildManualStatusFromInputs(double ph, double cloro) {
     final bool phOptimo = ph >= 7.2 && ph <= 7.8;
     final bool phWarning = !phOptimo && ph >= 6.8 && ph <= 8.2;
@@ -800,5 +828,29 @@ class _DashboardScreenState extends State<DashboardScreen> {
         'cloro': {'valor': cloro, 'estado': cloroState, 'fuente': 'manual'},
       },
     };
+  }
+}
+
+class _DeviceConnectionHint extends StatelessWidget {
+  const _DeviceConnectionHint({
+    required this.isOnline,
+    required this.lastSeenLabel,
+  });
+
+  final bool isOnline;
+  final String lastSeenLabel;
+
+  @override
+  Widget build(BuildContext context) {
+    final color =
+        isOnline ? AppColors.statusGood : AppColors.statusWarning;
+
+    return Text(
+      isOnline
+          ? 'Dispositivo conectado · temperatura en vivo'
+          : 'Dispositivo desconectado · última conexión: $lastSeenLabel',
+      textAlign: TextAlign.center,
+      style: GoogleFonts.interTight(color: color, fontSize: 12),
+    );
   }
 }
