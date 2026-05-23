@@ -11,32 +11,24 @@ from typing import Any, Dict, Optional, Tuple
 
 from pymongo.database import Database
 
-from services.pool_status import _find_piscina_doc
+from services.pool_lookup import find_piscina_doc
+from services.reading_freshness import ONLINE_WINDOW, is_device_online, is_reading_fresh
 
 logger = logging.getLogger(__name__)
 
-# Sin lectura MQTT en este intervalo → OFFLINE (ESP publica cada 10 s).
-ONLINE_WINDOW = timedelta(minutes=2)
 MQTT_TOPIC_PATTERN = "cleanpool/+/temperatura"
 
-
-def _ensure_utc(dt: datetime) -> datetime:
-    if dt.tzinfo is None:
-        return dt.replace(tzinfo=timezone.utc)
-    return dt.astimezone(timezone.utc)
-
-
-def is_reading_fresh(
-    timestamp: Optional[datetime], *, window: timedelta = ONLINE_WINDOW
-) -> bool:
-    if timestamp is None:
-        return False
-    now = datetime.now(timezone.utc)
-    return (now - _ensure_utc(timestamp)) <= window
-
-
-def is_device_online(last_seen_at: Optional[datetime]) -> bool:
-    return is_reading_fresh(last_seen_at)
+# Re-export para tests y routers que importaban desde aquí.
+__all__ = [
+    "MQTT_TOPIC_PATTERN",
+    "ONLINE_WINDOW",
+    "is_device_online",
+    "is_reading_fresh",
+    "ingest_temperature_reading",
+    "parse_temperature_payload",
+    "process_mqtt_temperature_message",
+    "resolve_pool_from_mqtt_topic",
+]
 
 
 def resolve_pool_from_mqtt_topic(
@@ -60,7 +52,7 @@ def resolve_pool_from_mqtt_topic(
     if binding:
         return binding["pool_id"], binding.get("device_id")
 
-    pool = _find_piscina_doc(db, key)
+    pool = find_piscina_doc(db, key)
     if pool:
         pool_id = str(pool["_id"])
         bound = db.device_bindings.find_one(

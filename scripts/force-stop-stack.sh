@@ -20,19 +20,16 @@ for profile in docker-default snap.docker.dockerd snap.docker.docker; do
   fi
 done
 
-echo "==> Deteniendo contenedores CleanPool..."
-NAMES=(cleanpool_frontend cleanpool_backend cleanpool_mongo cleanpool_mosquitto)
-for name in "${NAMES[@]}"; do
-  if ! docker inspect "$name" &>/dev/null; then
-    continue
-  fi
+echo "==> Deteniendo contenedores CleanPool (nombres fijos y restos de Dokploy)..."
+while IFS= read -r name; do
+  [[ -z "$name" ]] && continue
   pid="$(docker inspect -f '{{.State.Pid}}' "$name" 2>/dev/null || echo 0)"
   if [[ -n "$pid" && "$pid" != "0" ]]; then
     kill -9 "$pid" 2>/dev/null || true
   fi
   docker rm -f "$name" 2>/dev/null || true
   echo "  eliminado: $name"
-done
+done < <(docker ps -a --format '{{.Names}}' | grep -E 'cleanpool_|_cleanpool_' || true)
 
 echo "==> docker compose down -v..."
 docker compose down -v 2>/dev/null || true

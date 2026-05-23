@@ -8,25 +8,12 @@ from __future__ import annotations
 
 from typing import Any, Dict, Optional
 
-from bson import ObjectId
-from bson.errors import InvalidId
 from fastapi import HTTPException, status
 from pymongo.database import Database
 
 from services.calculator import evaluarAptitud, evaluar_parametros_individuales
-from services.device_presence import is_reading_fresh
-
-
-def _find_piscina_doc(db: Database, pool_id: str) -> Optional[Dict[str, Any]]:
-    """Resuelve por ObjectId o por campo legacy pool_id."""
-    try:
-        oid = ObjectId(pool_id)
-        doc = db.piscinas.find_one({"_id": oid})
-        if doc:
-            return doc
-    except (InvalidId, TypeError):
-        pass
-    return db.piscinas.find_one({"pool_id": pool_id})
+from services.pool_lookup import find_piscina_doc
+from services.reading_freshness import is_reading_fresh
 
 
 def build_pool_status_payload(db: Database, pool_id: str) -> Dict[str, Any]:
@@ -34,7 +21,7 @@ def build_pool_status_payload(db: Database, pool_id: str) -> Dict[str, Any]:
     Construye el cuerpo JSON de estado (claves ok, pool_id, estado, parametros).
     No comprueba propiedad del usuario; eso lo hace el router de /piscinas.
     """
-    pool = _find_piscina_doc(db, pool_id)
+    pool = find_piscina_doc(db, pool_id)
     if not pool:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -106,7 +93,7 @@ def build_pool_status_for_owner(
     db: Database, pool_id: str, username: str
 ) -> Dict[str, Any]:
     """Igual que build_pool_status_payload pero exige que la piscina pertenezca al usuario."""
-    pool = _find_piscina_doc(db, pool_id)
+    pool = find_piscina_doc(db, pool_id)
     if not pool or pool.get("username") != username:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
