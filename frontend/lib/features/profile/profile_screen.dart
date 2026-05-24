@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 
 import '../../core/constants/app_colors.dart';
+import '../../core/constants/app_routes.dart';
 import '../../models/maintenance.dart';
 import '../../shared/services/auth_service.dart';
 import '../../shared/services/maintenance_service.dart';
-import '../auth/login_screen.dart';
 import 'profile_filter_chips.dart';
 import 'profile_header_widgets.dart';
 import 'profile_helpers.dart';
@@ -86,9 +86,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Future<void> _logout() async {
     await _authService.logout();
     if (!mounted) return;
-    Navigator.pushAndRemoveUntil(
+    Navigator.pushNamedAndRemoveUntil(
       context,
-      MaterialPageRoute(builder: (_) => const LoginScreen()),
+      AppRoutes.welcome,
       (route) => false,
     );
   }

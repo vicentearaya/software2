@@ -65,7 +65,9 @@ class _LoginScreenState extends State<LoginScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const SizedBox(height: 60),
+                const SizedBox(height: 20),
+                _buildBackButton(),
+                const SizedBox(height: 24),
                 _buildHeader(),
                 const SizedBox(height: 48),
                 _buildEmailField(),
@@ -80,6 +82,23 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildBackButton() {
+    return IconButton(
+      onPressed: () => Navigator.pushNamedAndRemoveUntil(
+        context,
+        AppRoutes.welcome,
+        (route) => false,
+      ),
+      icon: const Icon(
+        Icons.arrow_back_ios,
+        color: AppColors.textPrimary,
+        size: 20,
+      ),
+      padding: EdgeInsets.zero,
+      tooltip: 'Volver',
     );
   }
 
