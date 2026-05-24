@@ -7,18 +7,56 @@ class AppStrings {
   static const String welcomeHeadline = 'Bienvenido';
   static const String welcomeTitle = 'Monitorea tu piscina con confianza';
 
-  /// Párrafos del cuerpo (orden de lectura).
-  static const List<String> welcomeBodyParagraphs = <String>[
-    'CleanPool es una app diseñada para que cualquier persona pueda gestionar, '
-        'mantener y cuidar su piscina de forma fácil y segura.',
-    'Permite registrar lecturas de pH, cloro y temperatura del agua en tiempo casi real, '
-        'entregando recomendaciones claras según el estado de la piscina. Así puedes saber cuándo '
-        'ajustar químicos, limpiar, revisar el sistema de filtrado o tomar medidas preventivas.',
-    'Además, CleanPool ayuda a organizar el inventario de productos, registrar mantenciones y '
-        'consultar guías para resolver problemas frecuentes como agua turbia, algas o desbalances químicos.',
-    'Con CleanPool, el mantenimiento de tu piscina deja de ser complicado y se vuelve simple, '
-        'ordenado y eficiente.',
+  static const String welcomeAppIntro =
+      'CleanPool te ayuda a cuidar el agua de tu piscina con lecturas, '
+      'alertas y recomendaciones claras — sin ser experto en química.';
+
+  static const String welcomeFunctionsTitle = '¿Qué puedes hacer?';
+
+  static const List<String> welcomeFunctions = <String>[
+    'Ver el estado del agua (pH, cloro y temperatura) en el dashboard.',
+    'Recibir recomendaciones según la aptitud del agua y calcular tratamientos.',
+    'Vincular un sensor IoT y consultar si el dispositivo está en línea.',
+    'Gestionar el inventario de productos químicos y registrar su uso.',
+    'Consultar guías para problemas frecuentes (turbiedad, algas, filtro).',
+    'Revisar el historial de mantenciones desde tu perfil.',
   ];
+
+  static const String welcomeSolvesTitle = '¿Qué problemas resuelve?';
+
+  static const List<String> welcomeSolves = <String>[
+    'Evita tratar el agua a ciegas o en el momento equivocado.',
+    'Reduce desbalances químicos que causan irritación o agua turbia.',
+    'Centraliza inventario y mantenciones en un solo lugar.',
+  ];
+
+  // Tarjetas educativas — pH
+  static const String welcomePhTitle = 'pH del agua';
+  static const String welcomePhWhat =
+      'Indica si el agua es ácida o alcalina. En piscinas se busca un rango '
+      'cercano al neutro para que el cloro actúe bien y la piel no se irrite.';
+  static const String welcomePhMeasure =
+      'Se mide con tiras reactivas, kit líquido de prueba o sensor digital. '
+      'La escala va de 0 a 14.';
+  static const String welcomePhIndicates =
+      'Ideal: 7,2 – 7,6. Por debajo: agua ácida (irritación, corrosión). '
+      'Por encima: agua alcalina (turbiedad, cloro menos eficaz).';
+
+  // Tarjetas educativas — cloro
+  static const String welcomeChlorineTitle = 'Cloro libre';
+  static const String welcomeChlorineWhat =
+      'Desinfectante principal: elimina bacterias, virus y algas. '
+      'El “cloro libre” es el que aún puede desinfectar.';
+  static const String welcomeChlorineMeasure =
+      'Se mide en ppm (partes por millón) o mg/L con tiras o kit de prueba, '
+      'o con un sensor acoplado al dispositivo.';
+  static const String welcomeChlorineIndicates =
+      'Ideal: 1 – 3 ppm. Bajo: riesgo microbiológico y agua verde. '
+      'Alto: olor fuerte e irritación en ojos y piel.';
+
+  static const String welcomeCardWhat = 'Qué es';
+  static const String welcomeCardMeasure = 'Cómo se mide';
+  static const String welcomeCardIndicates = 'Qué indica';
 
   static const String welcomeRegister = 'Registrarse';
 

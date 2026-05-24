@@ -1,46 +1,14 @@
-import 'dart:math' as math;
 import 'dart:ui';
 
-import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:rive/rive.dart' as rive;
 
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_routes.dart';
 import '../../core/constants/app_strings.dart';
 
-/// Asset Rive (solo móvil/escritorio nativo): ejemplo [rive-flutter](https://github.com/rive-app/rive-flutter) (MIT), tema agua.
-const String _kWelcomeRiveAsset = 'assets/rive/welcome.riv';
-
-class WelcomeScreen extends StatefulWidget {
+class WelcomeScreen extends StatelessWidget {
   const WelcomeScreen({super.key});
-
-  @override
-  State<WelcomeScreen> createState() => _WelcomeScreenState();
-}
-
-class _WelcomeScreenState extends State<WelcomeScreen> {
-  /// En **web** Rive suele mostrar demos raros o placeholders; usamos olas en Canvas.
-  /// En iOS/Android/desktop usamos Rive con asset acuático.
-  rive.FileLoader? _riveLoader;
-
-  @override
-  void initState() {
-    super.initState();
-    if (!kIsWeb) {
-      _riveLoader = rive.FileLoader.fromAsset(
-        _kWelcomeRiveAsset,
-        riveFactory: rive.Factory.flutter,
-      );
-    }
-  }
-
-  @override
-  void dispose() {
-    _riveLoader?.dispose();
-    super.dispose();
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -60,7 +28,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                   vertical: 24,
                 ),
                 child: ConstrainedBox(
-                  constraints: BoxConstraints(maxWidth: wide ? 1040 : 480),
+                  constraints: BoxConstraints(maxWidth: wide ? 1040 : 520),
                   child: wide ? _buildWideLayout(context) : _buildNarrowLayout(context),
                 ),
               ),
@@ -75,11 +43,11 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _HeroRiveCard(height: 200, fileLoader: _riveLoader),
+        _CopyBlock(),
+        const SizedBox(height: 24),
+        const _ParameterCardsRow(),
         const SizedBox(height: 28),
-        _CopyBlock(context),
-        const SizedBox(height: 28),
-        _CtaButtons(context),
+        _buildCtaButtons(context),
         const SizedBox(height: 16),
       ],
     );
@@ -90,81 +58,29 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Expanded(
-          flex: 54,
+          flex: 52,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
             children: [
-              _CopyBlock(context),
+              _CopyBlock(),
               const SizedBox(height: 32),
               ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 400),
-                child: _CtaButtons(context),
+                constraints: const BoxConstraints(maxWidth: 380),
+                child: _buildCtaButtons(context),
               ),
             ],
           ),
         ),
-        const SizedBox(width: 40),
-        Expanded(
-          flex: 46,
-          child: Align(
-            alignment: Alignment.topCenter,
-            child: _HeroRiveCard(height: 360, fileLoader: _riveLoader),
-          ),
+        const SizedBox(width: 32),
+        const Expanded(
+          flex: 48,
+          child: _ParameterCardsRow(),
         ),
       ],
     );
   }
 
-  Widget _CopyBlock(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final textMaxWidth = constraints.maxWidth > 620 ? 580.0 : constraints.maxWidth;
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _BrandPill(),
-            const SizedBox(height: 18),
-            Text(
-              AppStrings.welcomeHeadline,
-              style: GoogleFonts.syne(
-                fontSize: 42,
-                fontWeight: FontWeight.w800,
-                height: 1.05,
-                letterSpacing: -0.5,
-                color: AppColors.textPrimary,
-              ),
-            ),
-            const SizedBox(height: 10),
-            ShaderMask(
-              shaderCallback: (bounds) => const LinearGradient(
-                colors: [AppColors.primaryLight, AppColors.accent],
-                begin: Alignment.centerLeft,
-                end: Alignment.centerRight,
-              ).createShader(bounds),
-              blendMode: BlendMode.srcIn,
-              child: Text(
-                AppStrings.welcomeTitle,
-                style: GoogleFonts.syne(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w600,
-                  height: 1.3,
-                  color: Colors.white,
-                ),
-              ),
-            ),
-            const SizedBox(height: 22),
-            SizedBox(
-              width: textMaxWidth,
-              child: _WelcomeBodyText(),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  Widget _CtaButtons(BuildContext context) {
+  Widget _buildCtaButtons(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -182,26 +98,294 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
   }
 }
 
-/// Cuerpo de la bienvenida: varios párrafos con ritmo visual claro.
-class _WelcomeBodyText extends StatelessWidget {
+class _CopyBlock extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    final paras = AppStrings.welcomeBodyParagraphs;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        for (var i = 0; i < paras.length; i++) ...[
-          if (i > 0) const SizedBox(height: 16),
-          Text(
-            paras[i],
-            style: GoogleFonts.interTight(
-              fontSize: i == 0 ? 17 : 15.5,
-              height: 1.62,
-              fontWeight: i == 0 ? FontWeight.w500 : FontWeight.w400,
-              color: i == 0 ? AppColors.textPrimary : AppColors.textSecondary,
+        const _BrandPill(),
+        const SizedBox(height: 18),
+        Text(
+          AppStrings.welcomeHeadline,
+          style: GoogleFonts.syne(
+            fontSize: 42,
+            fontWeight: FontWeight.w800,
+            height: 1.05,
+            letterSpacing: -0.5,
+            color: AppColors.textPrimary,
+          ),
+        ),
+        const SizedBox(height: 10),
+        ShaderMask(
+          shaderCallback: (bounds) => const LinearGradient(
+            colors: [AppColors.primaryLight, AppColors.accent],
+            begin: Alignment.centerLeft,
+            end: Alignment.centerRight,
+          ).createShader(bounds),
+          blendMode: BlendMode.srcIn,
+          child: Text(
+            AppStrings.welcomeTitle,
+            style: GoogleFonts.syne(
+              fontSize: 20,
+              fontWeight: FontWeight.w600,
+              height: 1.3,
+              color: Colors.white,
             ),
           ),
+        ),
+        const SizedBox(height: 20),
+        Text(
+          AppStrings.welcomeAppIntro,
+          style: GoogleFonts.interTight(
+            fontSize: 16,
+            height: 1.55,
+            fontWeight: FontWeight.w500,
+            color: AppColors.textPrimary,
+          ),
+        ),
+        const SizedBox(height: 22),
+        _SectionTitle(AppStrings.welcomeFunctionsTitle),
+        const SizedBox(height: 10),
+        const _BulletList(items: AppStrings.welcomeFunctions),
+        const SizedBox(height: 20),
+        _SectionTitle(AppStrings.welcomeSolvesTitle),
+        const SizedBox(height: 10),
+        const _BulletList(items: AppStrings.welcomeSolves),
+      ],
+    );
+  }
+}
+
+class _SectionTitle extends StatelessWidget {
+  const _SectionTitle(this.text);
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      text,
+      style: GoogleFonts.syne(
+        fontSize: 15,
+        fontWeight: FontWeight.w700,
+        color: AppColors.primaryLight,
+        letterSpacing: 0.2,
+      ),
+    );
+  }
+}
+
+class _BulletList extends StatelessWidget {
+  const _BulletList({required this.items});
+
+  final List<String> items;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        for (final item in items)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.only(top: 7),
+                  child: Container(
+                    width: 5,
+                    height: 5,
+                    decoration: const BoxDecoration(
+                      color: AppColors.primary,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    item,
+                    style: GoogleFonts.interTight(
+                      fontSize: 14,
+                      height: 1.5,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+class _ParameterCardsRow extends StatelessWidget {
+  const _ParameterCardsRow();
+
+  @override
+  Widget build(BuildContext context) {
+    final phCard = _ParameterInfoCard(
+      title: AppStrings.welcomePhTitle,
+      icon: Icons.science_outlined,
+      accentColor: AppColors.accent,
+      idealRange: '7,2 – 7,6',
+      what: AppStrings.welcomePhWhat,
+      measure: AppStrings.welcomePhMeasure,
+      indicates: AppStrings.welcomePhIndicates,
+    );
+
+    final chlorineCard = _ParameterInfoCard(
+      title: AppStrings.welcomeChlorineTitle,
+      icon: Icons.bubble_chart_outlined,
+      accentColor: AppColors.statusGood,
+      idealRange: '1 – 3 ppm',
+      what: AppStrings.welcomeChlorineWhat,
+      measure: AppStrings.welcomeChlorineMeasure,
+      indicates: AppStrings.welcomeChlorineIndicates,
+    );
+
+    return Column(
+      children: [
+        phCard,
+        const SizedBox(height: 14),
+        chlorineCard,
+      ],
+    );
+  }
+}
+
+class _ParameterInfoCard extends StatelessWidget {
+  const _ParameterInfoCard({
+    required this.title,
+    required this.icon,
+    required this.accentColor,
+    required this.idealRange,
+    required this.what,
+    required this.measure,
+    required this.indicates,
+  });
+
+  final String title;
+  final IconData icon;
+  final Color accentColor;
+  final String idealRange;
+  final String what;
+  final String measure;
+  final String indicates;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceElevated.withValues(alpha: 0.85),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: accentColor.withValues(alpha: 0.28)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.25),
+            blurRadius: 16,
+            offset: const Offset(0, 8),
+          ),
         ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: accentColor.withValues(alpha: 0.14),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: accentColor.withValues(alpha: 0.25)),
+                ),
+                child: Icon(icon, color: accentColor, size: 22),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  title,
+                  style: GoogleFonts.syne(
+                    fontSize: 17,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: accentColor.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: accentColor.withValues(alpha: 0.22)),
+                ),
+                child: Text(
+                  'Ideal: $idealRange',
+                  style: GoogleFonts.interTight(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    color: accentColor,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          _CardSection(
+            label: AppStrings.welcomeCardWhat,
+            text: what,
+          ),
+          const SizedBox(height: 12),
+          _CardSection(
+            label: AppStrings.welcomeCardMeasure,
+            text: measure,
+          ),
+          const SizedBox(height: 12),
+          _CardSection(
+            label: AppStrings.welcomeCardIndicates,
+            text: indicates,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _CardSection extends StatelessWidget {
+  const _CardSection({required this.label, required this.text});
+
+  final String label;
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: GoogleFonts.interTight(
+            fontSize: 11,
+            fontWeight: FontWeight.w700,
+            letterSpacing: 0.4,
+            color: AppColors.textMuted,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          text,
+          style: GoogleFonts.interTight(
+            fontSize: 13.5,
+            height: 1.45,
+            color: AppColors.textSecondary,
+          ),
+        ),
       ],
     );
   }
@@ -224,15 +408,15 @@ class _BackdropPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final rect = Offset.zero & size;
     final bg = Paint()
-      ..shader = LinearGradient(
+      ..shader = const LinearGradient(
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
         colors: [
-          const Color(0xFF060A12),
-          const Color(0xFF0A1424),
-          const Color(0xFF0D1A2E),
+          Color(0xFF060A12),
+          Color(0xFF0A1424),
+          Color(0xFF0D1A2E),
         ],
-        stops: const [0.0, 0.45, 1.0],
+        stops: [0.0, 0.45, 1.0],
       ).createShader(rect);
     canvas.drawRect(rect, bg);
 
@@ -265,6 +449,8 @@ class _BackdropPainter extends CustomPainter {
 }
 
 class _BrandPill extends StatelessWidget {
+  const _BrandPill();
+
   @override
   Widget build(BuildContext context) {
     return ClipRRect(
@@ -286,7 +472,7 @@ class _BrandPill extends StatelessWidget {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.water_drop_rounded, color: AppColors.primary, size: 20),
+              const Icon(Icons.water_drop_rounded, color: AppColors.primary, size: 20),
               const SizedBox(width: 8),
               Text(
                 AppStrings.appName,
@@ -318,248 +504,6 @@ class _BrandPill extends StatelessWidget {
           ),
         ),
       ),
-    );
-  }
-}
-
-class _HeroRiveCard extends StatelessWidget {
-  const _HeroRiveCard({
-    required this.height,
-    this.fileLoader,
-  });
-
-  final double height;
-  final rive.FileLoader? fileLoader;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      height: height,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(28),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.primary.withValues(alpha: 0.12),
-            blurRadius: 40,
-            spreadRadius: 0,
-            offset: const Offset(0, 20),
-          ),
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.45),
-            blurRadius: 24,
-            offset: const Offset(0, 12),
-          ),
-        ],
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(28),
-        child: Stack(
-          fit: StackFit.expand,
-          children: [
-            Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    AppColors.surfaceElevated,
-                    const Color(0xFF0F1729),
-                    AppColors.surface.withValues(alpha: 0.95),
-                  ],
-                ),
-                border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
-              ),
-            ),
-            Positioned.fill(
-              child: Padding(
-                padding: const EdgeInsets.all(12),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(20),
-                  child: ColoredBox(
-                    color: const Color(0xFF080C14),
-                    child: fileLoader == null
-                        ? const _AnimatedWaterHero()
-                        : _RiveStage(fileLoader: fileLoader!, height: height),
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _RiveStage extends StatelessWidget {
-  const _RiveStage({
-    required this.fileLoader,
-    required this.height,
-  });
-
-  final rive.FileLoader fileLoader;
-  final double height;
-
-  @override
-  Widget build(BuildContext context) {
-    return rive.RiveWidgetBuilder(
-      fileLoader: fileLoader,
-      builder: (context, state) {
-        return switch (state) {
-          rive.RiveLoading() => Center(
-              child: SizedBox(
-                width: 36,
-                height: 36,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2.5,
-                  color: AppColors.primary.withValues(alpha: 0.85),
-                ),
-              ),
-            ),
-          rive.RiveFailed() => _DecorativeWaterFallback(height: height),
-          rive.RiveLoaded(:final controller) => rive.RiveWidget(
-              controller: controller,
-              fit: rive.Fit.contain,
-              alignment: Alignment.center,
-            ),
-        };
-      },
-    );
-  }
-}
-
-/// Olas animadas en puro Flutter (reemplazo estable en web frente a glitches de Rive).
-class _AnimatedWaterHero extends StatefulWidget {
-  const _AnimatedWaterHero();
-
-  @override
-  State<_AnimatedWaterHero> createState() => _AnimatedWaterHeroState();
-}
-
-class _AnimatedWaterHeroState extends State<_AnimatedWaterHero>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _controller = AnimationController(
-    vsync: this,
-    duration: const Duration(seconds: 6),
-  )..repeat();
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: _controller,
-      builder: (context, _) {
-        return CustomPaint(
-          painter: _WavesPainter(phase: _controller.value * 2 * math.pi),
-        );
-      },
-    );
-  }
-}
-
-class _WavesPainter extends CustomPainter {
-  _WavesPainter({required this.phase});
-
-  final double phase;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final w = size.width;
-    final h = size.height;
-    if (w <= 0 || h <= 0) return;
-
-    final center = Offset(w * 0.5, h * 0.48);
-    final glow = Paint()
-      ..shader = RadialGradient(
-        colors: [
-          AppColors.primary.withValues(alpha: 0.28),
-          AppColors.accent.withValues(alpha: 0.08),
-          Colors.transparent,
-        ],
-        stops: const [0.0, 0.45, 1.0],
-      ).createShader(Rect.fromCircle(center: center, radius: w * 0.35));
-    canvas.drawCircle(center, w * 0.35, glow);
-
-    for (var i = 0; i < 4; i++) {
-      final path = Path();
-      final y0 = h * (0.38 + i * 0.09);
-      final amp = 5.0 + i * 3.5;
-      final freq = 0.014 + i * 0.003;
-      final shift = phase * (1.0 + i * 0.15) + i * 0.8;
-      path.moveTo(0, y0);
-      for (double x = 0; x <= w; x += 4) {
-        final y = y0 + math.sin(x * freq + shift) * amp;
-        path.lineTo(x, y);
-      }
-      final stroke = Paint()
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 2.0 + i * 0.35
-        ..strokeCap = StrokeCap.round
-        ..color = AppColors.primaryLight.withValues(alpha: 0.22 - i * 0.035);
-      canvas.drawPath(path, stroke);
-    }
-
-    final drop = Path()
-      ..addOval(
-        Rect.fromCenter(
-          center: center,
-          width: w * 0.14,
-          height: w * 0.2,
-        ),
-      );
-    canvas.drawPath(
-      drop,
-      Paint()
-        ..color = AppColors.primary.withValues(alpha: 0.45)
-        ..style = PaintingStyle.fill,
-    );
-    canvas.drawPath(
-      drop,
-      Paint()
-        ..color = AppColors.primaryLight.withValues(alpha: 0.35)
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 1.5,
-    );
-  }
-
-  @override
-  bool shouldRepaint(covariant _WavesPainter oldDelegate) => oldDelegate.phase != phase;
-}
-
-class _DecorativeWaterFallback extends StatelessWidget {
-  const _DecorativeWaterFallback({required this.height});
-
-  final double height;
-
-  @override
-  Widget build(BuildContext context) {
-    return Stack(
-      alignment: Alignment.center,
-      children: [
-        Container(
-          width: height * 0.42,
-          height: height * 0.42,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            gradient: RadialGradient(
-              colors: [
-                AppColors.primary.withValues(alpha: 0.35),
-                AppColors.primary.withValues(alpha: 0.0),
-              ],
-            ),
-          ),
-        ),
-        Icon(
-          Icons.waves_rounded,
-          size: height * 0.22,
-          color: AppColors.primaryLight.withValues(alpha: 0.9),
-        ),
-      ],
     );
   }
 }
