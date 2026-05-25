@@ -12,7 +12,9 @@ os.environ.setdefault("API_KEY", "dummy_api_key")
 from services.device_presence import (
     is_device_online,
     is_reading_fresh,
+    parse_orp_payload,
     parse_temperature_payload,
+    process_mqtt_orp_message,
     process_mqtt_temperature_message,
     resolve_pool_from_mqtt_topic,
 )
@@ -25,6 +27,31 @@ def test_parse_temperature_payload_json():
 
 def test_parse_temperature_payload_plain():
     assert parse_temperature_payload("25.5") == pytest.approx(25.5)
+
+
+def test_parse_orp_payload_json():
+    raw = json.dumps({"orp": 512.5}).encode()
+    assert parse_orp_payload(raw) == pytest.approx(512.5)
+
+
+def test_process_mqtt_orp_message_ok():
+    db = MagicMock()
+    db.device_bindings.find_one.return_value = {
+        "pool_id": "pool-abc",
+        "device_id": "dev-1",
+    }
+    db.lecturas.insert_one.return_value = MagicMock(inserted_id="x2")
+
+    ok = process_mqtt_orp_message(
+        db,
+        "cleanpool/piscina-1/orp",
+        b'{"orp":650}',
+    )
+
+    assert ok is True
+    doc = db.lecturas.insert_one.call_args[0][0]
+    assert doc["orp"] == pytest.approx(650)
+    assert "temperatura" not in doc
 
 
 def test_is_reading_fresh_recent():

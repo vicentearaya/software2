@@ -12,11 +12,13 @@ class PoolHeroCard extends StatelessWidget {
     required this.pool,
     required this.litrosStr,
     this.temperatureC,
+    this.orpMv,
   });
 
   final PoolData pool;
   final String litrosStr;
   final double? temperatureC;
+  final double? orpMv;
 
   @override
   Widget build(BuildContext context) {
@@ -127,26 +129,48 @@ class PoolHeroCard extends StatelessWidget {
           ),
           const SizedBox(height: 14),
           Row(
-            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
-              const Icon(
-                Icons.thermostat_rounded,
-                color: AppColors.accent,
-                size: 22,
+              _LiveSensorChip(
+                icon: Icons.thermostat_rounded,
+                value: temperatureC != null
+                    ? '${temperatureC!.toStringAsFixed(1)}°C'
+                    : '-',
               ),
-              const SizedBox(width: 8),
-              Text(
-                temperatureC != null ? '${temperatureC!.toStringAsFixed(1)}°C' : '-',
-                style: GoogleFonts.syne(
-                  color: AppColors.accent,
-                  fontSize: 20,
-                  fontWeight: FontWeight.w700,
-                ),
+              _LiveSensorChip(
+                icon: Icons.bolt_rounded,
+                value: orpMv != null ? '${orpMv!.toStringAsFixed(0)} mV' : '-',
               ),
             ],
           ),
         ],
       ),
+    );
+  }
+}
+
+class _LiveSensorChip extends StatelessWidget {
+  const _LiveSensorChip({required this.icon, required this.value});
+
+  final IconData icon;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, color: AppColors.accent, size: 22),
+        const SizedBox(width: 8),
+        Text(
+          value,
+          style: GoogleFonts.syne(
+            color: AppColors.accent,
+            fontSize: 20,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+      ],
     );
   }
 }

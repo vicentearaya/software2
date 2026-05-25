@@ -18,4 +18,4 @@ docker compose restart mosquitto
 
 Topics sugeridos: `cleanpool/{pool_id}/lectura`, `cleanpool/{pool_id}/temperatura`.
 
-El backend (FastAPI) se suscribe a `cleanpool/+/temperatura`, persiste en MongoDB y actualiza `last_seen_at` del vínculo activo. El slug del topic (ej. `piscina-1`) debe coincidir con `mqtt_topic_slug` al vincular el dispositivo en el Dashboard.
+El backend (FastAPI) se suscribe a `cleanpool/+/temperatura` y `cleanpool/+/orp`, persiste en MongoDB y actualiza `last_seen_at` del vínculo activo. Cada mensaje puede traer solo temperatura u solo ORP. El slug del topic (ej. `piscina-1`) debe coincidir con `mqtt_topic_slug` al vincular el dispositivo en el Dashboard.

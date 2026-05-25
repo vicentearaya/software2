@@ -404,8 +404,19 @@ class _DashboardScreenState extends State<DashboardScreen> {
         isDeviceOnline &&
         temperaturaValor != null &&
         tempFuente == 'sensor';
+
+    final Map<String, dynamic>? orpData =
+        _poolStatus?['parametros']?['orp'] as Map<String, dynamic>?;
+    final num? orpValor = orpData?['valor'] as num?;
+    final String? orpFuente = orpData?['fuente'] as String?;
+    final bool showLiveOrp = isDeviceBoundToSelectedPool &&
+        isDeviceOnline &&
+        orpValor != null &&
+        orpFuente == 'sensor';
+
     final double? temperatureC =
         showLiveTemperature ? temperaturaValor!.toDouble() : null;
+    final double? orpMv = showLiveOrp ? orpValor!.toDouble() : null;
 
     return Scaffold(
       body: SafeArea(
@@ -585,6 +596,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     pool: pool,
                     litrosStr: litrosStr,
                     temperatureC: temperatureC,
+                    orpMv: orpMv,
                   ),
                 ),
               ),
@@ -847,7 +859,7 @@ class _DeviceConnectionHint extends StatelessWidget {
 
     return Text(
       isOnline
-          ? 'Dispositivo conectado · temperatura en vivo'
+          ? 'Dispositivo conectado · sensores en vivo'
           : 'Dispositivo desconectado · última conexión: $lastSeenLabel',
       textAlign: TextAlign.center,
       style: GoogleFonts.interTight(color: color, fontSize: 12),

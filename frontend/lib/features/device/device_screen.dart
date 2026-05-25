@@ -92,6 +92,7 @@ class _DeviceScreenState extends State<DeviceScreen> {
     final isOnline = _deviceStatus?['is_online'] == true;
     final lastSeenRaw = _deviceStatus?['last_seen_at'];
     final lastTemp = _deviceStatus?['last_temperature'] as num?;
+    final lastOrp = _deviceStatus?['last_orp'] as num?;
 
     return Scaffold(
       appBar: AppBar(title: const Text('Dispositivo'), centerTitle: true),
@@ -158,12 +159,23 @@ class _DeviceScreenState extends State<DeviceScreen> {
                         label: 'Temperatura actual',
                         value: '${lastTemp.toStringAsFixed(1)} °C',
                       ),
-                    if (_deviceStatus!['mqtt_topic_slug'] != null)
+                    if (isOnline && lastOrp != null)
                       _DetailRow(
-                        label: 'Topic MQTT',
+                        label: 'ORP actual',
+                        value: '${lastOrp.toStringAsFixed(0)} mV',
+                      ),
+                    if (_deviceStatus!['mqtt_topic_slug'] != null) ...[
+                      _DetailRow(
+                        label: 'Topic temperatura',
                         value:
                             'cleanpool/${_deviceStatus!['mqtt_topic_slug']}/temperatura',
                       ),
+                      _DetailRow(
+                        label: 'Topic ORP',
+                        value:
+                            'cleanpool/${_deviceStatus!['mqtt_topic_slug']}/orp',
+                      ),
+                    ],
                   ],
                 ),
               ),

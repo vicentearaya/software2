@@ -155,6 +155,10 @@ class DeviceStatusResponse(BaseModel):
         default=None,
         description="Última temperatura reciente del sensor (null si está offline o sin datos)",
     )
+    last_orp: Optional[float] = Field(
+        default=None,
+        description="Último ORP reciente del sensor en mV (null si no hay lectura reciente)",
+    )
 
 
 class SensorEvaluacion(BaseModel):

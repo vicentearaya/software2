@@ -14,9 +14,9 @@ from models import (
 )
 from routers.auth import get_current_user
 from services.device_presence import (
+    get_latest_fresh_sensor_value,
     ingest_temperature_reading,
     is_device_online,
-    is_reading_fresh,
 )
 
 router = APIRouter(tags=["Device Bindings"])
@@ -184,16 +184,9 @@ def get_device_status(
     is_online = is_device_online(last_seen)
     state = "ONLINE" if is_online else "OFFLINE"
 
-    last_temperature = None
-    latest = db.lecturas.find_one(
-        {"pool_id": binding["pool_id"]},
-        sort=[("timestamp", -1)],
-        projection={"temperatura": 1, "timestamp": 1},
-    )
-    if latest and is_reading_fresh(latest.get("timestamp")):
-        temp = latest.get("temperatura")
-        if temp is not None:
-            last_temperature = float(temp)
+    pool_id = binding["pool_id"]
+    last_temperature = get_latest_fresh_sensor_value(db, pool_id, "temperatura")
+    last_orp = get_latest_fresh_sensor_value(db, pool_id, "orp")
 
     return DeviceStatusResponse(
         ok=True,
@@ -206,6 +199,7 @@ def get_device_status(
         connection_state=state,
         mqtt_topic_slug=binding.get("mqtt_topic_slug"),
         last_temperature=last_temperature,
+        last_orp=last_orp,
     )
 
 

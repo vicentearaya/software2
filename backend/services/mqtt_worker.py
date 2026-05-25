@@ -1,5 +1,5 @@
 """
-Cliente MQTT en segundo plano: suscribe lecturas de temperatura y las persiste en MongoDB.
+Cliente MQTT en segundo plano: suscribe temperatura y ORP y los persiste en MongoDB.
 """
 
 from __future__ import annotations
@@ -13,7 +13,10 @@ import paho.mqtt.client as mqtt
 
 from config import Settings
 from db import get_db
-from services.device_presence import MQTT_TOPIC_PATTERN, process_mqtt_temperature_message
+from services.device_presence import (
+    MQTT_TOPIC_PATTERNS,
+    process_mqtt_sensor_message,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -37,9 +40,9 @@ class MqttIngestWorker:
         )
         self._thread.start()
         logger.info(
-            "Worker MQTT iniciado (host=%s, topic=%s)",
+            "Worker MQTT iniciado (host=%s, topics=%s)",
             self._settings.mqtt_host,
-            MQTT_TOPIC_PATTERN,
+            MQTT_TOPIC_PATTERNS,
         )
 
     def stop(self) -> None:
@@ -81,15 +84,16 @@ class MqttIngestWorker:
 
         def on_connect(_client, _userdata, _flags, reason_code, _properties=None):
             if reason_code == 0:
-                _client.subscribe(MQTT_TOPIC_PATTERN, qos=0)
-                logger.info("MQTT conectado y suscrito a %s", MQTT_TOPIC_PATTERN)
+                for pattern in MQTT_TOPIC_PATTERNS:
+                    _client.subscribe(pattern, qos=0)
+                logger.info("MQTT conectado y suscrito a %s", MQTT_TOPIC_PATTERNS)
             else:
                 logger.error("MQTT connect falló: %s", reason_code)
 
         def on_message(_client, _userdata, msg):
             try:
                 db = get_db()
-                process_mqtt_temperature_message(db, msg.topic, msg.payload)
+                process_mqtt_sensor_message(db, msg.topic, msg.payload)
             except Exception:
                 logger.exception("Error procesando mensaje MQTT %s", msg.topic)
 
