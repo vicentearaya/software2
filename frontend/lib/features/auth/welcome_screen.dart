@@ -247,11 +247,23 @@ class _ParameterCardsRow extends StatelessWidget {
       indicates: AppStrings.welcomeChlorineIndicates,
     );
 
+    final orpCard = _ParameterInfoCard(
+      title: AppStrings.welcomeOrpTitle,
+      icon: Icons.bolt_outlined,
+      accentColor: AppColors.primaryLight,
+      idealRange: '650 – 750 mV',
+      what: AppStrings.welcomeOrpWhat,
+      measure: AppStrings.welcomeOrpMeasure,
+      indicates: AppStrings.welcomeOrpIndicates,
+    );
+
     return Column(
       children: [
         phCard,
         const SizedBox(height: 14),
         chlorineCard,
+        const SizedBox(height: 14),
+        orpCard,
       ],
     );
   }

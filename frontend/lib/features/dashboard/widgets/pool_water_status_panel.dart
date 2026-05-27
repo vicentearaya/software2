@@ -132,7 +132,11 @@ class PoolWaterStatusPanel extends StatelessWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
-                _ParamCell(label: 'pH', paramKey: 'ph', data: parametros?['ph']),
+                _ParamCell(
+                  label: 'pH',
+                  paramKey: 'ph',
+                  data: parametros?['ph'],
+                ),
                 _ParamCell(
                   label: 'Cloro',
                   paramKey: 'cloro',
@@ -148,11 +152,7 @@ class PoolWaterStatusPanel extends StatelessWidget {
 }
 
 class _ParamCell extends StatelessWidget {
-  const _ParamCell({
-    required this.label,
-    required this.paramKey,
-    this.data,
-  });
+  const _ParamCell({required this.label, required this.paramKey, this.data});
 
   final String label;
   final String paramKey;

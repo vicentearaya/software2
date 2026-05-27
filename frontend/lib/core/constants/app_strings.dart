@@ -54,6 +54,19 @@ class AppStrings {
       'Ideal: 1 – 3 ppm. Bajo: riesgo microbiológico y agua verde. '
       'Alto: olor fuerte e irritación en ojos y piel.';
 
+  // Tarjetas educativas — ORP
+  static const String welcomeOrpTitle = 'ORP (mV)';
+  static const String welcomeOrpWhat =
+      'El ORP (Potencial de Óxido-Reducción) refleja la capacidad desinfectante '
+      'del agua: qué tan “oxidante” está para inactivar microorganismos. No es '
+      'cloro, pero se relaciona con su efectividad.';
+  static const String welcomeOrpMeasure =
+      'Se mide en milivoltios (mV) con una sonda ORP. Valores más altos suelen '
+      'indicar mayor poder desinfectante.';
+  static const String welcomeOrpIndicates =
+      'Muy bajo: < 400. Bajo: 400 – 650. Ideal: 650 – 750. '
+      'Alto: 750 – 850. Muy alto: > 850.';
+
   static const String welcomeCardWhat = 'Qué es';
   static const String welcomeCardMeasure = 'Cómo se mide';
   static const String welcomeCardIndicates = 'Qué indica';

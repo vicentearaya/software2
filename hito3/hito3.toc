@@ -1,0 +1,33 @@
+\babel@toc {spanish}{}\relax 
+\contentsline {section}{\numberline {1}Estado General del Proyecto}{3}{section.1}%
+\contentsline {subsection}{\numberline {1.1}Resumen Ejecutivo}{3}{subsection.1.1}%
+\contentsline {subsection}{\numberline {1.2}Objetivos Alcanzados}{3}{subsection.1.2}%
+\contentsline {subsection}{\numberline {1.3}Estado de Madurez del Sistema}{3}{subsection.1.3}%
+\contentsline {section}{\numberline {2}Arquitectura Final del Sistema}{4}{section.2}%
+\contentsline {subsection}{\numberline {2.1}Arquitectura Integrada}{4}{subsection.2.1}%
+\contentsline {subsection}{\numberline {2.2}Integracion de Componentes}{4}{subsection.2.2}%
+\contentsline {subsection}{\numberline {2.3}Escalabilidad y Rendimiento}{4}{subsection.2.3}%
+\contentsline {section}{\numberline {3}Validacion Funcional y Tecnica}{5}{section.3}%
+\contentsline {subsection}{\numberline {3.1}Funcionalidades Finales Implementadas}{5}{subsection.3.1}%
+\contentsline {subsection}{\numberline {3.2}Casos de Uso Validados}{5}{subsection.3.2}%
+\contentsline {subsection}{\numberline {3.3}Pruebas Realizadas}{6}{subsection.3.3}%
+\contentsline {subsection}{\numberline {3.4}Cobertura y Calidad}{6}{subsection.3.4}%
+\contentsline {section}{\numberline {4}Despliegue y Operacion}{6}{section.4}%
+\contentsline {subsection}{\numberline {4.1}Infraestructura de Produccion}{6}{subsection.4.1}%
+\contentsline {subsection}{\numberline {4.2}Proceso de Despliegue}{7}{subsection.4.2}%
+\contentsline {subsection}{\numberline {4.3}Monitoreo y Logs}{7}{subsection.4.3}%
+\contentsline {section}{\numberline {5}Gestion Scrum y Trabajo Colaborativo}{7}{section.5}%
+\contentsline {subsection}{\numberline {5.1}Estado Final del Sprint}{7}{subsection.5.1}%
+\contentsline {subsection}{\numberline {5.2}Commits y Participacion}{7}{subsection.5.2}%
+\contentsline {subsection}{\numberline {5.3}Problemas y Resoluciones}{8}{subsection.5.3}%
+\contentsline {section}{\numberline {6}Demostracion de Valor}{8}{section.6}%
+\contentsline {subsection}{\numberline {6.1}Valor Entregado al Usuario}{8}{subsection.6.1}%
+\contentsline {subsection}{\numberline {6.2}Evidencia Funcional}{8}{subsection.6.2}%
+\contentsline {subsection}{\numberline {6.3}Retroalimentacion Obtenida}{8}{subsection.6.3}%
+\contentsline {section}{\numberline {7}Conclusiones y Proximos Pasos}{9}{section.7}%
+\contentsline {subsection}{\numberline {7.1}Conclusiones Tecnicas}{9}{subsection.7.1}%
+\contentsline {subsection}{\numberline {7.2}Aprendizajes del Equipo}{9}{subsection.7.2}%
+\contentsline {subsection}{\numberline {7.3}Trabajo Futuro}{9}{subsection.7.3}%
+\contentsline {section}{\numberline {A}Capturas del Sistema}{10}{appendix.Alph1}%
+\contentsline {section}{\numberline {B}Repositorio y Evidencias}{13}{appendix.Alph2}%
+\contentsline {section}{\numberline {C}Commits Relevantes}{13}{appendix.Alph3}%
