@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_routes.dart';
+import '../../core/utils/app_utils.dart';
+import '../../core/utils/responsive_utils.dart';
 import '../../models/maintenance.dart';
 import '../../shared/services/auth_service.dart';
 import '../../shared/services/maintenance_service.dart';
+import '../../shared/services/pdf_service.dart';
 import 'profile_filter_chips.dart';
 import 'profile_header_widgets.dart';
 import 'profile_helpers.dart';
@@ -24,6 +28,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   List<Maintenance> _history = [];
   Map<String, dynamic>? _user;
   bool _isLoading = true;
+  bool _isGeneratingPdf = false;
   String? _error;
   HistoryFilter _activeFilter = HistoryFilter.all;
 
@@ -83,6 +88,29 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
+  Future<void> _exportarPDF() async {
+    if (_isLoading || _isGeneratingPdf) return;
+
+    setState(() => _isGeneratingPdf = true);
+    try {
+      final userName =
+          (_user?['username'] as String?) ?? (_user?['name'] as String?) ?? 'usuario';
+      await PdfService.exportMaintenanceHistory(
+        records: _history,
+        userName: userName,
+      );
+    } catch (_) {
+      if (!mounted) return;
+      AppUtils.showSnackBar(
+        context,
+        'Error al generar PDF. Intenta de nuevo.',
+        isError: true,
+      );
+    } finally {
+      if (mounted) setState(() => _isGeneratingPdf = false);
+    }
+  }
+
   Future<void> _logout() async {
     await _authService.logout();
     if (!mounted) return;
@@ -117,14 +145,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               const SizedBox(height: 14),
               ProfileSummaryCards(history: _history, formatDate: formatHistoryDate),
               const SizedBox(height: 32),
-              const Text(
-                'Historial de Mantenciones',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.textPrimary,
-                ),
-              ),
+              _buildHistoryHeader(context),
               const SizedBox(height: 12),
               if (!_isLoading && _error == null)
                 ProfileFilterChips(
@@ -171,6 +192,65 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  /// Encabezado del historial: en móvil apila título y botón; en ancho los pone en fila.
+  Widget _buildHistoryHeader(BuildContext context) {
+    const titulo = Text(
+      'Historial de Mantenciones',
+      style: TextStyle(
+        fontSize: 18,
+        fontWeight: FontWeight.bold,
+        color: AppColors.textPrimary,
+      ),
+    );
+
+    if (ResponsiveUtils.isMobile(context)) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          titulo,
+          const SizedBox(height: 12),
+          _buildExportButton(fullWidth: true),
+        ],
+      );
+    }
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        const Expanded(child: titulo),
+        _buildExportButton(fullWidth: false),
+      ],
+    );
+  }
+
+  /// Botón "Exportar PDF" con estado de carga y guardas.
+  Widget _buildExportButton({required bool fullWidth}) {
+    return ElevatedButton.icon(
+      onPressed: (_isLoading || _isGeneratingPdf) ? null : _exportarPDF,
+      icon: _isGeneratingPdf
+          ? const SizedBox(
+              width: 16,
+              height: 16,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                color: Colors.white,
+              ),
+            )
+          : const Icon(Icons.picture_as_pdf_rounded, size: 18),
+      label: Text(
+        _isGeneratingPdf ? 'Generando...' : 'Exportar PDF',
+        style: GoogleFonts.syne(fontWeight: FontWeight.w600),
+      ),
+      style: ElevatedButton.styleFrom(
+        backgroundColor: AppColors.primary,
+        foregroundColor: Colors.white,
+        minimumSize: Size(fullWidth ? double.infinity : 0, fullWidth ? 48 : 44),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
       ),
     );
   }

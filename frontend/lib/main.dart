@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:rive/rive.dart';
 
 import 'core/constants/app_routes.dart';
 import 'core/constants/app_strings.dart';
@@ -8,9 +7,8 @@ import 'features/auth/login_screen.dart';
 import 'features/auth/register_screen.dart';
 import 'features/auth/welcome_screen.dart';
 
-Future<void> main() async {
+void main() {
   WidgetsFlutterBinding.ensureInitialized();
-  await RiveNative.init();
   runApp(const CleanPoolApp());
 }
 
@@ -23,9 +21,8 @@ class CleanPoolApp extends StatelessWidget {
       title: AppStrings.appName,
       debugShowCheckedModeBanner: false,
       theme: AppTheme.darkTheme,
-      initialRoute: AppRoutes.welcome,
+      home: const WelcomeScreen(),
       routes: {
-        AppRoutes.welcome: (_) => const WelcomeScreen(),
         AppRoutes.login: (_) => const LoginScreen(),
         AppRoutes.register: (_) => const RegisterScreen(),
       },

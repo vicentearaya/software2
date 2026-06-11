@@ -6,13 +6,19 @@ import '../../core/network/api_client.dart';
 class AuthService {
   static const String _tokenKey = 'auth_token';
   static const String _userKey = 'user_data';
+  static const String _rememberMeKey = 'remember_me';
+  static const String _savedEmailKey = 'saved_email';
 
   final ApiClient _api;
 
   AuthService({ApiClient? apiClient, http.Client? client})
       : _api = apiClient ?? ApiClient(httpClient: client);
 
-  Future<Map<String, dynamic>> login(String email, String password) async {
+  Future<Map<String, dynamic>> login(
+    String email,
+    String password, {
+    bool rememberMe = true,
+  }) async {
     final response = await _api.post(
       '/auth/login',
       body: {'username': email, 'password': password},
@@ -30,6 +36,7 @@ class AuthService {
     }
 
     await _saveSession(token, userData);
+    await _saveLoginPreferences(email, rememberMe);
     return {'success': true, 'data': data};
   }
 
@@ -67,9 +74,61 @@ class AuthService {
     return prefs.containsKey(_tokenKey);
   }
 
+  /// Indica si la app debe abrir directamente el dashboard al iniciar.
+  Future<bool> shouldAutoLogin() async {
+    final prefs = await SharedPreferences.getInstance();
+    final hasToken = prefs.containsKey(_tokenKey);
+    if (!hasToken) return false;
+
+    final rememberMe = prefs.getBool(_rememberMeKey);
+    // Sesiones previas sin preferencia explícita: mantener acceso automático.
+    if (rememberMe == null) return true;
+    if (!rememberMe) {
+      await _clearSession(prefs);
+      return false;
+    }
+    return true;
+  }
+
+  Future<bool> getRememberMe() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_rememberMeKey) ?? true;
+  }
+
+  Future<String?> getSavedEmail() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_savedEmailKey);
+  }
+
+  Future<void> _saveLoginPreferences(String email, bool rememberMe) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_rememberMeKey, rememberMe);
+    if (rememberMe) {
+      await prefs.setString(_savedEmailKey, email);
+    } else {
+      await prefs.remove(_savedEmailKey);
+    }
+  }
+
+  Future<void> _clearSession(SharedPreferences prefs) async {
+    await prefs.remove(_tokenKey);
+    await prefs.remove(_userKey);
+  }
+
   Future<void> logout() async {
     final prefs = await SharedPreferences.getInstance();
+    final rememberMe = prefs.getBool(_rememberMeKey) ?? false;
+    final savedEmail = prefs.getString(_savedEmailKey);
+
     await prefs.clear();
+
+    // Conserva solo el correo si el usuario quiere ser recordado.
+    if (rememberMe) {
+      await prefs.setBool(_rememberMeKey, true);
+      if (savedEmail != null && savedEmail.isNotEmpty) {
+        await prefs.setString(_savedEmailKey, savedEmail);
+      }
+    }
   }
 
   Future<String?> getToken() async {
@@ -81,6 +140,11 @@ class AuthService {
     final prefs = await SharedPreferences.getInstance();
     final userStr = prefs.getString(_userKey);
     if (userStr == null) return null;
-    return jsonDecode(userStr) as Map<String, dynamic>;
+    try {
+      return jsonDecode(userStr) as Map<String, dynamic>;
+    } catch (_) {
+      await prefs.remove(_userKey);
+      return null;
+    }
   }
 }

@@ -1,37 +1,124 @@
-import 'dart:ui';
-
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_routes.dart';
 import '../../core/constants/app_strings.dart';
+import '../../core/utils/responsive_utils.dart';
+import '../../shared/services/auth_service.dart';
+import '../../shared/widgets/main_screen.dart';
+import 'widgets/device_placeholder_widget.dart';
+import 'widgets/pool_ripple_background.dart';
+import 'widgets/welcome_cta_widgets.dart';
 
-class WelcomeScreen extends StatelessWidget {
+class WelcomeScreen extends StatefulWidget {
   const WelcomeScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final w = MediaQuery.sizeOf(context).width;
-    final wide = w >= 900;
+  State<WelcomeScreen> createState() => _WelcomeScreenState();
+}
 
+class _WelcomeScreenState extends State<WelcomeScreen>
+    with TickerProviderStateMixin {
+  late final AnimationController _floatController;
+  late final Animation<double> _floatAnimation;
+  late final AnimationController _entranceController;
+  late final Animation<double> _entranceFade;
+  late final Animation<Offset> _entranceSlide;
+
+  @override
+  void initState() {
+    super.initState();
+    _floatController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 2400),
+    )..repeat(reverse: true);
+    _floatAnimation = Tween<double>(begin: -6, end: 6).animate(
+      CurvedAnimation(parent: _floatController, curve: Curves.easeInOut),
+    );
+
+    // Animación de entrada: aparece desvaneciéndose y subiendo al cargar.
+    _entranceController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 900),
+    );
+    _entranceFade = CurvedAnimation(
+      parent: _entranceController,
+      curve: Curves.easeOut,
+    );
+    _entranceSlide = Tween<Offset>(
+      begin: const Offset(0, 0.06),
+      end: Offset.zero,
+    ).animate(
+      CurvedAnimation(parent: _entranceController, curve: Curves.easeOutCubic),
+    );
+    _entranceController.forward();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _tryAutoLogin());
+  }
+
+  Future<void> _tryAutoLogin() async {
+    final authService = AuthService();
+    var shouldAutoLogin = false;
+    try {
+      shouldAutoLogin = await authService
+          .shouldAutoLogin()
+          .timeout(const Duration(seconds: 3), onTimeout: () => false);
+    } catch (_) {
+      shouldAutoLogin = false;
+    }
+
+    if (!mounted || !shouldAutoLogin) return;
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute(builder: (_) => const MainScreen()),
+    );
+  }
+
+  @override
+  void dispose() {
+    _floatController.dispose();
+    _entranceController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isMobile = ResponsiveUtils.isMobile(context);
     return Scaffold(
       backgroundColor: AppColors.background,
       body: Stack(
         children: [
-          const Positioned.fill(child: _WelcomeBackdrop()),
+          Positioned.fill(
+            child: PoolRippleBackground(mobileOptimized: isMobile),
+          ),
           SafeArea(
-            child: Center(
-              child: SingleChildScrollView(
-                padding: EdgeInsets.symmetric(
-                  horizontal: w >= 600 ? 40 : 24,
-                  vertical: 24,
-                ),
-                child: ConstrainedBox(
-                  constraints: BoxConstraints(maxWidth: wide ? 1040 : 520),
-                  child: wide ? _buildWideLayout(context) : _buildNarrowLayout(context),
-                ),
-              ),
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final isMobile = ResponsiveUtils.isMobile(context);
+                return Padding(
+                  padding: ResponsiveUtils.pagePadding(context),
+                  child: Center(
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(
+                        maxWidth: 900,
+                        maxHeight: constraints.maxHeight,
+                      ),
+                      child: FadeTransition(
+                        opacity: _entranceFade,
+                        child: SlideTransition(
+                          position: _entranceSlide,
+                          child: SizedBox(
+                            height: constraints.maxHeight,
+                            width: double.infinity,
+                            child: isMobile
+                                ? _buildMobileLayout(context)
+                                : _buildWebLayout(context),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                );
+              },
             ),
           ),
         ],
@@ -39,84 +126,119 @@ class WelcomeScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildNarrowLayout(BuildContext context) {
+  Widget _buildDeviceImage(
+    BuildContext context, {
+    required double heightFactor,
+    double maxHeightFactor = 0.4,
+  }) {
+    final screenHeight = MediaQuery.sizeOf(context).height;
+    final imageHeight = (screenHeight * heightFactor).clamp(
+      120.0,
+      screenHeight * maxHeightFactor,
+    );
+
+    return Hero(
+      tag: 'cleanpool-device',
+      child: AnimatedBuilder(
+        animation: _floatAnimation,
+        builder: (context, child) {
+          return Transform.translate(
+            offset: Offset(0, _floatAnimation.value),
+            child: child,
+          );
+        },
+        child: SizedBox(
+          height: imageHeight,
+          width: double.infinity,
+          child: const DevicePlaceholderWidget(),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMobileLayout(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _CopyBlock(),
+        const Spacer(flex: 1),
+        const Center(child: WelcomeBrandPill()),
+        const SizedBox(height: 18),
+        _buildDeviceImage(
+          context,
+          heightFactor: 0.30,
+          maxHeightFactor: 0.36,
+        ),
         const SizedBox(height: 24),
-        const _ParameterCardsRow(),
-        const SizedBox(height: 28),
-        _buildCtaButtons(context),
-        const SizedBox(height: 16),
+        _buildTagline(centered: true),
+        const SizedBox(height: 30),
+        Align(
+          alignment: Alignment.center,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 360),
+            child: _buildAuthButtons(context),
+          ),
+        ),
+        const Spacer(flex: 1),
       ],
     );
   }
 
-  Widget _buildWideLayout(BuildContext context) {
+  Widget _buildWebLayout(BuildContext context) {
     return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         Expanded(
           flex: 52,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              _CopyBlock(),
-              const SizedBox(height: 32),
+              const WelcomeBrandPill(),
+              const SizedBox(height: 20),
+              _buildTagline(),
+              const SizedBox(height: 28),
               ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 380),
-                child: _buildCtaButtons(context),
+                child: _buildAuthButtons(context),
               ),
             ],
           ),
         ),
         const SizedBox(width: 32),
-        const Expanded(
+        Expanded(
           flex: 48,
-          child: _ParameterCardsRow(),
+          child: Center(
+            child: _buildDeviceImage(
+              context,
+              heightFactor: 0.45,
+              maxHeightFactor: 0.6,
+            ),
+          ),
         ),
       ],
     );
   }
 
-  Widget _buildCtaButtons(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        _PrimaryCta(
-          label: AppStrings.login,
-          onPressed: () => Navigator.pushNamed(context, AppRoutes.login),
-        ),
-        const SizedBox(height: 14),
-        _SecondaryCta(
-          label: AppStrings.welcomeRegister,
-          onPressed: () => Navigator.pushNamed(context, AppRoutes.register),
-        ),
-      ],
-    );
-  }
-}
+  Widget _buildTagline({bool centered = false}) {
+    final alignment =
+        centered ? CrossAxisAlignment.center : CrossAxisAlignment.start;
+    final textAlign = centered ? TextAlign.center : TextAlign.start;
 
-class _CopyBlock extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: alignment,
       children: [
-        const _BrandPill(),
-        const SizedBox(height: 18),
         Text(
           AppStrings.welcomeHeadline,
+          textAlign: textAlign,
           style: GoogleFonts.syne(
-            fontSize: 42,
+            fontSize: centered ? 32 : 38,
             fontWeight: FontWeight.w800,
             height: 1.05,
             letterSpacing: -0.5,
             color: AppColors.textPrimary,
           ),
         ),
-        const SizedBox(height: 10),
+        const SizedBox(height: 8),
         ShaderMask(
           shaderCallback: (bounds) => const LinearGradient(
             colors: [AppColors.primaryLight, AppColors.accent],
@@ -126,482 +248,33 @@ class _CopyBlock extends StatelessWidget {
           blendMode: BlendMode.srcIn,
           child: Text(
             AppStrings.welcomeTitle,
+            textAlign: textAlign,
             style: GoogleFonts.syne(
-              fontSize: 20,
+              fontSize: centered ? 17 : 20,
               fontWeight: FontWeight.w600,
               height: 1.3,
               color: Colors.white,
             ),
           ),
         ),
-        const SizedBox(height: 20),
-        Text(
-          AppStrings.welcomeAppIntro,
-          style: GoogleFonts.interTight(
-            fontSize: 16,
-            height: 1.55,
-            fontWeight: FontWeight.w500,
-            color: AppColors.textPrimary,
-          ),
+      ],
+    );
+  }
+
+  Widget _buildAuthButtons(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        WelcomePrimaryCta(
+          label: AppStrings.login,
+          onPressed: () => Navigator.pushNamed(context, AppRoutes.login),
         ),
-        const SizedBox(height: 22),
-        _SectionTitle(AppStrings.welcomeFunctionsTitle),
-        const SizedBox(height: 10),
-        const _BulletList(items: AppStrings.welcomeFunctions),
-        const SizedBox(height: 20),
-        _SectionTitle(AppStrings.welcomeSolvesTitle),
-        const SizedBox(height: 10),
-        const _BulletList(items: AppStrings.welcomeSolves),
-      ],
-    );
-  }
-}
-
-class _SectionTitle extends StatelessWidget {
-  const _SectionTitle(this.text);
-
-  final String text;
-
-  @override
-  Widget build(BuildContext context) {
-    return Text(
-      text,
-      style: GoogleFonts.syne(
-        fontSize: 15,
-        fontWeight: FontWeight.w700,
-        color: AppColors.primaryLight,
-        letterSpacing: 0.2,
-      ),
-    );
-  }
-}
-
-class _BulletList extends StatelessWidget {
-  const _BulletList({required this.items});
-
-  final List<String> items;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        for (final item in items)
-          Padding(
-            padding: const EdgeInsets.only(bottom: 8),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.only(top: 7),
-                  child: Container(
-                    width: 5,
-                    height: 5,
-                    decoration: const BoxDecoration(
-                      color: AppColors.primary,
-                      shape: BoxShape.circle,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Text(
-                    item,
-                    style: GoogleFonts.interTight(
-                      fontSize: 14,
-                      height: 1.5,
-                      color: AppColors.textSecondary,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-      ],
-    );
-  }
-}
-
-class _ParameterCardsRow extends StatelessWidget {
-  const _ParameterCardsRow();
-
-  @override
-  Widget build(BuildContext context) {
-    final phCard = _ParameterInfoCard(
-      title: AppStrings.welcomePhTitle,
-      icon: Icons.science_outlined,
-      accentColor: AppColors.accent,
-      idealRange: '7,2 – 7,6',
-      what: AppStrings.welcomePhWhat,
-      measure: AppStrings.welcomePhMeasure,
-      indicates: AppStrings.welcomePhIndicates,
-    );
-
-    final chlorineCard = _ParameterInfoCard(
-      title: AppStrings.welcomeChlorineTitle,
-      icon: Icons.bubble_chart_outlined,
-      accentColor: AppColors.statusGood,
-      idealRange: '1 – 3 ppm',
-      what: AppStrings.welcomeChlorineWhat,
-      measure: AppStrings.welcomeChlorineMeasure,
-      indicates: AppStrings.welcomeChlorineIndicates,
-    );
-
-    final orpCard = _ParameterInfoCard(
-      title: AppStrings.welcomeOrpTitle,
-      icon: Icons.bolt_outlined,
-      accentColor: AppColors.primaryLight,
-      idealRange: '650 – 750 mV',
-      what: AppStrings.welcomeOrpWhat,
-      measure: AppStrings.welcomeOrpMeasure,
-      indicates: AppStrings.welcomeOrpIndicates,
-    );
-
-    return Column(
-      children: [
-        phCard,
         const SizedBox(height: 14),
-        chlorineCard,
-        const SizedBox(height: 14),
-        orpCard,
-      ],
-    );
-  }
-}
-
-class _ParameterInfoCard extends StatelessWidget {
-  const _ParameterInfoCard({
-    required this.title,
-    required this.icon,
-    required this.accentColor,
-    required this.idealRange,
-    required this.what,
-    required this.measure,
-    required this.indicates,
-  });
-
-  final String title;
-  final IconData icon;
-  final Color accentColor;
-  final String idealRange;
-  final String what;
-  final String measure;
-  final String indicates;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: AppColors.surfaceElevated.withValues(alpha: 0.85),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: accentColor.withValues(alpha: 0.28)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.25),
-            blurRadius: 16,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: accentColor.withValues(alpha: 0.14),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: accentColor.withValues(alpha: 0.25)),
-                ),
-                child: Icon(icon, color: accentColor, size: 22),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  title,
-                  style: GoogleFonts.syne(
-                    fontSize: 17,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.textPrimary,
-                  ),
-                ),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(
-                  color: accentColor.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: accentColor.withValues(alpha: 0.22)),
-                ),
-                child: Text(
-                  'Ideal: $idealRange',
-                  style: GoogleFonts.interTight(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
-                    color: accentColor,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          _CardSection(
-            label: AppStrings.welcomeCardWhat,
-            text: what,
-          ),
-          const SizedBox(height: 12),
-          _CardSection(
-            label: AppStrings.welcomeCardMeasure,
-            text: measure,
-          ),
-          const SizedBox(height: 12),
-          _CardSection(
-            label: AppStrings.welcomeCardIndicates,
-            text: indicates,
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _CardSection extends StatelessWidget {
-  const _CardSection({required this.label, required this.text});
-
-  final String label;
-  final String text;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: GoogleFonts.interTight(
-            fontSize: 11,
-            fontWeight: FontWeight.w700,
-            letterSpacing: 0.4,
-            color: AppColors.textMuted,
-          ),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          text,
-          style: GoogleFonts.interTight(
-            fontSize: 13.5,
-            height: 1.45,
-            color: AppColors.textSecondary,
-          ),
+        WelcomeSecondaryCta(
+          label: AppStrings.welcomeRegister,
+          onPressed: () => Navigator.pushNamed(context, AppRoutes.register),
         ),
       ],
-    );
-  }
-}
-
-class _WelcomeBackdrop extends StatelessWidget {
-  const _WelcomeBackdrop();
-
-  @override
-  Widget build(BuildContext context) {
-    return CustomPaint(
-      painter: _BackdropPainter(),
-      child: const SizedBox.expand(),
-    );
-  }
-}
-
-class _BackdropPainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final rect = Offset.zero & size;
-    final bg = Paint()
-      ..shader = const LinearGradient(
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-        colors: [
-          Color(0xFF060A12),
-          Color(0xFF0A1424),
-          Color(0xFF0D1A2E),
-        ],
-        stops: [0.0, 0.45, 1.0],
-      ).createShader(rect);
-    canvas.drawRect(rect, bg);
-
-    void orb(double cx, double cy, double r, Color c) {
-      final p = Paint()
-        ..shader = RadialGradient(
-          colors: [c.withValues(alpha: 0.45), c.withValues(alpha: 0.0)],
-        ).createShader(Rect.fromCircle(center: Offset(cx, cy), radius: r));
-      canvas.drawCircle(Offset(cx, cy), r, p);
-    }
-
-    orb(size.width * 0.85, size.height * 0.08, size.width * 0.35, AppColors.primary);
-    orb(size.width * 0.1, size.height * 0.55, size.width * 0.42, AppColors.accent);
-    orb(size.width * 0.7, size.height * 0.88, size.width * 0.28, const Color(0xFF1A6FA3));
-
-    final grid = Paint()
-      ..color = Colors.white.withValues(alpha: 0.03)
-      ..strokeWidth = 1;
-    const step = 48.0;
-    for (double x = 0; x < size.width; x += step) {
-      canvas.drawLine(Offset(x, 0), Offset(x, size.height), grid);
-    }
-    for (double y = 0; y < size.height; y += step) {
-      canvas.drawLine(Offset(0, y), Offset(size.width, y), grid);
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
-}
-
-class _BrandPill extends StatelessWidget {
-  const _BrandPill();
-
-  @override
-  Widget build(BuildContext context) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(999),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(999),
-            border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
-            gradient: LinearGradient(
-              colors: [
-                AppColors.surfaceElevated.withValues(alpha: 0.65),
-                AppColors.surface.withValues(alpha: 0.35),
-              ],
-            ),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(Icons.water_drop_rounded, color: AppColors.primary, size: 20),
-              const SizedBox(width: 8),
-              Text(
-                AppStrings.appName,
-                style: GoogleFonts.syne(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.textPrimary,
-                  letterSpacing: 0.2,
-                ),
-              ),
-              const SizedBox(width: 10),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                decoration: BoxDecoration(
-                  color: AppColors.primary.withValues(alpha: 0.18),
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                child: Text(
-                  'IoT',
-                  style: GoogleFonts.interTight(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.primaryLight,
-                    letterSpacing: 0.6,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _PrimaryCta extends StatelessWidget {
-  const _PrimaryCta({required this.label, required this.onPressed});
-
-  final String label;
-  final VoidCallback onPressed;
-
-  @override
-  Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(14),
-        gradient: const LinearGradient(
-          colors: [AppColors.primary, Color(0xFF1E8BC3)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.primary.withValues(alpha: 0.35),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: onPressed,
-          borderRadius: BorderRadius.circular(14),
-          child: SizedBox(
-            width: double.infinity,
-            height: 54,
-            child: Center(
-              child: Text(
-                label,
-                style: GoogleFonts.syne(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w700,
-                  color: Colors.white,
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _SecondaryCta extends StatelessWidget {
-  const _SecondaryCta({required this.label, required this.onPressed});
-
-  final String label;
-  final VoidCallback onPressed;
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onPressed,
-        borderRadius: BorderRadius.circular(14),
-        child: Ink(
-          width: double.infinity,
-          height: 54,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: Colors.white.withValues(alpha: 0.22), width: 1.2),
-            color: Colors.white.withValues(alpha: 0.04),
-          ),
-          child: Center(
-            child: Text(
-              label,
-              style: GoogleFonts.syne(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-                color: AppColors.textPrimary,
-              ),
-            ),
-          ),
-        ),
-      ),
     );
   }
 }

@@ -6,9 +6,9 @@
 
 #include "generated_plugin_registrant.h"
 
-#include <rive_native/rive_native_plugin.h>
+#include <printing/printing_plugin.h>
 
 void RegisterPlugins(flutter::PluginRegistry* registry) {
-  RiveNativePluginRegisterWithRegistrar(
-      registry->GetRegistrarForPlugin("RiveNativePlugin"));
+  PrintingPluginRegisterWithRegistrar(
+      registry->GetRegistrarForPlugin("PrintingPlugin"));
 }

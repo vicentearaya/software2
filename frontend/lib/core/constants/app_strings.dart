@@ -72,6 +72,7 @@ class AppStrings {
   static const String welcomeCardIndicates = 'Qué indica';
 
   static const String welcomeRegister = 'Registrarse';
+  static const String welcomeLearnMore = 'Ver cómo funciona';
 
   // Auth
   static const String login = 'Iniciar sesión';
@@ -80,6 +81,7 @@ class AppStrings {
   static const String email = 'Correo electrónico';
   static const String password = 'Contraseña';
   static const String forgotPassword = '¿Olvidaste tu contraseña?';
+  static const String rememberMe = 'Recordarme';
   static const String noAccount = '¿No tienes cuenta? ';
   static const String hasAccount = '¿Ya tienes cuenta? ';
 
