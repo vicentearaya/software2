@@ -34,11 +34,6 @@ jobs:
         run: |
           cd frontend
           flutter pub get
-      # Rive: sin esto, RiveNative.init() falla en Linux (widget_test + WelcomeScreen nativo).
-      - name: Setup Rive native (Linux)
-        run: |
-          cd frontend
-          dart run rive_native:setup --verbose --clean --platform linux
       - name: Flutter test
         run: |
           cd frontend

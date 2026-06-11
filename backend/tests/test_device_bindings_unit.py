@@ -63,6 +63,8 @@ def test_get_device_status_online(current_user):
         "assigned_at": now - timedelta(days=1),
         "last_seen_at": now - timedelta(minutes=1),
     }
+    # Sin lecturas recientes en `lecturas` (evita MagicMock en timestamp).
+    db.lecturas.find_one.return_value = None
 
     status = get_device_status("dev-1", current_user=current_user, db=db)
 
