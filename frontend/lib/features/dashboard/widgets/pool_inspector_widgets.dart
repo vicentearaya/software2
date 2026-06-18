@@ -484,6 +484,55 @@ class PoolDimensionsStrip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    List<Widget> children = [];
+
+    if (pool.forma == 'circular') {
+      children = [
+        _CompactDimension(label: 'Diámetro', value: '${pool.ancho} m'),
+        const _StripDivider(),
+        _CompactDimension(label: 'Prof.', value: '${pool.profundidad} m'),
+        const _StripDivider(),
+        _CompactDimension(
+          label: 'Vol.',
+          value: '${pool.volumenM3.toStringAsFixed(1)} m³',
+        ),
+      ];
+    } else if (pool.forma == 'oval') {
+      children = [
+        _CompactDimension(label: 'Largo máx', value: '${pool.largo} m'),
+        const _StripDivider(),
+        _CompactDimension(label: 'Ancho máx', value: '${pool.ancho} m'),
+        const _StripDivider(),
+        _CompactDimension(label: 'Prof.', value: '${pool.profundidad} m'),
+        const _StripDivider(),
+        _CompactDimension(
+          label: 'Vol.',
+          value: '${pool.volumenM3.toStringAsFixed(1)} m³',
+        ),
+      ];
+    } else if (pool.forma == 'volumen_conocido') {
+      children = [
+        _CompactDimension(
+          label: 'Vol. Registrado',
+          value: '${pool.volumenM3.toStringAsFixed(1)} m³',
+        ),
+      ];
+    } else {
+      // rectangular
+      children = [
+        _CompactDimension(label: 'Largo', value: '${pool.largo} m'),
+        const _StripDivider(),
+        _CompactDimension(label: 'Ancho', value: '${pool.ancho} m'),
+        const _StripDivider(),
+        _CompactDimension(label: 'Prof.', value: '${pool.profundidad} m'),
+        const _StripDivider(),
+        _CompactDimension(
+          label: 'Vol.',
+          value: '${pool.volumenM3.toStringAsFixed(1)} m³',
+        ),
+      ];
+    }
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       decoration: BoxDecoration(
@@ -493,18 +542,7 @@ class PoolDimensionsStrip extends StatelessWidget {
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: [
-          _CompactDimension(label: 'Largo', value: '${pool.largo} m'),
-          const _StripDivider(),
-          _CompactDimension(label: 'Ancho', value: '${pool.ancho} m'),
-          const _StripDivider(),
-          _CompactDimension(label: 'Prof.', value: '${pool.profundidad} m'),
-          const _StripDivider(),
-          _CompactDimension(
-            label: 'Vol.',
-            value: '${pool.volumenM3.toStringAsFixed(1)} m³',
-          ),
-        ],
+        children: children,
       ),
     );
   }

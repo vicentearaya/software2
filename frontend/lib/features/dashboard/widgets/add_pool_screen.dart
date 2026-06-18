@@ -21,16 +21,33 @@ class _AddPoolScreenState extends State<AddPoolScreen> {
   final _largoCtrl = TextEditingController();
   final _anchoCtrl = TextEditingController();
   final _profundidadCtrl = TextEditingController();
+  final _volumenCtrl = TextEditingController();
 
   bool _esInterior = false;
   bool _tieneFiltro = true;
   bool _isSaving = false;
+  String _forma = 'rectangular';
 
   double get _litros {
-    final l = double.tryParse(_largoCtrl.text) ?? 0;
-    final a = double.tryParse(_anchoCtrl.text) ?? 0;
-    final p = double.tryParse(_profundidadCtrl.text) ?? 0;
-    return l * a * p * 1000;
+    if (_forma == 'volumen_conocido') {
+      final v = double.tryParse(_volumenCtrl.text) ?? 0.0;
+      return v * 1000;
+    } else if (_forma == 'circular') {
+      final d = double.tryParse(_anchoCtrl.text) ?? 0.0;
+      final p = double.tryParse(_profundidadCtrl.text) ?? 0.0;
+      final r = d / 2;
+      return 3.141592653589793 * r * r * p * 1000;
+    } else if (_forma == 'oval') {
+      final l = double.tryParse(_largoCtrl.text) ?? 0.0;
+      final a = double.tryParse(_anchoCtrl.text) ?? 0.0;
+      final p = double.tryParse(_profundidadCtrl.text) ?? 0.0;
+      return 3.141592653589793 * (l / 2) * (a / 2) * p * 1000;
+    } else {
+      final l = double.tryParse(_largoCtrl.text) ?? 0.0;
+      final a = double.tryParse(_anchoCtrl.text) ?? 0.0;
+      final p = double.tryParse(_profundidadCtrl.text) ?? 0.0;
+      return l * a * p * 1000;
+    }
   }
 
   @override
@@ -44,10 +61,15 @@ class _AddPoolScreenState extends State<AddPoolScreen> {
       _profundidadCtrl.text = d.profundidad.toString();
       _esInterior = d.esInterior;
       _tieneFiltro = d.tieneFiltro;
+      _forma = d.forma;
+      if (d.forma == 'volumen_conocido') {
+        _volumenCtrl.text = d.volumen?.toString() ?? '';
+      }
     }
     _largoCtrl.addListener(() => setState(() {}));
     _anchoCtrl.addListener(() => setState(() {}));
     _profundidadCtrl.addListener(() => setState(() {}));
+    _volumenCtrl.addListener(() => setState(() {}));
   }
 
   @override
@@ -56,6 +78,7 @@ class _AddPoolScreenState extends State<AddPoolScreen> {
     _largoCtrl.dispose();
     _anchoCtrl.dispose();
     _profundidadCtrl.dispose();
+    _volumenCtrl.dispose();
     super.dispose();
   }
 
@@ -65,11 +88,21 @@ class _AddPoolScreenState extends State<AddPoolScreen> {
     setState(() => _isSaving = true);
     final pool = PoolData(
       nombre: _nombreCtrl.text.trim(),
-      largo: double.parse(_largoCtrl.text.trim()),
-      ancho: double.parse(_anchoCtrl.text.trim()),
-      profundidad: double.parse(_profundidadCtrl.text.trim()),
+      largo: _forma == 'volumen_conocido' || _forma == 'circular'
+          ? 0.0
+          : double.parse(_largoCtrl.text.trim()),
+      ancho: _forma == 'volumen_conocido'
+          ? 0.0
+          : double.parse(_anchoCtrl.text.trim()),
+      profundidad: _forma == 'volumen_conocido'
+          ? 0.0
+          : double.parse(_profundidadCtrl.text.trim()),
       esInterior: _esInterior,
       tieneFiltro: _tieneFiltro,
+      forma: _forma,
+      volumen: _forma == 'volumen_conocido'
+          ? double.parse(_volumenCtrl.text.trim())
+          : null,
     );
     await widget.onSave(pool);
     if (!mounted) return;
@@ -135,39 +168,78 @@ class _AddPoolScreenState extends State<AddPoolScreen> {
                             (v == null || v.trim().isEmpty) ? 'Campo requerido' : null,
                       ),
                       const SizedBox(height: 24),
-                      _SectionLabel(label: 'Dimensiones (en metros)'),
+                      _SectionLabel(label: 'Forma de la piscina'),
                       const SizedBox(height: 8),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: _buildTextField(
-                              controller: _largoCtrl,
-                              hint: 'Largo',
-                              icon: Icons.straighten_rounded,
-                              isNumber: true,
-                              validator: _validatePositiveNumber,
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: _buildTextField(
-                              controller: _anchoCtrl,
-                              hint: 'Ancho',
-                              icon: Icons.swap_horiz_rounded,
-                              isNumber: true,
-                              validator: _validatePositiveNumber,
-                            ),
-                          ),
-                        ],
+                      _ShapeSelector(
+                        selectedForma: _forma,
+                        onChanged: (v) => setState(() => _forma = v),
                       ),
                       const SizedBox(height: 12),
-                      _buildTextField(
-                        controller: _profundidadCtrl,
-                        hint: 'Profundidad',
-                        icon: Icons.vertical_align_bottom_rounded,
-                        isNumber: true,
-                        validator: _validatePositiveNumber,
+                      _buildShapeHelpText(_forma),
+                      const SizedBox(height: 24),
+                      _SectionLabel(
+                        label: _forma == 'volumen_conocido'
+                            ? 'Capacidad'
+                            : 'Dimensiones (en metros)',
                       ),
+                      const SizedBox(height: 8),
+                      if (_forma == 'rectangular' || _forma == 'oval') ...[
+                        Row(
+                          children: [
+                            Expanded(
+                              child: _buildTextField(
+                                controller: _largoCtrl,
+                                hint: _forma == 'oval' ? 'Largo máx' : 'Largo',
+                                icon: Icons.straighten_rounded,
+                                isNumber: true,
+                                validator: _validatePositiveNumber,
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: _buildTextField(
+                                controller: _anchoCtrl,
+                                hint: _forma == 'oval' ? 'Ancho máx' : 'Ancho',
+                                icon: Icons.swap_horiz_rounded,
+                                isNumber: true,
+                                validator: _validatePositiveNumber,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        _buildTextField(
+                          controller: _profundidadCtrl,
+                          hint: 'Profundidad',
+                          icon: Icons.vertical_align_bottom_rounded,
+                          isNumber: true,
+                          validator: _validatePositiveNumber,
+                        ),
+                      ] else if (_forma == 'circular') ...[
+                        _buildTextField(
+                          controller: _anchoCtrl,
+                          hint: 'Diámetro',
+                          icon: Icons.circle_outlined,
+                          isNumber: true,
+                          validator: _validatePositiveNumber,
+                        ),
+                        const SizedBox(height: 12),
+                        _buildTextField(
+                          controller: _profundidadCtrl,
+                          hint: 'Profundidad',
+                          icon: Icons.vertical_align_bottom_rounded,
+                          isNumber: true,
+                          validator: _validatePositiveNumber,
+                        ),
+                      ] else if (_forma == 'volumen_conocido') ...[
+                        _buildTextField(
+                          controller: _volumenCtrl,
+                          hint: 'Volumen en m³ (metros cúbicos)',
+                          icon: Icons.water_drop_outlined,
+                          isNumber: true,
+                          validator: _validatePositiveNumber,
+                        ),
+                      ],
                       if (_litros > 0) ...[
                         const SizedBox(height: 16),
                         _LitrosPreview(litros: _litros),
@@ -222,6 +294,41 @@ class _AddPoolScreenState extends State<AddPoolScreen> {
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildShapeHelpText(String forma) {
+    String text = '';
+    switch (forma) {
+      case 'rectangular':
+        text = 'Ideal para piscinas tradicionales. Calcula el volumen usando: Largo × Ancho × Profundidad promedio.';
+        break;
+      case 'circular':
+        text = 'Ideal para tinajas o piscinas redondas. Mide el diámetro en la parte más ancha.';
+        break;
+      case 'oval':
+        text = 'Ideal para piscinas ovaladas. Mide el largo y ancho máximos.';
+        break;
+      case 'volumen_conocido':
+        text = 'Si ya conoces la capacidad exacta en metros cúbicos (m³) o litros de tu piscina.';
+        break;
+    }
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceElevated.withOpacity(0.5),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: AppColors.border.withOpacity(0.5)),
+      ),
+      child: Text(
+        text,
+        style: GoogleFonts.interTight(
+          color: AppColors.textSecondary,
+          fontSize: 12,
+          height: 1.4,
         ),
       ),
     );
@@ -461,6 +568,76 @@ class _Chip extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+class _ShapeSelector extends StatelessWidget {
+  const _ShapeSelector({
+    required this.selectedForma,
+    required this.onChanged,
+  });
+  final String selectedForma;
+  final ValueChanged<String> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final shapes = [
+      {'id': 'rectangular', 'label': 'Rectangular', 'icon': Icons.crop_landscape_rounded},
+      {'id': 'circular', 'label': 'Circular', 'icon': Icons.circle_outlined},
+      {'id': 'oval', 'label': 'Ovalada', 'icon': Icons.motion_photos_on_rounded},
+      {'id': 'volumen_conocido', 'label': 'Vol. Conocido', 'icon': Icons.water_drop_outlined},
+    ];
+
+    return GridView.count(
+      shrinkWrap: true,
+      crossAxisCount: 2,
+      crossAxisSpacing: 10,
+      mainAxisSpacing: 10,
+      childAspectRatio: 2.3,
+      physics: const NeverScrollableScrollPhysics(),
+      children: shapes.map((s) {
+        final id = s['id'] as String;
+        final label = s['label'] as String;
+        final icon = s['icon'] as IconData;
+        final isSelected = selectedForma == id;
+
+        return GestureDetector(
+          onTap: () => onChanged(id),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            decoration: BoxDecoration(
+              color: isSelected ? AppColors.primary.withOpacity(0.15) : AppColors.surfaceElevated,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: isSelected ? AppColors.primary.withOpacity(0.6) : AppColors.border,
+                width: isSelected ? 1.5 : 1,
+              ),
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  icon,
+                  color: isSelected ? AppColors.primary : AppColors.textMuted,
+                  size: 20,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    label,
+                    style: GoogleFonts.syne(
+                      color: isSelected ? AppColors.primary : AppColors.textSecondary,
+                      fontSize: 12,
+                      fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      }).toList(),
     );
   }
 }

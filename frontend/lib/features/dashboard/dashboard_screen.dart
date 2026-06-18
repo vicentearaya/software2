@@ -192,6 +192,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       'ancho': pool.ancho,
       'profundidad': pool.profundidad,
       'filtro': pool.tieneFiltro,
+      'forma': pool.forma,
     };
 
     Map<String, dynamic> result;
@@ -328,12 +329,21 @@ class _DashboardScreenState extends State<DashboardScreen> {
           initialData: _selectedPool != null
               ? PoolData(
                   nombre: _selectedPool!['nombre'] ?? '',
-                  largo: (_selectedPool!['largo'] as num?)?.toDouble() ?? 0,
-                  ancho: (_selectedPool!['ancho'] as num?)?.toDouble() ?? 0,
+                  largo: (_selectedPool!['largo'] as num?)?.toDouble() ?? 0.0,
+                  ancho: (_selectedPool!['ancho'] as num?)?.toDouble() ?? 0.0,
                   profundidad:
-                      (_selectedPool!['profundidad'] as num?)?.toDouble() ?? 0,
+                      (_selectedPool!['profundidad'] as num?)?.toDouble() ?? 0.0,
                   esInterior: (_selectedPool!['tipo'] as String?) == 'interior',
                   tieneFiltro: (_selectedPool!['filtro'] as bool?) ?? true,
+                  forma: () {
+                    final formaRaw = _selectedPool!['forma'] as String?;
+                    if (formaRaw != null && formaRaw.isNotEmpty) return formaRaw;
+                    final l = (_selectedPool!['largo'] as num?)?.toDouble() ?? 0.0;
+                    final a = (_selectedPool!['ancho'] as num?)?.toDouble() ?? 0.0;
+                    final p = (_selectedPool!['profundidad'] as num?)?.toDouble() ?? 0.0;
+                    return (l > 0 || a > 0 || p > 0) ? 'rectangular' : 'volumen_conocido';
+                  }(),
+                  volumen: (_selectedPool!['volumen'] as num?)?.toDouble(),
                 )
               : null,
         ),
@@ -388,6 +398,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
       profundidad: prof,
       esInterior: selectedPoolMap['tipo'] == 'interior',
       tieneFiltro: (selectedPoolMap['filtro'] as bool?) ?? true,
+      forma: () {
+        final formaRaw = selectedPoolMap['forma'] as String?;
+        if (formaRaw != null && formaRaw.isNotEmpty) return formaRaw;
+        return (largo > 0 || ancho > 0 || prof > 0) ? 'rectangular' : 'volumen_conocido';
+      }(),
+      volumen: volumenM3,
     );
     final String selectedPoolId = selectedPoolMap['id'] as String;
     final String? boundPoolId = _deviceBinding?['pool_id'] as String?;

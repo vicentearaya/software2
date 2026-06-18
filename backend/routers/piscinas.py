@@ -1,7 +1,7 @@
 from typing import List
 from datetime import datetime, timezone
 from fastapi import APIRouter, Depends, HTTPException, status
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 from bson import ObjectId
 from pymongo.database import Database
 
@@ -22,6 +22,15 @@ class PiscinaIn(BaseModel):
     ancho: float = 0.0
     profundidad: float = 0.0
     filtro: bool = True
+    forma: str = "rectangular"
+
+    @field_validator("forma")
+    @classmethod
+    def validate_forma(cls, v: str) -> str:
+        allowed = {"rectangular", "circular", "oval", "volumen_conocido"}
+        if v not in allowed:
+            raise ValueError(f"Forma no válida. Debe ser una de: {', '.join(allowed)}")
+        return v
 
 class PiscinaOut(PiscinaIn):
     id: str
@@ -58,6 +67,16 @@ def get_pools(current_user: dict = Depends(get_current_user), db = Depends(get_d
     cursor = db.piscinas.find({"username": current_user["username"]})
     pools = []
     for doc in cursor:
+        largo = doc.get("largo", 0.0)
+        ancho = doc.get("ancho", 0.0)
+        profundidad = doc.get("profundidad", 0.0)
+        forma = doc.get("forma")
+        if not forma:
+            if largo > 0 or ancho > 0 or profundidad > 0:
+                forma = "rectangular"
+            else:
+                forma = "volumen_conocido"
+
         pools.append(PiscinaOut(
             id=str(doc["_id"]),
             username=doc["username"],
@@ -65,10 +84,11 @@ def get_pools(current_user: dict = Depends(get_current_user), db = Depends(get_d
             volumen=doc.get("volumen", 0.0),
             tipo=doc.get("tipo", "exterior"),
             ubicacion=doc.get("ubicacion", ""),
-            largo=doc.get("largo", 0.0),
-            ancho=doc.get("ancho", 0.0),
-            profundidad=doc.get("profundidad", 0.0),
+            largo=largo,
+            ancho=ancho,
+            profundidad=profundidad,
             filtro=doc.get("filtro", True),
+            forma=forma,
         ))
     return pools
 

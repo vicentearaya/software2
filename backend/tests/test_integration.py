@@ -244,6 +244,115 @@ class TestPiscinasCrudFlow:
         del_body = del_resp.json()
         assert del_body["ok"] is True
 
+    def test_create_and_update_all_shapes(self):
+        """Integración: Crear y actualizar piscinas con cada una de las formas permitidas."""
+        self._auth_override()
+        from db import get_db
+
+        shapes = ["rectangular", "circular", "oval", "volumen_conocido"]
+        for shape in shapes:
+            fake_oid = ObjectId()
+            mock_db_local = MagicMock()
+            mock_db_local.piscinas.insert_one.return_value = MagicMock(inserted_id=fake_oid)
+            mock_db_local.piscinas.find_one.return_value = {
+                "_id": fake_oid,
+                "username": "tecnico_crud",
+                "nombre": f"Piscina {shape}",
+                "volumen": 50.0,
+                "tipo": "exterior",
+                "ubicacion": "jardin",
+                "forma": shape
+            }
+            mock_db_local.piscinas.update_one.return_value = MagicMock(matched_count=1)
+            app.dependency_overrides[get_db] = lambda: mock_db_local
+
+            # 1. CREAR
+            create_resp = client.post("/piscinas", json={
+                "nombre": f"Piscina {shape}",
+                "volumen": 50.0,
+                "tipo": "exterior",
+                "ubicacion": "jardin",
+                "forma": shape
+            })
+            assert create_resp.status_code == 201, f"Fallo creando forma {shape}: {create_resp.text}"
+            data = create_resp.json()
+            assert data["forma"] == shape
+
+            # 2. ACTUALIZAR
+            update_resp = client.put(f"/piscinas/{str(fake_oid)}", json={
+                "nombre": f"Piscina {shape} Mod",
+                "volumen": 60.0,
+                "tipo": "interior",
+                "ubicacion": "indoor",
+                "forma": shape
+            })
+            assert update_resp.status_code == 200, f"Fallo actualizando forma {shape}: {update_resp.text}"
+            data_up = update_resp.json()
+            assert data_up["forma"] == shape
+            assert data_up["nombre"] == f"Piscina {shape} Mod"
+
+    def test_create_pool_invalid_shape(self):
+        """Integración: Enviar una forma no permitida debe retornar 422."""
+        self._auth_override()
+        
+        create_resp = client.post("/piscinas", json={
+            "nombre": "Piscina Triangular",
+            "volumen": 30.0,
+            "tipo": "exterior",
+            "ubicacion": "patio",
+            "forma": "triangular"  # Forma inválida
+        })
+        assert create_resp.status_code == 422
+
+    def test_legacy_pool_migration(self):
+        """Integración: Cargar piscinas sin forma (legacy) y tratarlas según sus dimensiones."""
+        self._auth_override()
+        from db import get_db
+
+        fake_oid_1 = ObjectId()
+        fake_oid_2 = ObjectId()
+
+        mock_db_local = MagicMock()
+        mock_db_local.piscinas.find.return_value = [
+            {
+                "_id": fake_oid_1,
+                "username": "tecnico_crud",
+                "nombre": "Legacy Rectangular",
+                "volumen": 30.0,
+                "tipo": "exterior",
+                "ubicacion": "",
+                "largo": 5.0,
+                "ancho": 3.0,
+                "profundidad": 1.5,
+            },
+            {
+                "_id": fake_oid_2,
+                "username": "tecnico_crud",
+                "nombre": "Legacy Volumen",
+                "volumen": 15.0,
+                "tipo": "exterior",
+                "ubicacion": "",
+                "largo": 0.0,
+                "ancho": 0.0,
+                "profundidad": 0.0,
+            }
+        ]
+        app.dependency_overrides[get_db] = lambda: mock_db_local
+
+        list_resp = client.get("/piscinas")
+        assert list_resp.status_code == 200
+        pools = list_resp.json()
+        assert len(pools) == 2
+
+        # La primera tiene dimensiones > 0 -> rectangular
+        assert pools[0]["nombre"] == "Legacy Rectangular"
+        assert pools[0]["forma"] == "rectangular"
+
+        # La segunda no tiene dimensiones -> volumen_conocido
+        assert pools[1]["nombre"] == "Legacy Volumen"
+        assert pools[1]["forma"] == "volumen_conocido"
+
+
 
 # ══════════════════════════════════════════════════════════════════════════
 # FLUJO 3: Estado de piscina — Pool Status endpoint
