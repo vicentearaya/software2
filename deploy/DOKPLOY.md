@@ -133,12 +133,43 @@ sudo snap disable docker
 sudo systemctl enable --now docker
 ```
 
+## Disco lleno en redeploys (`No space left on device`)
+
+Cada `docker compose up --build` acumula **build cache** (en Flutter puede ser varios GB). Si el disco del servidor se llena, fallan `flutter pub get` o `pip install`.
+
+### Prevención automática (recomendado)
+
+1. En el servidor, una vez:
+
+```bash
+cd ~/software2 && git pull origin main
+sudo bash scripts/install-docker-disk-maintenance.sh
+```
+
+Eso programa limpieza semanal (domingo 03:00).
+
+2. En Dokploy → **Advanced** → **Run Command**, agrega limpieza **antes** del build (ajusta el `-p` de tu proyecto):
+
+```bash
+bash -c 'sudo /usr/local/bin/cleanpool-kill-stack && sudo AGGRESSIVE=1 bash scripts/docker-disk-maintenance.sh && docker compose -p produccion-app-06zzup -f ./docker-compose.yml up -d --build --remove-orphans'
+```
+
+3. Limpieza manual cuando haga falta:
+
+```bash
+sudo AGGRESSIVE=1 bash scripts/docker-disk-maintenance.sh
+df -h /
+```
+
+**No uses** `docker system prune -af --volumes` en producción: puede borrar datos de Mongo/Mosquitto.
+
 ## Comandos útiles en el servidor
 
 ```bash
 docker compose ps
 docker compose logs -f backend
 docker compose logs -f mosquitto
+sudo bash scripts/docker-disk-maintenance.sh
 ```
 
 ## Presencia del ESP8266
