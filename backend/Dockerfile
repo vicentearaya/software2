@@ -2,14 +2,9 @@ FROM python:3.10-slim
 
 WORKDIR /app
 
-# Instalar dependencias del sistema necesarias
-RUN apt-get update && apt-get install -y \
-    gcc \
-    && rm -rf /var/lib/apt/lists/*
-
-# Copiar requirements y instalarlos
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+# Copiar requirements de producción e instalarlas
+COPY requirements-prod.txt .
+RUN pip install --no-cache-dir --prefer-binary -r requirements-prod.txt
 
 # Copiar el código fuente
 COPY . .

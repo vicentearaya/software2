@@ -17,9 +17,11 @@ class DevicePlaceholderWidget extends StatelessWidget {
       child: Stack(
         fit: StackFit.expand,
         children: [
+          const ColoredBox(color: AppColors.surface),
           Image.asset(
             assetPath,
-            fit: BoxFit.cover,
+            fit: BoxFit.contain,
+            alignment: Alignment.center,
             errorBuilder: (_, __, ___) => const _HeroFallback(),
           ),
           // Borde sutil + degradado inferior para integrarlo con el tema.
