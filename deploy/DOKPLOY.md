@@ -54,16 +54,27 @@ Si `docker compose` falla con *permission denied*, en el servidor unifica Docker
    sudo bash scripts/install-cleanpool-kill-stack.sh
    sudo bash scripts/install-cleanpool-pre-deploy.sh
    ```
-9. En Dokploy configura **dos campos** (Dokploy antepone `docker` al Run Command; no uses `bash -c` ahí):
-   - **Pre Deploy Command:**
-     ```bash
-     sudo /usr/local/bin/cleanpool-pre-deploy
-     ```
-   - **Advanced → Run Command** (solo la parte después de `docker`):
-     ```bash
-     compose -p produccion-app-06zzup -f ./docker-compose.yml up -d --build --remove-orphans
-     ```
-   Sin el pre-deploy, fallará con *container name already in use* o *permission denied*.
+9. En Dokploy → **Advanced** → **Command** (o *Run Command*), pega **solo** esto (sin `docker`, sin `bash`):
+
+   ```bash
+   compose -p produccion-app-06zzup -f ./docker-compose.yml up -d --build --remove-orphans
+   ```
+
+   Dokploy antepone `docker` automáticamente. Si pones `bash -c`, fallará con `docker: unknown command: docker bash`.
+
+   **Antes de cada deploy** (por SSH, porque Dokploy no tiene Pre Deploy en todas las versiones):
+
+   ```bash
+   sudo /usr/local/bin/cleanpool-pre-deploy
+   ```
+
+   Luego pulsa **Deploy** en Dokploy. Para no depender de hacerlo a mano, instala el cron semanal:
+
+   ```bash
+   sudo bash scripts/install-docker-disk-maintenance.sh
+   ```
+
+   Sin el `cleanpool-kill-stack` antes del `up`, puede fallar con *container name already in use* o *permission denied*.
    **No uses** `docker compose up` manual en `~/software2` si despliegas con Dokploy (solo un método).
 9. Primer deploy: **Deploy** (ver abajo si ya hay contenedores levantados)
 
@@ -159,13 +170,13 @@ sudo bash scripts/install-docker-disk-maintenance.sh
 
 Eso programa limpieza semanal (domingo 03:00).
 
-2. En Dokploy usa **Pre Deploy Command** + **Run Command** por separado (no combines con `bash -c` en Run Command):
+2. Flujo de deploy sin campo Pre Deploy en Dokploy:
 
 ```bash
-# Pre Deploy Command
+# 1) En el servidor por SSH (antes de Deploy en Dokploy)
 sudo /usr/local/bin/cleanpool-pre-deploy
 
-# Run Command (sin "docker" al inicio; Dokploy lo agrega solo)
+# 2) En Dokploy → Advanced → Command
 compose -p produccion-app-06zzup -f ./docker-compose.yml up -d --build --remove-orphans
 ```
 
