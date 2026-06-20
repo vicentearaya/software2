@@ -1,16 +1,24 @@
 FROM ghcr.io/cirruslabs/flutter:stable AS build
 
 WORKDIR /app
-COPY . .
 
 # Pasamos la URL del backend por argumento de build
 ARG API_URL=""
 
-RUN flutter config --enable-web
-RUN flutter pub get
+# Copiamos primero los archivos de dependencias para aprovechar caché y
+# evitar invalidar `flutter pub get` en cada cambio de código.
+COPY pubspec.yaml pubspec.lock ./
 
-# Compilar para entorno web inyectando la URL de la API
-RUN flutter build web --dart-define=API_URL=$API_URL
+# Resolvemos dependencias antes de copiar el código fuente completo para
+# reutilizar la caché cuando cambian solo archivos de la app.
+RUN flutter config --enable-web && flutter pub get
+
+COPY . .
+
+# Compilar para entorno web inyectando la URL de la API y luego limpiar la
+# caché descargada para reducir el espacio retenido por el builder.
+RUN flutter build web --dart-define=API_URL=$API_URL \
+    && rm -rf /root/.pub-cache
 
 FROM nginx:alpine
 # Copiar configuración adaptada para SPA de Flutter

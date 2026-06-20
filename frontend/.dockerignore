@@ -6,5 +6,10 @@ linux/
 android/
 ios/
 test/
+tool/
+.git/
+.github/
+.idea/
+.vscode/
 *.env
 .gitignore
