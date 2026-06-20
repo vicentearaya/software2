@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# Pre-deploy en el host: mata contenedores viejos y libera disco Docker.
-# Instalar: sudo bash scripts/install-cleanpool-pre-deploy.sh
+# Ejecutar en el servidor ANTES de pulsar Deploy en Dokploy.
+# Instalar: sudo bash scripts/install-cleanpool-server-maintenance.sh
 set -euo pipefail
 
 if [[ "${EUID:-}" -ne 0 ]]; then
@@ -8,19 +8,12 @@ if [[ "${EUID:-}" -ne 0 ]]; then
   exit 1
 fi
 
-echo "==> cleanpool-pre-deploy: kill-stack"
-/usr/local/bin/cleanpool-kill-stack
+AGGRESSIVE=1 /usr/local/bin/cleanpool-server-maintenance
 
-echo "==> cleanpool-pre-deploy: limpieza de disco Docker"
-docker builder prune -af
-docker image prune -f
-
-USE="$(df / | awk 'NR==2 {gsub(/%/, "", $5); print $5}')"
-if [[ "$USE" -ge 92 ]]; then
-  echo "==> Disco al ${USE}%: volúmenes huérfanos"
-  docker volume prune -f
+if [[ "${FULL_STACK:-0}" == "1" ]]; then
+  /usr/local/bin/cleanpool-kill-stack
+else
+  /usr/local/bin/cleanpool-kill-app
 fi
 
-echo "==> Estado de disco:"
-df -h /
-docker system df
+echo "cleanpool-pre-deploy: listo para Deploy en Dokploy"

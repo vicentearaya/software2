@@ -161,31 +161,29 @@ Cada `docker compose up --build` acumula **build cache** (en Flutter puede ser v
 
 ### Prevención automática (recomendado)
 
-1. En el servidor, una vez:
+1. En el servidor, **una vez** (instala scripts + cron cada 4 horas):
 
 ```bash
 cd ~/software2 && git pull origin main
-sudo bash scripts/install-docker-disk-maintenance.sh
+sudo bash scripts/install-cleanpool-server-maintenance.sh
 ```
 
-Eso programa limpieza semanal (domingo 03:00).
-
-2. Flujo de deploy sin campo Pre Deploy en Dokploy:
+2. **Antes de cada Deploy** en Dokploy (por SSH):
 
 ```bash
-# 1) En el servidor por SSH (antes de Deploy en Dokploy)
 sudo /usr/local/bin/cleanpool-pre-deploy
+df -h /
+```
 
-# 2) En Dokploy → Advanced → Command
+Objetivo: **≥ 5 GB libres** antes de construir.
+
+3. En Dokploy → **Advanced** → **Command** (sin `docker`, sin `bash`):
+
+```bash
 compose -p produccion-app-06zzup -f ./docker-compose.yml up -d --build --remove-orphans
 ```
 
-3. Limpieza manual cuando haga falta:
-
-```bash
-sudo AGGRESSIVE=1 bash scripts/docker-disk-maintenance.sh
-df -h /
-```
+El cron (`cleanpool-server-maintenance`) limpia caché y logs automáticamente cada 4 horas para que los autodeploys no llenen el disco.
 
 **No uses** `docker system prune -af --volumes` en producción: puede borrar datos de Mongo/Mosquitto.
 
