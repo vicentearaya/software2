@@ -48,11 +48,22 @@ Si `docker compose` falla con *permission denied*, en el servidor unifica Docker
    cd ~/software2 && git pull origin main
    sudo bash scripts/install-cleanpool-kill-stack.sh
    ```
-8. En **Advanced** → **Run Command** (reemplaza el comando por defecto; usa tu `-p` de Dokploy):
+8. En el servidor (una vez):
    ```bash
-   bash -c 'sudo /usr/local/bin/cleanpool-kill-stack && docker compose -p produccin-appdespliegue-hwhkj3 -f ./docker-compose.yml up -d --build --remove-orphans'
+   cd ~/software2 && git pull origin main
+   sudo bash scripts/install-cleanpool-kill-stack.sh
+   sudo bash scripts/install-cleanpool-pre-deploy.sh
    ```
-   Sin el `cleanpool-kill-stack` antes del `up`, fallará con *container name already in use* o *permission denied*.
+9. En Dokploy configura **dos campos** (Dokploy antepone `docker` al Run Command; no uses `bash -c` ahí):
+   - **Pre Deploy Command:**
+     ```bash
+     sudo /usr/local/bin/cleanpool-pre-deploy
+     ```
+   - **Advanced → Run Command** (solo la parte después de `docker`):
+     ```bash
+     compose -p produccion-app-06zzup -f ./docker-compose.yml up -d --build --remove-orphans
+     ```
+   Sin el pre-deploy, fallará con *container name already in use* o *permission denied*.
    **No uses** `docker compose up` manual en `~/software2` si despliegas con Dokploy (solo un método).
 9. Primer deploy: **Deploy** (ver abajo si ya hay contenedores levantados)
 
@@ -148,10 +159,14 @@ sudo bash scripts/install-docker-disk-maintenance.sh
 
 Eso programa limpieza semanal (domingo 03:00).
 
-2. En Dokploy → **Advanced** → **Run Command**, agrega limpieza **antes** del build (ajusta el `-p` de tu proyecto):
+2. En Dokploy usa **Pre Deploy Command** + **Run Command** por separado (no combines con `bash -c` en Run Command):
 
 ```bash
-bash -c 'sudo /usr/local/bin/cleanpool-kill-stack && sudo AGGRESSIVE=1 bash scripts/docker-disk-maintenance.sh && docker compose -p produccion-app-06zzup -f ./docker-compose.yml up -d --build --remove-orphans'
+# Pre Deploy Command
+sudo /usr/local/bin/cleanpool-pre-deploy
+
+# Run Command (sin "docker" al inicio; Dokploy lo agrega solo)
+compose -p produccion-app-06zzup -f ./docker-compose.yml up -d --build --remove-orphans
 ```
 
 3. Limpieza manual cuando haga falta:
