@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../core/constants/app_colors.dart';
+import '../../../core/constants/app_strings.dart';
 import '../../../core/utils/pool_volume_calculator.dart';
 import '../pool_data.dart';
 
@@ -312,6 +313,7 @@ class _AddPoolScreenState extends State<AddPoolScreen> {
                         ),
                       ],
                       if (_forma != 'volumen_conocido') ...[
+                        _ExpandableHelpCard(forma: _forma),
                         const SizedBox(height: 16),
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -824,6 +826,139 @@ class _ShapeSelector extends StatelessWidget {
           ),
         );
       }).toList(),
+    );
+  }
+}
+
+class _ExpandableHelpCard extends StatefulWidget {
+  const _ExpandableHelpCard({required this.forma});
+  final String forma;
+
+  @override
+  State<_ExpandableHelpCard> createState() => _ExpandableHelpCardState();
+}
+
+class _ExpandableHelpCardState extends State<_ExpandableHelpCard> {
+  bool _expanded = false;
+
+  @override
+  Widget build(BuildContext context) {
+    if (widget.forma == 'volumen_conocido') return const SizedBox.shrink();
+
+    return Container(
+      margin: const EdgeInsets.only(top: 16),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceElevated,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(12),
+        child: Theme(
+          data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+          child: ExpansionTile(
+            initiallyExpanded: false,
+            onExpansionChanged: (expanded) {
+              setState(() {
+                _expanded = expanded;
+              });
+            },
+            leading: Icon(
+              Icons.help_outline_rounded,
+              color: _expanded ? AppColors.primary : AppColors.textMuted,
+              size: 20,
+            ),
+            title: Text(
+              AppStrings.helpTitle,
+              style: GoogleFonts.syne(
+                color: AppColors.textPrimary,
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            trailing: Icon(
+              _expanded ? Icons.keyboard_arrow_up_rounded : Icons.keyboard_arrow_down_rounded,
+              color: AppColors.textSecondary,
+              size: 20,
+            ),
+            childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+            children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Divider(color: AppColors.border, height: 16),
+                  const SizedBox(height: 4),
+                  _buildHelpParagraph(
+                    title: 'Forma: ${_getFormaLabel(widget.forma)}',
+                    content: _getFormaInstruction(widget.forma),
+                  ),
+                  const SizedBox(height: 12),
+                  _buildHelpParagraph(
+                    title: '¿Cómo medir la profundidad?',
+                    content: AppStrings.helpDepthInstruction,
+                  ),
+                  const SizedBox(height: 12),
+                  _buildHelpParagraph(
+                    title: 'Consejo general',
+                    content: AppStrings.helpGeneralTip,
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  String _getFormaLabel(String forma) {
+    switch (forma) {
+      case 'rectangular':
+        return 'Rectangular';
+      case 'circular':
+        return 'Circular';
+      case 'oval':
+        return 'Ovalada';
+      default:
+        return '';
+    }
+  }
+
+  String _getFormaInstruction(String forma) {
+    switch (forma) {
+      case 'rectangular':
+        return AppStrings.helpRectangularInstruction;
+      case 'circular':
+        return AppStrings.helpCircularInstruction;
+      case 'oval':
+        return AppStrings.helpOvalInstruction;
+      default:
+        return '';
+    }
+  }
+
+  Widget _buildHelpParagraph({required String title, required String content}) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title,
+          style: GoogleFonts.syne(
+            color: AppColors.primary,
+            fontSize: 12,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          content,
+          style: GoogleFonts.interTight(
+            color: AppColors.textSecondary,
+            fontSize: 12,
+            height: 1.4,
+          ),
+        ),
+      ],
     );
   }
 }

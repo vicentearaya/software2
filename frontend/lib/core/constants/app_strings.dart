@@ -106,4 +106,17 @@ class AppStrings {
   static const String loading = 'Cargando...';
   static const String error = 'Ocurrió un error';
   static const String retry = 'Reintentar';
+
+  // Ayuda contextual al medir
+  static const String helpTitle = '¿Cómo medir tu piscina?';
+  static const String helpRectangularInstruction =
+      'Mide el largo y el ancho de la superficie en metros. Multiplica estos valores por la profundidad para calcular el volumen aproximado.';
+  static const String helpCircularInstruction =
+      'Mide el diámetro de borde a borde cruzando exactamente por el centro de la piscina. Para el volumen se utiliza la fórmula del cilindro.';
+  static const String helpOvalInstruction =
+      'Mide la longitud máxima (eje largo) y el ancho máximo (eje corto) cruzando en ángulo recto por el centro de la piscina.';
+  static const String helpDepthInstruction =
+      'Si tu piscina tiene desnivel, calcula la profundidad promedio sumando la parte más honda y la más playa, y dividiendo el resultado por 2. Ej: (1.0m + 2.0m) / 2 = 1.5m.';
+  static const String helpGeneralTip =
+      'Usa una cinta métrica estándar. Medir con precisión previene errores de dosificación química, cuidando la salud de tu familia y evitando el agua turbia o verde.';
 }
