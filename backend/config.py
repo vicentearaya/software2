@@ -24,6 +24,7 @@ class Settings(BaseSettings):
     database_name: str = "cleanpool"
     api_version: str = "v1"
     debug: bool = False
+    volume_tolerance: float = 0.05
 
     # MongoDB solo para logs estructurados (independiente de la BD de la app)
     mongodb_logs_uri: str | None = None

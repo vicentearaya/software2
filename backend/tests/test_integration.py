@@ -248,44 +248,67 @@ class TestPiscinasCrudFlow:
         """Integración: Crear y actualizar piscinas con cada una de las formas permitidas."""
         self._auth_override()
         from db import get_db
+    
+        shapes_data = {
+            "rectangular": {
+                "create": {"volumen": 50.0, "largo": 10.0, "ancho": 5.0, "profundidad": 1.0},
+                "update": {"volumen": 60.0, "largo": 10.0, "ancho": 6.0, "profundidad": 1.0}
+            },
+            "circular": {
+                "create": {"volumen": 50.265, "ancho": 8.0, "profundidad": 1.0},
+                "update": {"volumen": 60.319, "ancho": 8.0, "profundidad": 1.2}
+            },
+            "oval": {
+                "create": {"volumen": 50.0, "largo": 10.0, "ancho": 6.366, "profundidad": 1.0},
+                "update": {"volumen": 60.0, "largo": 10.0, "ancho": 7.639, "profundidad": 1.0}
+            },
+            "volumen_conocido": {
+                "create": {"volumen": 50.0},
+                "update": {"volumen": 60.0}
+            }
+        }
 
-        shapes = ["rectangular", "circular", "oval", "volumen_conocido"]
-        for shape in shapes:
+        for shape, data in shapes_data.items():
             fake_oid = ObjectId()
             mock_db_local = MagicMock()
             mock_db_local.piscinas.insert_one.return_value = MagicMock(inserted_id=fake_oid)
+            
+            # Mock find_one to return the updated record matching the shape
             mock_db_local.piscinas.find_one.return_value = {
                 "_id": fake_oid,
                 "username": "tecnico_crud",
-                "nombre": f"Piscina {shape}",
-                "volumen": 50.0,
-                "tipo": "exterior",
-                "ubicacion": "jardin",
-                "forma": shape
+                "nombre": f"Piscina {shape} Mod",
+                "volumen": data["update"]["volumen"],
+                "tipo": "interior",
+                "ubicacion": "indoor",
+                "forma": shape,
+                "largo": data["update"].get("largo", 0.0),
+                "ancho": data["update"].get("ancho", 0.0),
+                "profundidad": data["update"].get("profundidad", 0.0),
             }
             mock_db_local.piscinas.update_one.return_value = MagicMock(matched_count=1)
             app.dependency_overrides[get_db] = lambda: mock_db_local
-
+    
             # 1. CREAR
-            create_resp = client.post("/piscinas", json={
+            create_payload = {
                 "nombre": f"Piscina {shape}",
-                "volumen": 50.0,
                 "tipo": "exterior",
                 "ubicacion": "jardin",
-                "forma": shape
-            })
+                "forma": shape,
+                **data["create"]
+            }
+            create_resp = client.post("/piscinas", json=create_payload)
             assert create_resp.status_code == 201, f"Fallo creando forma {shape}: {create_resp.text}"
-            data = create_resp.json()
-            assert data["forma"] == shape
 
             # 2. ACTUALIZAR
-            update_resp = client.put(f"/piscinas/{str(fake_oid)}", json={
+            update_payload = {
                 "nombre": f"Piscina {shape} Mod",
-                "volumen": 60.0,
                 "tipo": "interior",
                 "ubicacion": "indoor",
-                "forma": shape
-            })
+                "forma": shape,
+                **data["update"]
+            }
+            update_resp = client.put(f"/piscinas/{str(fake_oid)}", json=update_payload)
             assert update_resp.status_code == 200, f"Fallo actualizando forma {shape}: {update_resp.text}"
             data_up = update_resp.json()
             assert data_up["forma"] == shape

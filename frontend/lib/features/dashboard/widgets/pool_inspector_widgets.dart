@@ -499,9 +499,9 @@ class PoolDimensionsStrip extends StatelessWidget {
       ];
     } else if (pool.forma == 'oval') {
       children = [
-        _CompactDimension(label: 'Largo máx', value: '${pool.largo} m'),
+        _CompactDimension(label: 'Eje largo', value: '${pool.largo} m'),
         const _StripDivider(),
-        _CompactDimension(label: 'Ancho máx', value: '${pool.ancho} m'),
+        _CompactDimension(label: 'Eje corto', value: '${pool.ancho} m'),
         const _StripDivider(),
         _CompactDimension(label: 'Prof.', value: '${pool.profundidad} m'),
         const _StripDivider(),

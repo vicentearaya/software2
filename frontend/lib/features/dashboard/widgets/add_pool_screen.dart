@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../core/constants/app_colors.dart';
+import '../../../core/utils/pool_volume_calculator.dart';
 import '../pool_data.dart';
 
 class AddPoolScreen extends StatefulWidget {
@@ -29,25 +30,22 @@ class _AddPoolScreenState extends State<AddPoolScreen> {
   String _forma = 'rectangular';
 
   double get _litros {
+    final Map<String, double> dims = {};
     if (_forma == 'volumen_conocido') {
-      final v = double.tryParse(_volumenCtrl.text) ?? 0.0;
-      return v * 1000;
+      dims['volumen'] = double.tryParse(_volumenCtrl.text) ?? 0.0;
     } else if (_forma == 'circular') {
-      final d = double.tryParse(_anchoCtrl.text) ?? 0.0;
-      final p = double.tryParse(_profundidadCtrl.text) ?? 0.0;
-      final r = d / 2;
-      return 3.141592653589793 * r * r * p * 1000;
+      dims['diametro'] = double.tryParse(_anchoCtrl.text) ?? 0.0;
+      dims['profundidad'] = double.tryParse(_profundidadCtrl.text) ?? 0.0;
     } else if (_forma == 'oval') {
-      final l = double.tryParse(_largoCtrl.text) ?? 0.0;
-      final a = double.tryParse(_anchoCtrl.text) ?? 0.0;
-      final p = double.tryParse(_profundidadCtrl.text) ?? 0.0;
-      return 3.141592653589793 * (l / 2) * (a / 2) * p * 1000;
+      dims['eje_largo'] = double.tryParse(_largoCtrl.text) ?? 0.0;
+      dims['eje_corto'] = double.tryParse(_anchoCtrl.text) ?? 0.0;
+      dims['profundidad'] = double.tryParse(_profundidadCtrl.text) ?? 0.0;
     } else {
-      final l = double.tryParse(_largoCtrl.text) ?? 0.0;
-      final a = double.tryParse(_anchoCtrl.text) ?? 0.0;
-      final p = double.tryParse(_profundidadCtrl.text) ?? 0.0;
-      return l * a * p * 1000;
+      dims['largo'] = double.tryParse(_largoCtrl.text) ?? 0.0;
+      dims['ancho'] = double.tryParse(_anchoCtrl.text) ?? 0.0;
+      dims['profundidad'] = double.tryParse(_profundidadCtrl.text) ?? 0.0;
     }
+    return PoolVolumeCalculator.calculateVolume(forma: _forma, dimensiones: dims) * 1000;
   }
 
   @override
@@ -189,7 +187,7 @@ class _AddPoolScreenState extends State<AddPoolScreen> {
                             Expanded(
                               child: _buildTextField(
                                 controller: _largoCtrl,
-                                hint: _forma == 'oval' ? 'Largo máx' : 'Largo',
+                                hint: _forma == 'oval' ? 'Eje largo' : 'Largo',
                                 icon: Icons.straighten_rounded,
                                 isNumber: true,
                                 validator: _validatePositiveNumber,
@@ -199,7 +197,7 @@ class _AddPoolScreenState extends State<AddPoolScreen> {
                             Expanded(
                               child: _buildTextField(
                                 controller: _anchoCtrl,
-                                hint: _forma == 'oval' ? 'Ancho máx' : 'Ancho',
+                                hint: _forma == 'oval' ? 'Eje corto' : 'Ancho',
                                 icon: Icons.swap_horiz_rounded,
                                 isNumber: true,
                                 validator: _validatePositiveNumber,

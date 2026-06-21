@@ -1,7 +1,7 @@
-from typing import List
+from typing import List, Any
 from datetime import datetime, timezone
 from fastapi import APIRouter, Depends, HTTPException, status
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 from bson import ObjectId
 from pymongo.database import Database
 
@@ -10,6 +10,8 @@ from models import TratamientoManualRequest
 from routers.auth import get_current_user
 from services.calculator import calcular_tratamiento
 from services.pool_status import build_pool_status_for_owner
+from services.pool_volume import calcular_volumen
+from config import get_settings
 
 router = APIRouter(tags=["Piscinas"])
 
@@ -23,6 +25,7 @@ class PiscinaIn(BaseModel):
     profundidad: float = 0.0
     filtro: bool = True
     forma: str = "rectangular"
+    dimensiones: dict[str, float] = Field(default_factory=dict)
 
     @field_validator("forma")
     @classmethod
@@ -31,6 +34,50 @@ class PiscinaIn(BaseModel):
         if v not in allowed:
             raise ValueError(f"Forma no válida. Debe ser una de: {', '.join(allowed)}")
         return v
+
+    @model_validator(mode="before")
+    @classmethod
+    def populate_dimensions_and_compat_fields(cls, data: Any) -> Any:
+        if not isinstance(data, dict):
+            return data
+        forma = data.get("forma", "rectangular")
+        dims = data.get("dimensiones", {})
+        
+        if dims:
+            cleaned_dims = {str(k): float(v) for k, v in dims.items()}
+            data["dimensiones"] = cleaned_dims
+            if forma == "circular":
+                data["ancho"] = cleaned_dims.get("diametro", 0.0)
+                data["profundidad"] = cleaned_dims.get("profundidad", 0.0)
+                data["largo"] = 0.0
+            elif forma == "oval":
+                data["largo"] = cleaned_dims.get("eje_largo", 0.0)
+                data["ancho"] = cleaned_dims.get("eje_corto", 0.0)
+                data["profundidad"] = cleaned_dims.get("profundidad", 0.0)
+            elif forma == "volumen_conocido":
+                data["largo"] = 0.0
+                data["ancho"] = 0.0
+                data["profundidad"] = 0.0
+            else: # rectangular
+                data["largo"] = cleaned_dims.get("largo", 0.0)
+                data["ancho"] = cleaned_dims.get("ancho", 0.0)
+                data["profundidad"] = cleaned_dims.get("profundidad", 0.0)
+        else:
+            l = float(data.get("largo", 0.0))
+            a = float(data.get("ancho", 0.0))
+            p = float(data.get("profundidad", 0.0))
+            v = float(data.get("volumen", 0.0))
+            if forma == "circular":
+                dims = {"diametro": a, "profundidad": p}
+            elif forma == "oval":
+                dims = {"eje_largo": l, "eje_corto": a, "profundidad": p}
+            elif forma == "volumen_conocido":
+                dims = {"volumen": v}
+            else: # rectangular
+                dims = {"largo": l, "ancho": a, "profundidad": p}
+            data["dimensiones"] = dims
+            
+        return data
 
 class PiscinaOut(PiscinaIn):
     id: str
@@ -48,6 +95,23 @@ def create_pool(pool: PiscinaIn, current_user: dict = Depends(get_current_user),
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail="El tipo de piscina debe ser 'interior' o 'exterior'"
+        )
+
+    # Recalcular volumen y verificar consistencia
+    settings = get_settings()
+    try:
+        calculated_vol = calcular_volumen(pool.forma, pool.dimensiones)
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=str(e)
+        )
+    
+    diff = abs(calculated_vol - pool.volumen)
+    if diff > settings.volume_tolerance:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=f"Inconsistencia de volumen: el volumen enviado es {pool.volumen} m³, pero el calculado es {calculated_vol:.3f} m³ (tolerancia: {settings.volume_tolerance} m³)"
         )
 
     pool_dict = pool.model_dump()
@@ -77,6 +141,17 @@ def get_pools(current_user: dict = Depends(get_current_user), db = Depends(get_d
             else:
                 forma = "volumen_conocido"
 
+        dims = doc.get("dimensiones")
+        if not dims:
+            if forma == "circular":
+                dims = {"diametro": ancho, "profundidad": profundidad}
+            elif forma == "oval":
+                dims = {"eje_largo": largo, "eje_corto": ancho, "profundidad": profundidad}
+            elif forma == "volumen_conocido":
+                dims = {"volumen": doc.get("volumen", 0.0)}
+            else:
+                dims = {"largo": largo, "ancho": ancho, "profundidad": profundidad}
+
         pools.append(PiscinaOut(
             id=str(doc["_id"]),
             username=doc["username"],
@@ -89,6 +164,7 @@ def get_pools(current_user: dict = Depends(get_current_user), db = Depends(get_d
             profundidad=profundidad,
             filtro=doc.get("filtro", True),
             forma=forma,
+            dimensiones=dims,
         ))
     return pools
 
@@ -114,6 +190,23 @@ def update_pool(
         raise HTTPException(status_code=422, detail="El volumen debe ser mayor a 0")
     if pool.tipo not in ["interior", "exterior"]:
         raise HTTPException(status_code=422, detail="El tipo debe ser 'interior' o 'exterior'")
+
+    # Recalcular volumen y verificar consistencia
+    settings = get_settings()
+    try:
+        calculated_vol = calcular_volumen(pool.forma, pool.dimensiones)
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=str(e)
+        )
+    
+    diff = abs(calculated_vol - pool.volumen)
+    if diff > settings.volume_tolerance:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=f"Inconsistencia de volumen: el volumen enviado es {pool.volumen} m³, pero el calculado es {calculated_vol:.3f} m³ (tolerancia: {settings.volume_tolerance} m³)"
+        )
 
     update_data = pool.model_dump()
     db.piscinas.update_one({"_id": oid}, {"$set": update_data})

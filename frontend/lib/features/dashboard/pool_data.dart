@@ -1,4 +1,4 @@
-import 'dart:math' as math;
+import '../../core/utils/pool_volume_calculator.dart';
 
 class PoolData {
   final String nombre;
@@ -21,18 +21,35 @@ class PoolData {
     this.volumen,
   });
 
-  double get volumenM3 {
+  Map<String, double> get dimensiones {
     if (forma == 'volumen_conocido') {
-      return volumen ?? 0.0;
+      return {'volumen': volumen ?? 0.0};
     } else if (forma == 'circular') {
-      final r = ancho / 2;
-      return math.pi * r * r * profundidad;
+      return {
+        'diametro': ancho,
+        'profundidad': profundidad,
+      };
     } else if (forma == 'oval') {
-      return math.pi * (largo / 2) * (ancho / 2) * profundidad;
+      return {
+        'eje_largo': largo,
+        'eje_corto': ancho,
+        'profundidad': profundidad,
+      };
     } else {
       // rectangular
-      return largo * ancho * profundidad;
+      return {
+        'largo': largo,
+        'ancho': ancho,
+        'profundidad': profundidad,
+      };
     }
+  }
+
+  double get volumenM3 {
+    return PoolVolumeCalculator.calculateVolume(
+      forma: forma,
+      dimensiones: dimensiones,
+    );
   }
 
   double get volumenLitros => volumenM3 * 1000;
@@ -46,21 +63,49 @@ class PoolData {
         'tieneFiltro': tieneFiltro,
         'forma': forma,
         'volumen': volumen,
+        'dimensiones': dimensiones,
       };
 
   factory PoolData.fromJson(Map<String, dynamic> json) {
-    final largo = (json['largo'] as num?)?.toDouble() ?? 0.0;
-    final ancho = (json['ancho'] as num?)?.toDouble() ?? 0.0;
-    final profundidad = (json['profundidad'] as num?)?.toDouble() ?? 0.0;
-
     String forma = 'rectangular';
     if (json['forma'] != null) {
       forma = json['forma'] as String;
-    } else {
-      if (largo > 0 || ancho > 0 || profundidad > 0) {
-        forma = 'rectangular';
+    }
+
+    double largo = 0.0;
+    double ancho = 0.0;
+    double profundidad = 0.0;
+    double? volumen;
+
+    if (json['dimensiones'] != null && json['dimensiones'] is Map) {
+      final dims = Map<String, dynamic>.from(json['dimensiones'] as Map);
+      if (forma == 'circular') {
+        ancho = (dims['diametro'] as num?)?.toDouble() ?? 0.0;
+        profundidad = (dims['profundidad'] as num?)?.toDouble() ?? 0.0;
+      } else if (forma == 'oval') {
+        largo = (dims['eje_largo'] as num?)?.toDouble() ?? 0.0;
+        ancho = (dims['eje_corto'] as num?)?.toDouble() ?? 0.0;
+        profundidad = (dims['profundidad'] as num?)?.toDouble() ?? 0.0;
+      } else if (forma == 'volumen_conocido') {
+        volumen = (dims['volumen'] as num?)?.toDouble();
       } else {
-        forma = 'volumen_conocido';
+        largo = (dims['largo'] as num?)?.toDouble() ?? 0.0;
+        ancho = (dims['ancho'] as num?)?.toDouble() ?? 0.0;
+        profundidad = (dims['profundidad'] as num?)?.toDouble() ?? 0.0;
+      }
+    } else {
+      largo = (json['largo'] as num?)?.toDouble() ?? 0.0;
+      ancho = (json['ancho'] as num?)?.toDouble() ?? 0.0;
+      profundidad = (json['profundidad'] as num?)?.toDouble() ?? 0.0;
+      volumen = (json['volumen'] as num?)?.toDouble() ?? (json['volumen_m3'] as num?)?.toDouble();
+      
+      // Fallback detection of forma if none provided
+      if (json['forma'] == null) {
+        if (largo > 0 || ancho > 0 || profundidad > 0) {
+          forma = 'rectangular';
+        } else {
+          forma = 'volumen_conocido';
+        }
       }
     }
 
@@ -72,7 +117,7 @@ class PoolData {
       esInterior: json['esInterior'] as bool? ?? json['tipo'] == 'interior',
       tieneFiltro: json['tieneFiltro'] as bool? ?? json['filtro'] as bool? ?? true,
       forma: forma,
-      volumen: (json['volumen'] as num?)?.toDouble() ?? (json['volumen_m3'] as num?)?.toDouble(),
+      volumen: volumen ?? (forma == 'volumen_conocido' ? (json['volumen'] as num?)?.toDouble() : null),
     );
   }
 }
