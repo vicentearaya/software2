@@ -48,11 +48,33 @@ Si `docker compose` falla con *permission denied*, en el servidor unifica Docker
    cd ~/software2 && git pull origin main
    sudo bash scripts/install-cleanpool-kill-stack.sh
    ```
-8. En **Advanced** → **Run Command** (reemplaza el comando por defecto; usa tu `-p` de Dokploy):
+8. En el servidor (una vez):
    ```bash
-   bash -c 'sudo /usr/local/bin/cleanpool-kill-stack && docker compose -p produccin-appdespliegue-hwhkj3 -f ./docker-compose.yml up -d --build --remove-orphans'
+   cd ~/software2 && git pull origin main
+   sudo bash scripts/install-cleanpool-kill-stack.sh
+   sudo bash scripts/install-cleanpool-pre-deploy.sh
    ```
-   Sin el `cleanpool-kill-stack` antes del `up`, fallará con *container name already in use* o *permission denied*.
+9. En Dokploy → **Advanced** → **Command** (o *Run Command*), pega **solo** esto (sin `docker`, sin `bash`):
+
+   ```bash
+   compose -p produccion-app-06zzup -f ./docker-compose.yml up -d --build --remove-orphans
+   ```
+
+   Dokploy antepone `docker` automáticamente. Si pones `bash -c`, fallará con `docker: unknown command: docker bash`.
+
+   **Antes de cada deploy** (por SSH, porque Dokploy no tiene Pre Deploy en todas las versiones):
+
+   ```bash
+   sudo /usr/local/bin/cleanpool-pre-deploy
+   ```
+
+   Luego pulsa **Deploy** en Dokploy. Para no depender de hacerlo a mano, instala el cron semanal:
+
+   ```bash
+   sudo bash scripts/install-docker-disk-maintenance.sh
+   ```
+
+   Sin el `cleanpool-kill-stack` antes del `up`, puede fallar con *container name already in use* o *permission denied*.
    **No uses** `docker compose up` manual en `~/software2` si despliegas con Dokploy (solo un método).
 9. Primer deploy: **Deploy** (ver abajo si ya hay contenedores levantados)
 
@@ -133,12 +155,45 @@ sudo snap disable docker
 sudo systemctl enable --now docker
 ```
 
+## Disco lleno en redeploys (`No space left on device`)
+
+Cada `docker compose up --build` acumula **build cache** (en Flutter puede ser varios GB). Si el disco del servidor se llena, fallan `flutter pub get` o `pip install`.
+
+### Prevención automática (recomendado)
+
+1. En el servidor, **una vez** (instala scripts + cron cada 4 horas):
+
+```bash
+cd ~/software2 && git pull origin main
+sudo bash scripts/install-cleanpool-server-maintenance.sh
+```
+
+2. **Antes de cada Deploy** en Dokploy (por SSH):
+
+```bash
+sudo /usr/local/bin/cleanpool-pre-deploy
+df -h /
+```
+
+Objetivo: **≥ 5 GB libres** antes de construir.
+
+3. En Dokploy → **Advanced** → **Command** (sin `docker`, sin `bash`):
+
+```bash
+compose -p produccion-app-06zzup -f ./docker-compose.yml up -d --build --remove-orphans
+```
+
+El cron (`cleanpool-server-maintenance`) limpia caché y logs automáticamente cada 4 horas para que los autodeploys no llenen el disco.
+
+**No uses** `docker system prune -af --volumes` en producción: puede borrar datos de Mongo/Mosquitto.
+
 ## Comandos útiles en el servidor
 
 ```bash
 docker compose ps
 docker compose logs -f backend
 docker compose logs -f mosquitto
+sudo bash scripts/docker-disk-maintenance.sh
 ```
 
 ## Presencia del ESP8266
