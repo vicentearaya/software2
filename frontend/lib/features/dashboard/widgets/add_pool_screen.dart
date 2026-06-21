@@ -28,11 +28,13 @@ class _AddPoolScreenState extends State<AddPoolScreen> {
   bool _tieneFiltro = true;
   bool _isSaving = false;
   String _forma = 'rectangular';
+  String _conocidoUnit = 'm³';
 
   double get _litros {
     final Map<String, double> dims = {};
     if (_forma == 'volumen_conocido') {
-      dims['volumen'] = double.tryParse(_volumenCtrl.text) ?? 0.0;
+      final raw = double.tryParse(_volumenCtrl.text) ?? 0.0;
+      dims['volumen'] = _conocidoUnit == 'Litros' ? raw / 1000.0 : raw;
     } else if (_forma == 'circular') {
       dims['diametro'] = double.tryParse(_anchoCtrl.text) ?? 0.0;
       dims['profundidad'] = double.tryParse(_profundidadCtrl.text) ?? 0.0;
@@ -99,7 +101,10 @@ class _AddPoolScreenState extends State<AddPoolScreen> {
       tieneFiltro: _tieneFiltro,
       forma: _forma,
       volumen: _forma == 'volumen_conocido'
-          ? double.parse(_volumenCtrl.text.trim())
+          ? () {
+              final raw = double.parse(_volumenCtrl.text.trim());
+              return _conocidoUnit == 'Litros' ? raw / 1000.0 : raw;
+            }()
           : null,
     );
     await widget.onSave(pool);
@@ -230,12 +235,55 @@ class _AddPoolScreenState extends State<AddPoolScreen> {
                           validator: _validatePositiveNumber,
                         ),
                       ] else if (_forma == 'volumen_conocido') ...[
-                        _buildTextField(
-                          controller: _volumenCtrl,
-                          hint: 'Volumen en m³ (metros cúbicos)',
-                          icon: Icons.water_drop_outlined,
-                          isNumber: true,
-                          validator: _validatePositiveNumber,
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(
+                              child: _buildTextField(
+                                controller: _volumenCtrl,
+                                hint: _conocidoUnit == 'm³'
+                                    ? 'ej. 45 m³ según instalador'
+                                    : 'ej. 45000 litros según instalador',
+                                icon: Icons.water_drop_outlined,
+                                isNumber: true,
+                                validator: _validatePositiveNumber,
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Container(
+                              height: 52,
+                              padding: const EdgeInsets.symmetric(horizontal: 12),
+                              decoration: BoxDecoration(
+                                color: AppColors.surfaceElevated,
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(color: AppColors.border),
+                              ),
+                              child: DropdownButtonHideUnderline(
+                                child: DropdownButton<String>(
+                                  value: _conocidoUnit,
+                                  dropdownColor: AppColors.surfaceElevated,
+                                  style: GoogleFonts.interTight(
+                                    color: AppColors.textPrimary,
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                  items: ['m³', 'Litros'].map((String unit) {
+                                    return DropdownMenuItem<String>(
+                                      value: unit,
+                                      child: Text(unit),
+                                    );
+                                  }).toList(),
+                                  onChanged: (String? value) {
+                                    if (value != null) {
+                                      setState(() {
+                                        _conocidoUnit = value;
+                                      });
+                                    }
+                                  },
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                       if (_litros > 0) ...[
