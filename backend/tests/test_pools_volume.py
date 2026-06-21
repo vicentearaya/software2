@@ -233,3 +233,72 @@ class TestPoolVolumeValidationAPI:
         assert len(actions) >= 1
         assert actions[0]["producto"] == "Elevador de pH (carbonato de sodio)"
         assert pytest.approx(actions[0]["cantidad"], 0.1) == 848.2
+
+
+class TestPoolManualVolumeOverride:
+    """Verifica la creación y uso de volumen manual override en piscinas."""
+
+    def test_create_oval_pool_with_manual_override_bypasses_validation(self, app_with_mock_db, mock_db):
+        fake_oid = ObjectId()
+        mock_db.piscinas.insert_one.return_value = MagicMock(inserted_id=fake_oid)
+
+        # Oval dimensions: eje_largo = 10.0, eje_corto = 5.0, profundidad = 1.5
+        # Calculated volume: pi * 5 * 2.5 * 1.5 = 58.9048...
+        # We manually override volume to 50.0 m³ (which is different by ~15%, well above 5% tolerance)
+        payload = {
+            "nombre": "Mi Oval Manual",
+            "volumen": 50.0,
+            "tipo": "exterior",
+            "ubicacion": "patio",
+            "forma": "oval",
+            "volumen_origen": "manual",
+            "dimensiones": {"eje_largo": 10.0, "eje_corto": 5.0, "profundidad": 1.5}
+        }
+
+        response = client.post("/piscinas", json=payload)
+        assert response.status_code == 201, response.text
+        res_data = response.json()
+        assert res_data["volumen"] == 50.0
+        assert res_data["volumen_origen"] == "manual"
+        # Calculated volume is saved inside volumen_estimado
+        assert pytest.approx(res_data["volumen_estimado"], 0.001) == 58.9048
+        # Dimensions are still correct and present
+        assert res_data["dimensiones"]["eje_largo"] == 10.0
+        assert res_data["dimensiones"]["eje_corto"] == 5.0
+
+    def test_treatment_calculation_uses_manual_volume(self, app_with_mock_db, mock_db):
+        fake_oid = ObjectId()
+        # Mock database returning a pool with volume override of 50.0 m³
+        mock_db.piscinas.find_one.return_value = {
+            "_id": fake_oid,
+            "username": "owner_test",
+            "nombre": "Mi Oval Override",
+            "volumen": 50.0,
+            "tipo": "exterior",
+            "ubicacion": "patio",
+            "forma": "oval",
+            "volumen_origen": "manual",
+            "volumen_estimado": 58.9048,
+            "largo": 10.0,
+            "ancho": 5.0,
+            "profundidad": 1.5,
+            "dimensiones": {"eje_largo": 10.0, "eje_corto": 5.0, "profundidad": 1.5}
+        }
+        mock_db.mantenimientos.insert_one.return_value = MagicMock()
+        mock_db.mantenciones.insert_one.return_value = MagicMock()
+
+        # Call treatment calculation for pH 6.8 (target 7.4 => delta = 0.6)
+        # Quantity should be based on manual volume (50.0 m³) -> 2250.0 grams of pH elevator
+        response = client.post(
+            f"/piscinas/{str(fake_oid)}/tratamiento",
+            json={"ph": 6.8, "cloro": 2.0}
+        )
+        assert response.status_code == 201, response.text
+        data = response.json()
+        assert data["ok"] is True
+        
+        actions = data["tratamiento"]
+        assert len(actions) >= 1
+        assert actions[0]["producto"] == "Elevador de pH (carbonato de sodio)"
+        assert pytest.approx(actions[0]["cantidad"], 0.1) == 2250.0
+

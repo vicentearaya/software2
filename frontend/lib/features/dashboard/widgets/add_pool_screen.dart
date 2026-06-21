@@ -23,19 +23,27 @@ class _AddPoolScreenState extends State<AddPoolScreen> {
   final _anchoCtrl = TextEditingController();
   final _profundidadCtrl = TextEditingController();
   final _volumenCtrl = TextEditingController();
+  final _volumenManualCtrl = TextEditingController();
 
   bool _esInterior = false;
   bool _tieneFiltro = true;
   bool _isSaving = false;
+  bool _volumenManual = false;
   String _forma = 'rectangular';
   String _conocidoUnit = 'm³';
+  String _manualUnit = 'm³';
 
   double get _litros {
-    final Map<String, double> dims = {};
     if (_forma == 'volumen_conocido') {
       final raw = double.tryParse(_volumenCtrl.text) ?? 0.0;
-      dims['volumen'] = _conocidoUnit == 'Litros' ? raw / 1000.0 : raw;
-    } else if (_forma == 'circular') {
+      return (_conocidoUnit == 'Litros' ? raw / 1000.0 : raw) * 1000;
+    }
+    if (_volumenManual) {
+      final raw = double.tryParse(_volumenManualCtrl.text) ?? 0.0;
+      return (_manualUnit == 'Litros' ? raw / 1000.0 : raw) * 1000;
+    }
+    final Map<String, double> dims = {};
+    if (_forma == 'circular') {
       dims['diametro'] = double.tryParse(_anchoCtrl.text) ?? 0.0;
       dims['profundidad'] = double.tryParse(_profundidadCtrl.text) ?? 0.0;
     } else if (_forma == 'oval') {
@@ -64,12 +72,18 @@ class _AddPoolScreenState extends State<AddPoolScreen> {
       _forma = d.forma;
       if (d.forma == 'volumen_conocido') {
         _volumenCtrl.text = d.volumen?.toString() ?? '';
+      } else {
+        _volumenManual = d.volumenOrigen == 'manual';
+        if (_volumenManual) {
+          _volumenManualCtrl.text = d.volumen?.toString() ?? '';
+        }
       }
     }
     _largoCtrl.addListener(() => setState(() {}));
     _anchoCtrl.addListener(() => setState(() {}));
     _profundidadCtrl.addListener(() => setState(() {}));
     _volumenCtrl.addListener(() => setState(() {}));
+    _volumenManualCtrl.addListener(() => setState(() {}));
   }
 
   @override
@@ -79,6 +93,7 @@ class _AddPoolScreenState extends State<AddPoolScreen> {
     _anchoCtrl.dispose();
     _profundidadCtrl.dispose();
     _volumenCtrl.dispose();
+    _volumenManualCtrl.dispose();
     super.dispose();
   }
 
@@ -105,7 +120,17 @@ class _AddPoolScreenState extends State<AddPoolScreen> {
               final raw = double.parse(_volumenCtrl.text.trim());
               return _conocidoUnit == 'Litros' ? raw / 1000.0 : raw;
             }()
-          : null,
+          : (_volumenManual && _volumenManualCtrl.text.trim().isNotEmpty)
+              ? () {
+                  final raw = double.parse(_volumenManualCtrl.text.trim());
+                  return _manualUnit == 'Litros' ? raw / 1000.0 : raw;
+                }()
+              : null,
+      volumenOrigen: _forma == 'volumen_conocido'
+          ? 'manual'
+          : (_volumenManual && _volumenManualCtrl.text.trim().isNotEmpty)
+              ? 'manual'
+              : 'calculado',
     );
     await widget.onSave(pool);
     if (!mounted) return;
@@ -286,9 +311,113 @@ class _AddPoolScreenState extends State<AddPoolScreen> {
                           ],
                         ),
                       ],
+                      if (_forma != 'volumen_conocido') ...[
+                        const SizedBox(height: 16),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                          decoration: BoxDecoration(
+                            color: AppColors.surfaceElevated,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: AppColors.border),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'Fijar volumen manualmente',
+                                      style: GoogleFonts.syne(
+                                        color: AppColors.textPrimary,
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      'Ignora el cálculo matemático de las dimensiones',
+                                      style: GoogleFonts.interTight(
+                                        color: AppColors.textSecondary,
+                                        fontSize: 11,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Switch(
+                                value: _volumenManual,
+                                activeColor: AppColors.primary,
+                                onChanged: (val) {
+                                  setState(() {
+                                    _volumenManual = val;
+                                  });
+                                },
+                              ),
+                            ],
+                          ),
+                        ),
+                        if (_volumenManual) ...[
+                          const SizedBox(height: 12),
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Expanded(
+                                child: _buildTextField(
+                                  controller: _volumenManualCtrl,
+                                  hint: _manualUnit == 'm³'
+                                      ? 'ej. 45 m³ oficial'
+                                      : 'ej. 45000 litros oficial',
+                                  icon: Icons.water_drop_outlined,
+                                  isNumber: true,
+                                  validator: _validatePositiveNumber,
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Container(
+                                height: 52,
+                                padding: const EdgeInsets.symmetric(horizontal: 12),
+                                decoration: BoxDecoration(
+                                  color: AppColors.surfaceElevated,
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(color: AppColors.border),
+                                ),
+                                child: DropdownButtonHideUnderline(
+                                  child: DropdownButton<String>(
+                                    value: _manualUnit,
+                                    dropdownColor: AppColors.surfaceElevated,
+                                    style: GoogleFonts.interTight(
+                                      color: AppColors.textPrimary,
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                    items: ['m³', 'Litros'].map((String unit) {
+                                      return DropdownMenuItem<String>(
+                                        value: unit,
+                                        child: Text(unit),
+                                      );
+                                    }).toList(),
+                                    onChanged: (String? value) {
+                                      if (value != null) {
+                                        setState(() {
+                                          _manualUnit = value;
+                                        });
+                                      }
+                                    },
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ],
                       if (_litros > 0) ...[
                         const SizedBox(height: 16),
-                        _LitrosPreview(litros: _litros),
+                        _LitrosPreview(
+                          litros: _litros,
+                          isManual: _forma == 'volumen_conocido' || _volumenManual,
+                        ),
                       ],
                       const SizedBox(height: 24),
                       _SectionLabel(label: 'Tipo de instalación'),
@@ -467,8 +596,9 @@ class _SectionLabel extends StatelessWidget {
 }
 
 class _LitrosPreview extends StatelessWidget {
-  const _LitrosPreview({required this.litros});
+  const _LitrosPreview({required this.litros, this.isManual = false});
   final double litros;
+  final bool isManual;
 
   @override
   Widget build(BuildContext context) {
@@ -493,7 +623,7 @@ class _LitrosPreview extends StatelessWidget {
           ),
           const SizedBox(width: 10),
           Text(
-            'Capacidad estimada: ',
+            isManual ? 'Capacidad manual: ' : 'Capacidad estimada: ',
             style: GoogleFonts.interTight(
               color: AppColors.textSecondary,
               fontSize: 13,

@@ -26,6 +26,8 @@ class PiscinaIn(BaseModel):
     filtro: bool = True
     forma: str = "rectangular"
     dimensiones: dict[str, float] = Field(default_factory=dict)
+    volumen_origen: str = "calculado"
+    volumen_estimado: float | None = None
 
     @field_validator("forma")
     @classmethod
@@ -33,6 +35,14 @@ class PiscinaIn(BaseModel):
         allowed = {"rectangular", "circular", "oval", "volumen_conocido"}
         if v not in allowed:
             raise ValueError(f"Forma no válida. Debe ser una de: {', '.join(allowed)}")
+        return v
+
+    @field_validator("volumen_origen")
+    @classmethod
+    def validate_volumen_origen(cls, v: str) -> str:
+        allowed = {"calculado", "manual"}
+        if v not in allowed:
+            raise ValueError(f"volumen_origen debe ser uno de: {', '.join(allowed)}")
         return v
 
     @model_validator(mode="before")
@@ -107,14 +117,20 @@ def create_pool(pool: PiscinaIn, current_user: dict = Depends(get_current_user),
             detail=str(e)
         )
     
-    diff = abs(calculated_vol - pool.volumen)
-    if diff > settings.volume_tolerance:
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=f"Inconsistencia de volumen: el volumen enviado es {pool.volumen} m³, pero el calculado es {calculated_vol:.3f} m³ (tolerancia: {settings.volume_tolerance} m³)"
-        )
+    if pool.volumen_origen != "manual":
+        diff = abs(calculated_vol - pool.volumen)
+        if diff > settings.volume_tolerance:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail=f"Inconsistencia de volumen: el volumen enviado es {pool.volumen} m³, pero el calculado es {calculated_vol:.3f} m³ (tolerancia: {settings.volume_tolerance} m³)"
+            )
 
     pool_dict = pool.model_dump()
+    if pool.volumen_origen == "manual":
+        pool_dict["volumen_estimado"] = calculated_vol
+    else:
+        pool_dict["volumen_estimado"] = pool.volumen_estimado or calculated_vol
+
     pool_dict["username"] = current_user["username"]
     pool_dict["created_at"] = datetime.now(timezone.utc)
     
@@ -122,8 +138,7 @@ def create_pool(pool: PiscinaIn, current_user: dict = Depends(get_current_user),
     
     return PiscinaOut(
         id=str(result.inserted_id),
-        username=current_user["username"],
-        **pool.model_dump()
+        **pool_dict
     )
 
 @router.get("/piscinas", response_model=List[PiscinaOut])
@@ -152,6 +167,9 @@ def get_pools(current_user: dict = Depends(get_current_user), db = Depends(get_d
             else:
                 dims = {"largo": largo, "ancho": ancho, "profundidad": profundidad}
 
+        volumen_origen = doc.get("volumen_origen", "calculado")
+        volumen_estimado = doc.get("volumen_estimado")
+
         pools.append(PiscinaOut(
             id=str(doc["_id"]),
             username=doc["username"],
@@ -165,6 +183,8 @@ def get_pools(current_user: dict = Depends(get_current_user), db = Depends(get_d
             filtro=doc.get("filtro", True),
             forma=forma,
             dimensiones=dims,
+            volumen_origen=volumen_origen,
+            volumen_estimado=volumen_estimado,
         ))
     return pools
 
@@ -201,14 +221,20 @@ def update_pool(
             detail=str(e)
         )
     
-    diff = abs(calculated_vol - pool.volumen)
-    if diff > settings.volume_tolerance:
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=f"Inconsistencia de volumen: el volumen enviado es {pool.volumen} m³, pero el calculado es {calculated_vol:.3f} m³ (tolerancia: {settings.volume_tolerance} m³)"
-        )
+    if pool.volumen_origen != "manual":
+        diff = abs(calculated_vol - pool.volumen)
+        if diff > settings.volume_tolerance:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail=f"Inconsistencia de volumen: el volumen enviado es {pool.volumen} m³, pero el calculado es {calculated_vol:.3f} m³ (tolerancia: {settings.volume_tolerance} m³)"
+            )
 
     update_data = pool.model_dump()
+    if pool.volumen_origen == "manual":
+        update_data["volumen_estimado"] = calculated_vol
+    else:
+        update_data["volumen_estimado"] = pool.volumen_estimado or calculated_vol
+
     db.piscinas.update_one({"_id": oid}, {"$set": update_data})
 
     return PiscinaOut(

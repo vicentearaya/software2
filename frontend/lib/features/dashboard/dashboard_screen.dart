@@ -193,6 +193,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
       'profundidad': pool.profundidad,
       'filtro': pool.tieneFiltro,
       'forma': pool.forma,
+      'volumen_origen': pool.volumenOrigen,
+      'volumen_estimado': pool.volumenEstimado,
+      'dimensiones': pool.dimensiones,
     };
 
     Map<String, dynamic> result;
@@ -344,6 +347,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     return (l > 0 || a > 0 || p > 0) ? 'rectangular' : 'volumen_conocido';
                   }(),
                   volumen: (_selectedPool!['volumen'] as num?)?.toDouble(),
+                  volumenOrigen: _selectedPool!['volumen_origen'] as String? ?? 'calculado',
+                  volumenEstimado: (_selectedPool!['volumen_estimado'] as num?)?.toDouble(),
                 )
               : null,
         ),

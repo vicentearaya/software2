@@ -105,13 +105,37 @@ class PoolHeroCard extends StatelessWidget {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      'Capacidad total',
-                      style: GoogleFonts.interTight(
-                        color: AppColors.textSecondary,
-                        fontSize: 11,
-                        letterSpacing: 0.6,
-                      ),
+                    Row(
+                      children: [
+                        Text(
+                          'Capacidad total',
+                          style: GoogleFonts.interTight(
+                            color: AppColors.textSecondary,
+                            fontSize: 11,
+                            letterSpacing: 0.6,
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: pool.volumenOrigen == 'manual'
+                                ? AppColors.statusWarning.withOpacity(0.15)
+                                : AppColors.statusGood.withOpacity(0.15),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Text(
+                            pool.volumenOrigen == 'manual' ? 'Manual' : 'Calculado',
+                            style: GoogleFonts.interTight(
+                              color: pool.volumenOrigen == 'manual'
+                                  ? AppColors.statusWarning
+                                  : AppColors.statusGood,
+                              fontSize: 9,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                     const SizedBox(height: 2),
                     Text(

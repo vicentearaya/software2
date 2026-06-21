@@ -8,7 +8,9 @@ class PoolData {
   final bool esInterior;
   final bool tieneFiltro;
   final String forma; // rectangular, circular, oval, volumen_conocido
-  final double? volumen; // para volumen_conocido
+  final double? volumen; // para volumen_conocido u override manual
+  final String volumenOrigen; // calculado | manual
+  final double? volumenEstimado; // volumen calculado para auditoría
 
   const PoolData({
     required this.nombre,
@@ -19,6 +21,8 @@ class PoolData {
     required this.tieneFiltro,
     this.forma = 'rectangular',
     this.volumen,
+    this.volumenOrigen = 'calculado',
+    this.volumenEstimado,
   });
 
   Map<String, double> get dimensiones {
@@ -46,6 +50,9 @@ class PoolData {
   }
 
   double get volumenM3 {
+    if (volumenOrigen == 'manual') {
+      return volumen ?? 0.0;
+    }
     return PoolVolumeCalculator.calculateVolume(
       forma: forma,
       dimensiones: dimensiones,
@@ -64,6 +71,8 @@ class PoolData {
         'forma': forma,
         'volumen': volumen,
         'dimensiones': dimensiones,
+        'volumen_origen': volumenOrigen,
+        'volumen_estimado': volumenEstimado,
       };
 
   factory PoolData.fromJson(Map<String, dynamic> json) {
@@ -109,6 +118,9 @@ class PoolData {
       }
     }
 
+    final volumenOrigen = json['volumen_origen'] as String? ?? json['volumenOrigen'] as String? ?? 'calculado';
+    final volumenEstimado = (json['volumen_estimado'] as num?)?.toDouble() ?? (json['volumenEstimado'] as num?)?.toDouble();
+
     return PoolData(
       nombre: json['nombre'] as String? ?? '',
       largo: largo,
@@ -117,7 +129,9 @@ class PoolData {
       esInterior: json['esInterior'] as bool? ?? json['tipo'] == 'interior',
       tieneFiltro: json['tieneFiltro'] as bool? ?? json['filtro'] as bool? ?? true,
       forma: forma,
-      volumen: volumen ?? (forma == 'volumen_conocido' ? (json['volumen'] as num?)?.toDouble() : null),
+      volumen: volumen ?? ((forma == 'volumen_conocido' || volumenOrigen == 'manual') ? (json['volumen'] as num?)?.toDouble() : null),
+      volumenOrigen: volumenOrigen,
+      volumenEstimado: volumenEstimado,
     );
   }
 }

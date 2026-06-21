@@ -32,6 +32,9 @@ class RegisterPoolScreen extends StatelessWidget {
           'profundidad': pool.profundidad,
           'filtro': pool.tieneFiltro,
           'forma': pool.forma,
+          'volumen_origen': pool.volumenOrigen,
+          'volumen_estimado': pool.volumenEstimado,
+          'dimensiones': pool.dimensiones,
         };
 
         final result = await PoolService().createPool(payload, token);
