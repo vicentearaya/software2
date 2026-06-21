@@ -357,9 +357,19 @@ class _AddPoolScreenState extends State<AddPoolScreen> {
           : null,
       style: GoogleFonts.interTight(color: AppColors.textPrimary, fontSize: 14),
       decoration: InputDecoration(
+        labelText: hint,
+        labelStyle: GoogleFonts.interTight(
+          color: AppColors.textMuted,
+          fontSize: 14,
+        ),
+        floatingLabelStyle: GoogleFonts.interTight(
+          color: AppColors.primary,
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
+        ),
         hintText: hint,
         hintStyle: GoogleFonts.interTight(
-          color: AppColors.textMuted,
+          color: AppColors.textMuted.withOpacity(0.5),
           fontSize: 14,
         ),
         prefixIcon: Icon(icon, color: AppColors.textMuted, size: 18),
