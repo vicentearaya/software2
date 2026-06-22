@@ -288,7 +288,9 @@ def test_productos_catalogo_listar():
                     "nombre": "Cloro granulado",
                     "categoria": "Desinfectante",
                     "unidad": "g",
-                    "unidad_etiqueta": "gr",
+                    "unidad_etiqueta": "g",
+                    "descripcion": "Desinfecta el agua.",
+                    "seguridad": "No mezclar con otros químicos.",
                     "orden": 3,
                 }
             ]
@@ -299,4 +301,6 @@ def test_productos_catalogo_listar():
     data = response.json()
     assert len(data["items"]) == 1
     assert data["items"][0]["nombre"] == "Cloro granulado"
-    assert data["items"][0]["unidadEtiqueta"] == "gr"
+    assert data["items"][0]["unidadEtiqueta"] == "g"
+    assert data["items"][0]["descripcion"] == "Desinfecta el agua."
+    assert data["items"][0]["seguridad"] == "No mezclar con otros químicos."
