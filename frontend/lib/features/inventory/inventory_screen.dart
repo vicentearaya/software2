@@ -83,13 +83,13 @@ String _formatInventoryAmount(double n) {
 String _inventoryQuantityPlaceholder(String unidad) {
   switch (unidad) {
     case 'gr':
+    case 'g':
       return 'Ej: 500';
     case 'kg':
     case 'L':
       return 'Ej: 0.8';
-    case 'g':
     case 'ml':
-      return 'Ej: 500';
+      return 'Ej: 250';
     case 'unidades':
       return 'Ej: 2';
     default:
@@ -121,6 +121,8 @@ class CatalogProduct {
   final String categoria;
   final String unidad;
   final String unidadEtiqueta;
+  final String descripcion;
+  final String seguridad;
 
   const CatalogProduct({
     required this.slug,
@@ -128,6 +130,8 @@ class CatalogProduct {
     required this.categoria,
     required this.unidad,
     required this.unidadEtiqueta,
+    required this.descripcion,
+    required this.seguridad,
   });
 
   factory CatalogProduct.fromJson(Map<String, dynamic> json) => CatalogProduct(
@@ -138,8 +142,13 @@ class CatalogProduct {
         unidadEtiqueta: json['unidadEtiqueta'] as String? ??
             json['unidad'] as String? ??
             '',
+        descripcion: json['descripcion'] as String? ?? '',
+        seguridad: json['seguridad'] as String? ?? '',
       );
 }
+
+String _normalizeProductName(String value) =>
+    value.trim().toLowerCase().replaceAll(RegExp(r'\s+'), ' ');
 
 // ── Helpers de categoría ────────────────────────
 class _CategoryInfo {
@@ -177,6 +186,8 @@ class _InventoryScreenState extends State<InventoryScreen> {
   bool _actionInProgress = false;
   bool _isAuthenticated = false;
   List<InventoryProduct> _products = [];
+  Map<String, CatalogProduct> _catalogByName = const {};
+  final Set<String> _collapsedCategories = {};
 
   Future<void> _runInventoryAction(Future<void> Function() action) async {
     if (_actionInProgress) return;
@@ -217,9 +228,29 @@ class _InventoryScreenState extends State<InventoryScreen> {
     _isAuthenticated = true;
     if (mounted) setState(() => _loading = true);
     await _reloadFromApi();
+    await _loadCatalogMetadata(token);
     await _migrateLocalIfNeeded(token);
     await _reloadFromApi();
     if (mounted) setState(() => _loading = false);
+  }
+
+  Future<void> _loadCatalogMetadata(String token) async {
+    final res = await _inventoryService.getCatalog(token);
+    if (!mounted || res['success'] != true) return;
+    final data = res['data'];
+    final parsed = <CatalogProduct>[];
+    if (data is Map<String, dynamic> && data['items'] is List) {
+      for (final e in data['items'] as List) {
+        if (e is Map<String, dynamic>) {
+          parsed.add(CatalogProduct.fromJson(e));
+        }
+      }
+    }
+    setState(() {
+      _catalogByName = {
+        for (final item in parsed) _normalizeProductName(item.nombre): item,
+      };
+    });
   }
 
   /// Carga la lista desde el backend. Muestra SnackBar en error (coherente con [ApiClient]).
@@ -300,10 +331,15 @@ class _InventoryScreenState extends State<InventoryScreen> {
   }
 
   InventoryProduct? _findProductByNombre(String nombre) {
+    final normalized = _normalizeProductName(nombre);
     for (final p in _products) {
-      if (p.nombre == nombre) return p;
+      if (_normalizeProductName(p.nombre) == normalized) return p;
     }
     return null;
+  }
+
+  CatalogProduct? _findCatalogByNombre(String nombre) {
+    return _catalogByName[_normalizeProductName(nombre)];
   }
 
   Future<bool> _saveCatalogQuantities(
@@ -312,6 +348,19 @@ class _InventoryScreenState extends State<InventoryScreen> {
   ) async {
     if (quantitiesBySlug.isEmpty) return false;
     var ok = false;
+    final messenger = ScaffoldMessenger.of(context);
+    void showInventoryMessage(String message, {bool isError = false}) {
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(message),
+          backgroundColor: isError ? AppColors.statusDanger : AppColors.primary,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          margin: const EdgeInsets.all(16),
+        ),
+      );
+    }
+
     await _runInventoryAction(() async {
       final token = await _authService.getToken();
       if (token == null) {
@@ -355,23 +404,21 @@ class _InventoryScreenState extends State<InventoryScreen> {
 
       if (!mounted) return;
       await _reloadFromApi();
+      if (!mounted) return;
       if (failures > 0 && saved == 0) {
-        AppUtils.showSnackBar(
-          context,
+        showInventoryMessage(
           'No se pudieron guardar los productos',
           isError: true,
         );
         return;
       }
       if (failures > 0) {
-        AppUtils.showSnackBar(
-          context,
+        showInventoryMessage(
           'Se guardaron $saved producto(s); $failures no se pudieron registrar',
           isError: true,
         );
       } else {
-        AppUtils.showSnackBar(
-          context,
+        showInventoryMessage(
           saved == 1 ? 'Producto agregado' : '$saved productos agregados',
         );
       }
@@ -932,60 +979,86 @@ class _InventoryScreenState extends State<InventoryScreen> {
             ...orderedKeys.expand((cat) {
               final info = _getCategory(cat);
               final items = grouped[cat]!;
+              final isCollapsed = _collapsedCategories.contains(cat);
               return [
                 // Header de categoría
                 SliverToBoxAdapter(
                   child: Padding(
                     padding: const EdgeInsets.fromLTRB(20, 8, 20, 10),
-                    child: Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(6),
-                          decoration: BoxDecoration(
-                            color: info.color.withValues(alpha: 0.12),
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(color: info.color.withValues(alpha: 0.2)),
-                          ),
-                          child: Icon(info.icon, color: info.color, size: 16),
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(12),
+                      onTap: () {
+                        setState(() {
+                          if (isCollapsed) {
+                            _collapsedCategories.remove(cat);
+                          } else {
+                            _collapsedCategories.add(cat);
+                          }
+                        });
+                      },
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 4),
+                        child: Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(6),
+                              decoration: BoxDecoration(
+                                color: info.color.withValues(alpha: 0.12),
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(color: info.color.withValues(alpha: 0.2)),
+                              ),
+                              child: Icon(info.icon, color: info.color, size: 16),
+                            ),
+                            const SizedBox(width: 10),
+                            Text(cat.toUpperCase(), style: GoogleFonts.syne(
+                              color: info.color, fontSize: 12, fontWeight: FontWeight.w700, letterSpacing: 0.5)),
+                            const SizedBox(width: 8),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: info.color.withValues(alpha: 0.1),
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: Text('${items.length}', style: GoogleFonts.interTight(
+                                color: info.color, fontSize: 11, fontWeight: FontWeight.w600)),
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(child: Container(height: 1, color: AppColors.border.withValues(alpha: 0.4))),
+                            const SizedBox(width: 8),
+                            Icon(
+                              isCollapsed
+                                  ? Icons.keyboard_arrow_right_rounded
+                                  : Icons.keyboard_arrow_down_rounded,
+                              color: AppColors.textMuted,
+                              size: 22,
+                            ),
+                          ],
                         ),
-                        const SizedBox(width: 10),
-                        Text(cat.toUpperCase(), style: GoogleFonts.syne(
-                          color: info.color, fontSize: 12, fontWeight: FontWeight.w700, letterSpacing: 0.5)),
-                        const SizedBox(width: 8),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
-                          decoration: BoxDecoration(
-                            color: info.color.withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: Text('${items.length}', style: GoogleFonts.interTight(
-                            color: info.color, fontSize: 11, fontWeight: FontWeight.w600)),
-                        ),
-                        const SizedBox(width: 10),
-                        Expanded(child: Container(height: 1, color: AppColors.border.withValues(alpha: 0.4))),
-                      ],
+                      ),
                     ),
                   ),
                 ),
                 // Tarjetas de productos
-                SliverPadding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  sliver: SliverList(
-                    delegate: SliverChildBuilderDelegate((_, idx) {
-                      final entry = items[idx];
-                      return Padding(
-                        padding: const EdgeInsets.only(bottom: 10),
-                        child: _ProductCard(
-                          product: entry.value,
-                          categoryInfo: info,
-                          onAddMore: () => _openAddStockSheet(entry.key),
-                          onRegisterUse: () => _openUseStockSheet(entry.key),
-                          onDelete: () => _removeProduct(entry.value.id),
-                        ),
-                      );
-                    }, childCount: items.length),
+                if (!isCollapsed)
+                  SliverPadding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    sliver: SliverList(
+                      delegate: SliverChildBuilderDelegate((_, idx) {
+                        final entry = items[idx];
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 10),
+                          child: _ProductCard(
+                            product: entry.value,
+                            categoryInfo: info,
+                            catalogInfo: _findCatalogByNombre(entry.value.nombre),
+                            onAddMore: () => _openAddStockSheet(entry.key),
+                            onRegisterUse: () => _openUseStockSheet(entry.key),
+                            onDelete: () => _removeProduct(entry.value.id),
+                          ),
+                        );
+                      }, childCount: items.length),
+                    ),
                   ),
-                ),
                 const SliverToBoxAdapter(child: SizedBox(height: 8)),
               ];
             }),
@@ -1004,16 +1077,47 @@ class _InventoryScreenState extends State<InventoryScreen> {
   }
 }
 
+class _InventorySafetyHint extends StatelessWidget {
+  final String text;
+
+  const _InventorySafetyHint({required this.text});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      decoration: BoxDecoration(
+        color: AppColors.statusWarning.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: AppColors.statusWarning.withValues(alpha: 0.22)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Icon(Icons.warning_amber_rounded, color: AppColors.statusWarning, size: 16),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(text, style: GoogleFonts.interTight(
+              color: AppColors.textSecondary, fontSize: 11, height: 1.3)),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 // ── Tarjeta de producto ─────────────────────────
 class _ProductCard extends StatefulWidget {
   final InventoryProduct product;
   final _CategoryInfo categoryInfo;
+  final CatalogProduct? catalogInfo;
   final VoidCallback onAddMore;
   final VoidCallback onRegisterUse;
   final VoidCallback onDelete;
   const _ProductCard({
     required this.product,
     required this.categoryInfo,
+    this.catalogInfo,
     required this.onAddMore,
     required this.onRegisterUse,
     required this.onDelete,
@@ -1031,18 +1135,21 @@ class _ProductCardState extends State<_ProductCard> {
     final c = widget.categoryInfo;
     final stockLabel =
         '${_formatInventoryAmount(widget.product.cantidad)} ${widget.product.unidad}';
+    final description = widget.catalogInfo?.descripcion ?? '';
+    final safety = widget.catalogInfo?.seguridad ?? '';
     return MouseRegion(
       onEnter: (_) => setState(() => _hovered = true),
       onExit: (_) => setState(() => _hovered = false),
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 180),
+        duration: const Duration(milliseconds: 240),
+        curve: Curves.easeOutCubic,
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: _hovered ? c.color.withValues(alpha: 0.04) : AppColors.surface,
+          color: AppColors.surface,
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: _hovered ? c.color.withValues(alpha: 0.25) : AppColors.border.withValues(alpha: 0.5)),
+          border: Border.all(color: _hovered ? c.color.withValues(alpha: 0.16) : AppColors.border.withValues(alpha: 0.5)),
           boxShadow: _hovered
-              ? [BoxShadow(color: c.color.withValues(alpha: 0.08), blurRadius: 12, offset: const Offset(0, 3))]
+              ? [BoxShadow(color: Colors.black.withValues(alpha: 0.08), blurRadius: 10, offset: const Offset(0, 3))]
               : [],
         ),
         child: Row(
@@ -1089,6 +1196,15 @@ class _ProductCardState extends State<_ProductCard> {
                         color: AppColors.textMuted, fontSize: 11, fontStyle: FontStyle.italic),
                         maxLines: 1, overflow: TextOverflow.ellipsis),
                     ),
+                  if (description.isNotEmpty) ...[
+                    const SizedBox(height: 8),
+                    Text(description, style: GoogleFonts.interTight(
+                      color: AppColors.textSecondary, fontSize: 12, height: 1.35)),
+                  ],
+                  if (safety.isNotEmpty) ...[
+                    const SizedBox(height: 8),
+                    _InventorySafetyHint(text: safety),
+                  ],
                   const SizedBox(height: 10),
                   Wrap(
                     spacing: 8,
@@ -1471,14 +1587,39 @@ class _BulkAddCatalogScreenState extends State<_BulkAddCatalogScreen> {
             ),
             const SizedBox(width: 12),
             Expanded(
-              child: Text(
-                item.nombre,
-                style: GoogleFonts.interTight(
-                  color: AppColors.textPrimary,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  height: 1.35,
-                ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    item.nombre,
+                    style: GoogleFonts.interTight(
+                      color: AppColors.textPrimary,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      height: 1.35,
+                    ),
+                  ),
+                  if (item.descripcion.isNotEmpty) ...[
+                    const SizedBox(height: 4),
+                    Text(item.descripcion, style: GoogleFonts.interTight(
+                      color: AppColors.textSecondary, fontSize: 12, height: 1.3)),
+                  ],
+                  if (item.seguridad.isNotEmpty) ...[
+                    const SizedBox(height: 6),
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Icon(Icons.warning_amber_rounded,
+                            color: AppColors.statusWarning, size: 14),
+                        const SizedBox(width: 5),
+                        Expanded(
+                          child: Text(item.seguridad, style: GoogleFonts.interTight(
+                            color: AppColors.textMuted, fontSize: 11, height: 1.25)),
+                        ),
+                      ],
+                    ),
+                  ],
+                ],
               ),
             ),
             const SizedBox(width: 12),
