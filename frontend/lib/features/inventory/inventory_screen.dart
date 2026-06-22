@@ -186,7 +186,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
   bool _actionInProgress = false;
   bool _isAuthenticated = false;
   List<InventoryProduct> _products = [];
-  List<CatalogProduct>? _catalogProducts = const [];
+  Map<String, CatalogProduct> _catalogByName = const {};
   final Set<String> _collapsedCategories = {};
 
   Future<void> _runInventoryAction(Future<void> Function() action) async {
@@ -246,7 +246,11 @@ class _InventoryScreenState extends State<InventoryScreen> {
         }
       }
     }
-    setState(() => _catalogProducts = parsed);
+    setState(() {
+      _catalogByName = {
+        for (final item in parsed) _normalizeProductName(item.nombre): item,
+      };
+    });
   }
 
   /// Carga la lista desde el backend. Muestra SnackBar en error (coherente con [ApiClient]).
@@ -335,11 +339,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
   }
 
   CatalogProduct? _findCatalogByNombre(String nombre) {
-    final normalized = _normalizeProductName(nombre);
-    for (final item in _catalogProducts ?? const <CatalogProduct>[]) {
-      if (_normalizeProductName(item.nombre) == normalized) return item;
-    }
-    return null;
+    return _catalogByName[_normalizeProductName(nombre)];
   }
 
   Future<bool> _saveCatalogQuantities(

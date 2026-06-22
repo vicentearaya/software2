@@ -158,7 +158,8 @@ class PoolWaterStatusPanel extends StatelessWidget {
               ],
             ),
           ),
-          if (estado != 'APTA' && warnings.isNotEmpty) ...[
+          if ((estado == 'ADVERTENCIA' || estado == 'NO APTA') &&
+              warnings.isNotEmpty) ...[
             const SizedBox(height: 16),
             _RiskWarningList(warnings: warnings),
           ],
