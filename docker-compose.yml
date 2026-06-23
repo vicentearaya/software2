@@ -54,6 +54,9 @@ services:
       - MQTT_PORT=1883
       - MQTT_USER=${MQTT_USER:-cleanpool}
       - MQTT_PASSWORD=${API_KEY}
+      - OLLAMA_BASE_URL=${OLLAMA_BASE_URL:-http://10.10.50.51:11434}
+      - OLLAMA_MODEL=${OLLAMA_MODEL:-gemma4:e2b}
+      - OLLAMA_TIMEOUT_SECONDS=${OLLAMA_TIMEOUT_SECONDS:-120}
 
   frontend:
     build:

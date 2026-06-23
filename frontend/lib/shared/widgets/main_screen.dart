@@ -6,6 +6,7 @@ import '../../features/dashboard/dashboard_screen.dart';
 import '../../features/inventory/inventory_screen.dart';
 import '../../features/guides/guides_screen.dart';
 import '../../features/profile/profile_screen.dart';
+import 'chat_assistant_overlay.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -27,9 +28,11 @@ class _MainScreenState extends State<MainScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: _screens[_currentIndex],
-      bottomNavigationBar: _buildNavBar(),
+    return ChatAssistantOverlay(
+      child: Scaffold(
+        body: _screens[_currentIndex],
+        bottomNavigationBar: _buildNavBar(),
+      ),
     );
   }
 

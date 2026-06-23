@@ -37,6 +37,14 @@ class Settings(BaseSettings):
     mqtt_user: str | None = None
     mqtt_password: str | None = None
 
+    # Chatbot (Ollama en red interna del servidor universitario)
+    ollama_base_url: str = "http://10.10.50.51:11434"
+    ollama_model: str = "gemma4:e2b"
+    ollama_timeout_seconds: float = 120.0
+    chat_max_message_length: int = 500
+    chat_rate_limit_requests: int = 15
+    chat_rate_limit_window_seconds: int = 60
+
     @field_validator("mongodb_logs_uri", mode="before")
     @classmethod
     def _empty_logs_uri_to_none(cls, v: object) -> str | None:

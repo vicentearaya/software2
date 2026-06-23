@@ -292,3 +292,7 @@ class InventarioStockDelta(BaseModel):
     """Cantidad a sumar (agregar) o restar (usar), en la misma unidad que el ítem."""
 
     cantidad: float = Field(..., gt=0)
+
+
+class ChatAskRequest(BaseModel):
+    message: str = Field(..., min_length=1, max_length=500)

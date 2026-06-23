@@ -9,3 +9,4 @@ pydantic-settings
 a2wsgi
 certifi
 paho-mqtt>=2.0.0
+httpx

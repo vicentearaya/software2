@@ -13,6 +13,7 @@ from routers import inventario
 from routers import productos
 from routers import piscinas
 from routers import pools
+from routers import chat
 
 settings = get_settings()
 
@@ -59,6 +60,7 @@ app.include_router(inventario.router)
 app.include_router(productos.router)
 app.include_router(pools.router)
 app.include_router(mantenciones.router)
+app.include_router(chat.router)
 
 
 @app.get("/", summary="Health check", tags=["General"])
