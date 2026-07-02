@@ -5,6 +5,7 @@ import Hero from './components/Hero';
 import FeatureGrid from './components/FeatureGrid';
 import SpotlightCarousel from './components/SpotlightCarousel';
 import ValueSection from './components/ValueSection';
+import ContactSection from './components/ContactSection';
 import Footer from './components/Footer';
 
 export default function App() {
@@ -33,6 +34,7 @@ export default function App() {
         <FeatureGrid lang={lang} reduced={reduced} />
         <SpotlightCarousel lang={lang} reduced={reduced} />
         <ValueSection lang={lang} reduced={reduced} />
+        <ContactSection lang={lang} reduced={reduced} />
       </main>
       <Footer lang={lang} />
     </>
