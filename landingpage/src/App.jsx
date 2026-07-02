@@ -3,6 +3,7 @@ import { LANG_KEY, t } from './i18n/translations';
 import Header from './components/Header';
 import Hero from './components/Hero';
 import FeatureGrid from './components/FeatureGrid';
+import AppShowcase from './components/AppShowcase';
 import SpotlightCarousel from './components/SpotlightCarousel';
 import ValueSection from './components/ValueSection';
 import ContactSection from './components/ContactSection';
@@ -32,6 +33,7 @@ export default function App() {
       <main id="main">
         <Hero lang={lang} reduced={reduced} />
         <FeatureGrid lang={lang} reduced={reduced} />
+        <AppShowcase lang={lang} reduced={reduced} />
         <SpotlightCarousel lang={lang} reduced={reduced} />
         <ValueSection lang={lang} reduced={reduced} />
         <ContactSection lang={lang} reduced={reduced} />
